@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>麻雀部屋</title>
+<style>
+  body { font-family: system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+         background: #f4f1e8; color: #1c1e1a; margin: 0; padding: 40px 20px; }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  h1 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 30px; letter-spacing: .05em; }
+  a.room { display: block; text-decoration: none; color: inherit; border-radius: 12px;
+           padding: 20px 22px; margin: 14px 0; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+  a.room b { font-size: 18px; }
+  a.room span { display: block; font-size: 13px; margin-top: 4px; opacity: .85; }
+  .league { background: linear-gradient(160deg, #0d5f45, #0a4e39); color: #e9f7ef; }
+  .street { background: linear-gradient(160deg, #2b3568, #202950); color: #eceffc; }
+  @media (prefers-color-scheme: dark) { body { background: #101210; color: #ececec; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>麻雀部屋 🀄</h1>
+  <a class="room league" href="mleague-tracker.html"><b>社内Sリーグ</b><span>Mリーグルール準拠・5人ローテーション・週2半荘</span></a>
+  <a class="room street" href="street-scorer.html"><b>セット麻雀スコアラー</b><span>3麻・4麻対応/メンバー自由/チップpt換算</span></a>
+</div>
+</body>
+</html>

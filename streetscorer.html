@@ -1,0 +1,1066 @@
+<title>セット麻雀スコアラー</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f4f1e8;
+    --surface: #fcfaf3;
+    --surface2: #efebdd;
+    --ink: #1c1c1f;
+    --ink2: #595a60;
+    --muted: #8d8d90;
+    --line: #e3e0d2;
+    --baseline: #c7c4b4;
+    --accent: #3b4a9e;
+    --accent-ink: #ffffff;
+    --wash: rgba(59, 74, 158, .08);
+    --night: #2b3568;
+    --night-deep: #202950;
+    --night-ink: #eceffc;
+    --night-ink2: #a9b2d8;
+    --tile: #fbf9ef;
+    --tile-ink: #242820;
+    --tile-edge: #d9d5c2;
+    --pos: #03630a;
+    --neg: #c03535;
+    --p1: #2a78d6; --p2: #1baf7a; --p3: #eda100; --p4: #008300;
+    --p5: #4a3aa7; --p6: #e34948; --p7: #e87ba4; --p8: #eb6834;
+    --shadow: 0 1px 2px rgba(24, 22, 18, .06), 0 4px 14px rgba(24, 22, 18, .05);
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1014;
+      --surface: #171922;
+      --surface2: #1f2230;
+      --ink: #edeef4;
+      --ink2: #b4b7c6;
+      --muted: #83858f;
+      --line: #272a38;
+      --baseline: #3b3f52;
+      --accent: #8b9bf5;
+      --accent-ink: #0d1020;
+      --wash: rgba(139, 155, 245, .13);
+      --night: #232c5c;
+      --night-deep: #1a2148;
+      --night-ink: #e9ecfb;
+      --night-ink2: #9ba5cf;
+      --tile: #f4f1e2;
+      --tile-ink: #23271f;
+      --tile-edge: #b9b5a0;
+      --pos: #35b364;
+      --neg: #e66767;
+      --p1: #3987e5; --p2: #199e70; --p3: #c98500; --p4: #008300;
+      --p5: #9085e9; --p6: #e66767; --p7: #d55181; --p8: #d95926;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1014;
+    --surface: #171922;
+    --surface2: #1f2230;
+    --ink: #edeef4;
+    --ink2: #b4b7c6;
+    --muted: #83858f;
+    --line: #272a38;
+    --baseline: #3b3f52;
+    --accent: #8b9bf5;
+    --accent-ink: #0d1020;
+    --wash: rgba(139, 155, 245, .13);
+    --night: #232c5c;
+    --night-deep: #1a2148;
+    --night-ink: #e9ecfb;
+    --night-ink2: #9ba5cf;
+    --tile: #f4f1e2;
+    --tile-ink: #23271f;
+    --tile-edge: #b9b5a0;
+    --pos: #35b364;
+    --neg: #e66767;
+    --p1: #3987e5; --p2: #199e70; --p3: #c98500; --p4: #008300;
+    --p5: #9085e9; --p6: #e66767; --p7: #d55181; --p8: #d95926;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f1e8;
+    --surface: #fcfaf3;
+    --surface2: #efebdd;
+    --ink: #1c1c1f;
+    --ink2: #595a60;
+    --muted: #8d8d90;
+    --line: #e3e0d2;
+    --baseline: #c7c4b4;
+    --accent: #3b4a9e;
+    --accent-ink: #ffffff;
+    --wash: rgba(59, 74, 158, .08);
+    --night: #2b3568;
+    --night-deep: #202950;
+    --night-ink: #eceffc;
+    --night-ink2: #a9b2d8;
+    --tile: #fbf9ef;
+    --tile-ink: #242820;
+    --tile-edge: #d9d5c2;
+    --pos: #03630a;
+    --neg: #c03535;
+    --p1: #2a78d6; --p2: #1baf7a; --p3: #eda100; --p4: #008300;
+    --p5: #4a3aa7; --p6: #e34948; --p7: #e87ba4; --p8: #eb6834;
+    --shadow: 0 1px 2px rgba(24, 22, 18, .06), 0 4px 14px rgba(24, 22, 18, .05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px 48px; }
+
+  .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; margin-bottom: 2px; }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 28px; font-weight: 700; margin: 0; line-height: 1.25; letter-spacing: .04em;
+  }
+  .mast-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    appearance: none; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); font: inherit; font-size: 13px; font-weight: 600;
+    padding: 7px 14px; border-radius: 8px; cursor: pointer;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.danger { color: var(--neg); }
+  .btn.small { padding: 3px 10px; font-size: 12px; }
+  a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+  :is(.btn, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  section.card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  h2 { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--ink2); margin: 0 0 12px; text-transform: uppercase; }
+  .note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+
+  /* entry hero (the night table) */
+  .entry-card {
+    background: linear-gradient(160deg, var(--night), var(--night-deep));
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px 22px; margin-bottom: 18px; color: var(--night-ink);
+  }
+  .entry-card h2 { color: var(--night-ink2); }
+  .mode-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .mode-btn {
+    background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .25);
+    color: var(--night-ink); font: inherit; font-size: 13.5px; font-weight: 700;
+    padding: 7px 16px; border-radius: 99px; cursor: pointer;
+  }
+  .mode-btn.on { background: var(--tile); color: var(--tile-ink); border-color: var(--tile); }
+  .edit-flag {
+    font-size: 11px; font-weight: 700; color: var(--night-deep);
+    background: #f0c86a; border-radius: 99px; padding: 3px 10px;
+  }
+  .pick-label { font-size: 12px; font-weight: 700; color: var(--night-ink2); margin: 10px 0 6px; letter-spacing: .06em; }
+  .pick-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pick {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .22);
+    color: var(--night-ink); font: inherit; font-size: 13.5px; font-weight: 600;
+    padding: 6px 13px; border-radius: 99px; cursor: pointer;
+  }
+  .pick.on { background: var(--tile); color: var(--tile-ink); border-color: var(--tile); }
+  .pick .ord {
+    font-size: 11px; font-weight: 700; background: var(--night); color: var(--night-ink);
+    border-radius: 50%; width: 17px; height: 17px; display: inline-grid; place-items: center;
+  }
+  .erows { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  @media (max-width: 820px) { .erows { grid-template-columns: repeat(2, 1fr); } }
+  .erow { background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .18); border-radius: 8px; padding: 10px 12px; }
+  .erow .ehead { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+  .erow input {
+    font: inherit; font-size: 16px; font-variant-numeric: tabular-nums; width: 100%;
+    padding: 7px 9px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 7px;
+    background: rgba(0, 0, 0, .18); color: var(--night-ink);
+  }
+  .erow input::placeholder { color: rgba(255, 255, 255, .35); }
+  .entry-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+  .entry-card .btn.primary { background: var(--tile); border-color: var(--tile); color: var(--tile-ink); font-weight: 700; }
+  .entry-card .btn.ghost { background: transparent; border-color: rgba(255, 255, 255, .3); color: var(--night-ink); }
+  #sum-line { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--night-ink2); }
+  #sum-line.ok { color: #7fe0a0; font-weight: 700; }
+  #sum-line.err { color: #f4a3a3; font-weight: 700; }
+  #preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .pv {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 99px; padding: 4px 12px; font-size: 13px; color: var(--night-ink);
+  }
+  .pv .pv-rank { font-size: 11px; font-weight: 700; color: var(--night-ink2); }
+  .pv .pv-pt { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tie-note { font-size: 11.5px; color: var(--night-ink2); margin-top: 10px; }
+
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .ptag { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--muted); padding: 4px 8px; border-bottom: 1px solid var(--baseline); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .table-scroll { overflow-x: auto; }
+  #standings .rank { font-size: 13px; font-weight: 700; color: var(--muted); width: 30px; }
+  #standings .total { font-size: 16.5px; font-weight: 700; }
+  #standings tr.leader td { background: var(--wash); }
+  .crown { font-size: 10.5px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 99px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }
+  .empty { color: var(--muted); font-size: 13.5px; padding: 20px 4px; text-align: center; }
+
+  .hrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+  .hrow:last-child { border-bottom: none; }
+  .h-no { font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .mode-badge { font-size: 10.5px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 99px; padding: 1px 7px; margin-left: 6px; }
+  .h-res { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+  .h-res .r { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .h-res .r b { font-variant-numeric: tabular-nums; }
+  .h-res .r .rk { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+  .h-res .r .sc { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .h-act { margin-left: auto; display: flex; gap: 6px; }
+
+  .chip-grid { display: flex; flex-direction: column; gap: 8px; }
+  .chip-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .chip-row .ptag { min-width: 110px; }
+  .chip-row input { font: inherit; font-size: 14px; font-variant-numeric: tabular-nums; width: 90px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); }
+  .chip-calc { font-size: 12.5px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .chip-set { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .chip-set label { font-size: 12.5px; font-weight: 700; color: var(--ink2); display: inline-flex; align-items: center; gap: 6px; }
+  .chip-set input { font: inherit; font-size: 14px; width: 74px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+  #chip-warn { font-size: 12px; color: var(--neg); margin-top: 8px; font-weight: 600; }
+
+  .pedit { display: flex; flex-direction: column; gap: 8px; }
+  .prow { display: flex; align-items: center; gap: 9px; }
+  .prow input { font: inherit; font-size: 14px; padding: 6px 10px; flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); }
+  .add-row { display: flex; gap: 8px; margin-top: 10px; }
+  .add-row input { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); }
+
+  .rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 28px; }
+  @media (max-width: 720px) { .rule-grid { grid-template-columns: 1fr; } }
+  .rule-h { font-size: 12.5px; font-weight: 700; color: var(--accent); letter-spacing: .06em; margin: 0 0 8px; }
+  .rule-fields { display: flex; gap: 10px 14px; flex-wrap: wrap; }
+  .rule-fields label { font-size: 12px; font-weight: 700; color: var(--ink2); display: flex; flex-direction: column; gap: 3px; }
+  .rule-fields input { font: inherit; font-size: 14px; width: 84px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .preset-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .oka-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .share-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+  .share-row input { flex: 1; min-width: 220px; font: inherit; font-size: 12.5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface2); color: var(--ink); }
+  .share-note { margin: 0 0 14px; }
+  .share-label { font-size: 12px; font-weight: 700; color: var(--ink2); white-space: nowrap; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 99px;
+    font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap;
+  }
+  #toast.show { opacity: .95; }
+  footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
+  footer b { color: var(--ink2); }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .pick, .mode-btn { transition: background .12s ease; }
+    #toast { transition: opacity .25s ease; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">3麻・4麻対応/ポイント制セット記録</div>
+      <h1>セット麻雀スコアラー</h1>
+    </div>
+    <div class="mast-actions">
+      <button class="btn primary" id="btn-share-top" type="button">共有リンク</button>
+      <a class="btn" href="#rules-card">ルール設定</a>
+    </div>
+  </header>
+
+  <section class="entry-card" id="entry">
+    <h2>対局入力</h2>
+    <div class="mode-row">
+      <button class="mode-btn" id="mode-4" type="button">4人打ち</button>
+      <button class="mode-btn" id="mode-3" type="button">3人打ち</button>
+      <span class="edit-flag" id="edit-flag" hidden></span>
+    </div>
+    <div class="pick-label">打った人を順番にタップ(同点のときは先に選んだ人が上位)</div>
+    <div class="pick-row" id="pick-row"></div>
+    <div class="erows" id="entry-rows"></div>
+    <div id="preview"></div>
+    <div class="entry-foot">
+      <button class="btn primary" id="btn-save" type="button" disabled>結果を保存</button>
+      <button class="btn ghost" id="btn-autofill" type="button" hidden></button>
+      <button class="btn ghost" id="btn-cancel-edit" type="button" hidden>修正をやめる</button>
+      <span id="sum-line"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>今日の収支(ポイント)</h2>
+    <div class="table-scroll"><table id="standings"></table></div>
+    <p class="note">合計pt = 対局pt + チップpt。ptは常に現在のルール設定で再計算されます。</p>
+  </section>
+
+  <section class="card">
+    <h2>チップ</h2>
+    <div class="chip-set">
+      <label>配給枚数 <input type="number" id="chip-base" step="1" inputmode="numeric"></label>
+      <label>1枚あたり <input type="number" id="chip-pt" step="0.1" inputmode="decimal"> pt</label>
+    </div>
+    <div class="chip-grid" id="chip-grid"></div>
+    <div id="chip-warn"></div>
+    <p class="note">終了時に手元のチップ枚数を入れると、配給枚数との差分がptに換算されて合計に反映されます。</p>
+  </section>
+
+  <section class="card">
+    <h2>対局履歴</h2>
+    <div id="history"></div>
+  </section>
+
+  <section class="card">
+    <h2>メンバー</h2>
+    <div class="pedit" id="players-edit"></div>
+    <div class="add-row">
+      <input type="text" id="new-player" maxlength="12" placeholder="名前を入力して追加">
+      <button class="btn" id="btn-add-player" type="button">追加</button>
+    </div>
+    <p class="note">対局に参加済みのメンバーは削除できません(名前の変更はいつでも可能)。</p>
+  </section>
+
+  <section class="card" id="rules-card">
+    <h2>ルール設定</h2>
+    <div class="rule-grid">
+      <div>
+        <h3 class="rule-h">4人打ち</h3>
+        <div class="rule-fields">
+          <label>持ち点<input type="number" id="r4-start" step="1000"></label>
+          <label>返し点<input type="number" id="r4-target" step="1000"></label>
+          <label>ウマ1位<input type="number" id="r4-u0" step="5"></label>
+          <label>2位<input type="number" id="r4-u1" step="5"></label>
+          <label>3位<input type="number" id="r4-u2" step="5"></label>
+          <label>4位<input type="number" id="r4-u3" step="5"></label>
+        </div>
+        <div class="preset-row">
+          <button class="btn small" type="button" data-preset4="25000,30000,10,5,-5,-10">ゴットー(5-10)</button>
+          <button class="btn small" type="button" data-preset4="25000,30000,20,10,-10,-20">ワンツー(10-20)</button>
+          <button class="btn small" type="button" data-preset4="25000,30000,30,10,-10,-30">Mリーグ式(10-30)</button>
+        </div>
+        <div class="oka-note" id="oka4"></div>
+      </div>
+      <div>
+        <h3 class="rule-h">3人打ち</h3>
+        <div class="rule-fields">
+          <label>持ち点<input type="number" id="r3-start" step="1000"></label>
+          <label>返し点<input type="number" id="r3-target" step="1000"></label>
+          <label>ウマ1位<input type="number" id="r3-u0" step="5"></label>
+          <label>2位<input type="number" id="r3-u1" step="5"></label>
+          <label>3位<input type="number" id="r3-u2" step="5"></label>
+        </div>
+        <div class="preset-row">
+          <button class="btn small" type="button" data-preset3="35000,40000,15,0,-15">スタンダード(15)</button>
+          <button class="btn small" type="button" data-preset3="35000,40000,20,0,-20">つよめ(20)</button>
+        </div>
+        <div class="oka-note" id="oka3"></div>
+      </div>
+    </div>
+    <p class="note">ウマは1位から順にpt。オカ(返し点と持ち点の差×人数)は自動で1位に加算されます。</p>
+  </section>
+
+  <section class="card" id="share">
+    <h2>共有・バックアップ</h2>
+    <div class="share-row">
+      <button class="btn primary" id="btn-share" type="button">共有リンクを作成してコピー</button>
+      <input id="share-out" readonly placeholder="ここに共有リンクが表示されます" aria-label="共有リンク">
+    </div>
+    <p class="note share-note">今日の成績・チップ・ルールがすべて入ったURLです。メンバーに送ると同じ画面を見られます。</p>
+    <div class="share-row">
+      <input id="share-in" placeholder="受け取った共有リンクをここに貼り付け" aria-label="共有リンクの読み込み">
+      <button class="btn" id="btn-load-link" type="button">リンクを読み込み</button>
+    </div>
+    <div class="share-row">
+      <span class="share-label">リンクの土台URL</span>
+      <input id="share-base" aria-label="共有リンクのベースURL">
+    </div>
+    <p class="note share-note">このページを共有メニューで公開したら、その公開URLをここに貼ると以後の共有リンクはログイン不要で開けます。</p>
+    <div class="share-row">
+      <button class="btn" id="btn-export" type="button">ファイルに書き出し</button>
+      <button class="btn" id="btn-import" type="button">ファイルから読み込み</button>
+      <input type="file" id="file-import" accept="application/json" hidden>
+      <button class="btn danger" id="btn-reset" type="button">全データ削除</button>
+    </div>
+  </section>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <footer>
+    <b>データ:</b> このブラウザ内に自動保存され、保存のたびにURL末尾(#d=…)にも埋め込まれます。URLをブックマーク・共有すれば別の端末でも復元できます。<br>
+    <b>メモ:</b> このツールが扱うのはポイントのみです。
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var LS_KEY = 'street-scorer-v1';
+
+  /* ---------- state ---------- */
+  function defaultState() {
+    return {
+      players: [
+        { id: 1, name: 'プレイヤー1' }, { id: 2, name: 'プレイヤー2' },
+        { id: 3, name: 'プレイヤー3' }, { id: 4, name: 'プレイヤー4' }
+      ],
+      nextId: 5,
+      games: [],           // {mode:3|4, pids:[..], scores:[..]}
+      chips: {},           // pid -> count
+      rules: {
+        r4: { start: 25000, target: 30000, uma: [20, 10, -10, -20] },
+        r3: { start: 35000, target: 40000, uma: [15, 0, -15] },
+        chipBase: 20, chipPt: 1
+      }
+    };
+  }
+  function isValidState(o) {
+    if (!o || typeof o !== 'object') return false;
+    if (!Array.isArray(o.players) || !o.players.every(function (p) {
+      return p && typeof p.id === 'number' && typeof p.name === 'string';
+    })) return false;
+    if (!Array.isArray(o.games) || !o.games.every(function (g) {
+      return g && (g.mode === 3 || g.mode === 4) &&
+        Array.isArray(g.pids) && g.pids.length === g.mode &&
+        Array.isArray(g.scores) && g.scores.length === g.mode &&
+        g.scores.every(function (x) { return typeof x === 'number' && isFinite(x); });
+    })) return false;
+    if (!o.rules || !o.rules.r4 || !o.rules.r3) return false;
+    return true;
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) { var o = JSON.parse(raw); if (isValidState(o)) { o.chips = o.chips || {}; return o; } }
+    } catch (e) { /* fall through */ }
+    return defaultState();
+  }
+  var state = load();
+  function persist() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* blocked */ }
+    try { history.replaceState(null, '', '#d=' + encodeState()); } catch (e) { /* sandboxed */ }
+  }
+
+  /* entry form state (not persisted) */
+  var entryMode = 4;
+  var picked = [];         // pids in order
+  var editingIdx = null;   // index into state.games when editing
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pById(id) {
+    for (var i = 0; i < state.players.length; i++) if (state.players[i].id === id) return state.players[i];
+    return null;
+  }
+  function slot(id) {
+    var idx = state.players.findIndex(function (p) { return p.id === id; });
+    return (idx < 0 ? 0 : idx) % 8 + 1;
+  }
+  function ptag(id) {
+    var p = pById(id);
+    return '<span class="ptag"><i class="dot" style="background:var(--p' + slot(id) + ')"></i>' + esc(p ? p.name : '?') + '</span>';
+  }
+  function rulesFor(mode) { return mode === 3 ? state.rules.r3 : state.rules.r4; }
+  function okaFor(mode) {
+    var r = rulesFor(mode);
+    return (r.target - r.start) * mode / 1000;
+  }
+  function calcGame(mode, scores) {
+    var r = rulesFor(mode);
+    var order = scores.map(function (_, i) { return i; })
+      .sort(function (a, b) { return scores[b] - scores[a] || a - b; });
+    var out = [];
+    order.forEach(function (si, rank) {
+      var pt = (scores[si] - r.target) / 1000 + r.uma[rank] + (rank === 0 ? okaFor(mode) : 0);
+      out[si] = { rank: rank + 1, pt: Math.round(pt * 10) / 10 };
+    });
+    return out;
+  }
+  function fmtPt(v) {
+    var x = Math.round(v * 10) / 10;
+    if (x > 0) return '+' + x.toFixed(1);
+    if (x < 0) return '▲' + Math.abs(x).toFixed(1);
+    return '0.0';
+  }
+  function ptClass(v) { return v > 0 ? 'pos' : (v < 0 ? 'neg' : ''); }
+  function chipPtFor(id) {
+    var c = state.chips[id];
+    if (c === undefined || c === null || c === '') return null;
+    return Math.round((Number(c) - state.rules.chipBase) * state.rules.chipPt * 10) / 10;
+  }
+
+  /* ---------- toast ---------- */
+  var toastTimer = null;
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+
+  /* ---------- entry ---------- */
+  function renderEntry() {
+    document.getElementById('mode-4').className = 'mode-btn' + (entryMode === 4 ? ' on' : '');
+    document.getElementById('mode-3').className = 'mode-btn' + (entryMode === 3 ? ' on' : '');
+    var flag = document.getElementById('edit-flag');
+    flag.hidden = editingIdx === null;
+    if (editingIdx !== null) flag.textContent = '第' + (editingIdx + 1) + '戦を修正中';
+    document.getElementById('btn-cancel-edit').hidden = editingIdx === null;
+
+    var pr = document.getElementById('pick-row');
+    pr.innerHTML = state.players.map(function (p) {
+      var ord = picked.indexOf(p.id);
+      return '<button type="button" class="pick' + (ord >= 0 ? ' on' : '') + '" data-pick="' + p.id + '">' +
+        (ord >= 0 ? '<span class="ord">' + (ord + 1) + '</span>' : '') +
+        '<i class="dot" style="background:var(--p' + slot(p.id) + ')"></i>' + esc(p.name) + '</button>';
+    }).join('');
+
+    var er = document.getElementById('entry-rows');
+    var r = rulesFor(entryMode);
+    er.innerHTML = picked.map(function (id, i) {
+      return '<div class="erow"><div class="ehead"><i class="dot" style="background:var(--p' + slot(id) + ')"></i>' +
+        esc(pById(id).name) + '</div>' +
+        '<input type="number" step="100" inputmode="numeric" placeholder="' + r.start + '" data-eid="' + id + '" data-ei="' + i + '"></div>';
+    }).join('');
+    updateEntryState();
+  }
+  function readScores() {
+    var inputs = document.querySelectorAll('#entry-rows input');
+    var vals = [], filled = 0;
+    inputs.forEach(function (inp) {
+      if (inp.value.trim() === '') { vals.push(null); return; }
+      var v = Number(inp.value);
+      if (!isFinite(v)) { vals.push(null); return; }
+      vals.push(v); filled++;
+    });
+    return { vals: vals, filled: filled };
+  }
+  function updateEntryState() {
+    var need = entryMode;
+    var sumEl = document.getElementById('sum-line');
+    var pv = document.getElementById('preview');
+    var save = document.getElementById('btn-save');
+    var auto = document.getElementById('btn-autofill');
+    var target = rulesFor(entryMode).start * need;
+    if (picked.length !== need) {
+      sumEl.className = '';
+      sumEl.textContent = 'あと' + (need - picked.length) + '人選んでください';
+      pv.innerHTML = ''; save.disabled = true; auto.hidden = true;
+      return;
+    }
+    var e = readScores();
+    if (e.filled === need - 1) {
+      var rem = target - e.vals.reduce(function (a, b) { return a + (b || 0); }, 0);
+      auto.textContent = '残りの1人に ' + rem.toLocaleString() + '点 を自動入力';
+      auto.hidden = false;
+    } else auto.hidden = true;
+    if (e.filled !== need) {
+      sumEl.className = '';
+      sumEl.textContent = need + '人分の持ち点を入力してください';
+      pv.innerHTML = ''; save.disabled = true;
+      return;
+    }
+    var sum = e.vals.reduce(function (a, b) { return a + b; }, 0);
+    if (sum !== target) {
+      sumEl.className = 'err';
+      sumEl.textContent = '合計 ' + sum.toLocaleString() + ' 点 — ' + target.toLocaleString() + '点との差: ' +
+        (sum > target ? '+' : '') + (sum - target).toLocaleString() + ' 点';
+      pv.innerHTML = ''; save.disabled = true;
+      return;
+    }
+    sumEl.className = 'ok';
+    sumEl.textContent = '合計 ' + target.toLocaleString() + ' 点 OK';
+    var res = calcGame(entryMode, e.vals);
+    var order = e.vals.map(function (_, i) { return i; }).sort(function (a, b) { return res[a].rank - res[b].rank; });
+    pv.innerHTML = order.map(function (i) {
+      return '<span class="pv"><span class="pv-rank">' + res[i].rank + '位</span>' +
+        '<i class="dot" style="background:var(--p' + slot(picked[i]) + ')"></i>' + esc(pById(picked[i]).name) +
+        '<span class="pv-pt">' + fmtPt(res[i].pt) + '</span></span>';
+    }).join('');
+    save.disabled = false;
+  }
+
+  /* ---------- standings ---------- */
+  function renderStandings() {
+    var rows = state.players.map(function (p) {
+      var games = 0, scorePt = 0, tops = 0, lasts = 0;
+      state.games.forEach(function (g) {
+        var i = g.pids.indexOf(p.id);
+        if (i < 0) return;
+        var res = calcGame(g.mode, g.scores);
+        games++;
+        scorePt = Math.round((scorePt + res[i].pt) * 10) / 10;
+        if (res[i].rank === 1) tops++;
+        if (res[i].rank === g.mode) lasts++;
+      });
+      var cpt = chipPtFor(p.id);
+      var total = Math.round((scorePt + (cpt || 0)) * 10) / 10;
+      return { p: p, games: games, scorePt: scorePt, cpt: cpt, total: total, tops: tops, lasts: lasts };
+    });
+    rows.sort(function (a, b) { return b.total - a.total; });
+    var any = state.games.length > 0 || rows.some(function (r) { return r.cpt; });
+    var html = '<thead><tr><th></th><th>プレイヤー</th><th class="num">合計pt</th><th class="num">対局pt</th>' +
+      '<th class="num">チップpt</th><th class="num">半荘</th><th class="num">トップ</th><th class="num">ラス</th></tr></thead><tbody>';
+    rows.forEach(function (r, i) {
+      var leader = any && i === 0;
+      html += '<tr class="' + (leader ? 'leader' : '') + '">' +
+        '<td class="rank num">' + (i + 1) + '</td>' +
+        '<td>' + ptag(r.p.id) + (leader ? '<span class="crown">首位</span>' : '') + '</td>' +
+        '<td class="num total ' + ptClass(r.total) + '">' + fmtPt(r.total) + '</td>' +
+        '<td class="num ' + ptClass(r.scorePt) + '">' + fmtPt(r.scorePt) + '</td>' +
+        '<td class="num ' + (r.cpt === null ? '' : ptClass(r.cpt)) + '">' + (r.cpt === null ? '—' : fmtPt(r.cpt)) + '</td>' +
+        '<td class="num">' + r.games + '</td><td class="num">' + r.tops + '</td><td class="num">' + r.lasts + '</td></tr>';
+    });
+    html += '</tbody>';
+    document.getElementById('standings').innerHTML = html;
+  }
+
+  /* ---------- chips ---------- */
+  function renderChips() {
+    document.getElementById('chip-base').value = state.rules.chipBase;
+    document.getElementById('chip-pt').value = state.rules.chipPt;
+    var el = document.getElementById('chip-grid');
+    el.innerHTML = state.players.map(function (p) {
+      var v = state.chips[p.id];
+      var cpt = chipPtFor(p.id);
+      var diff = (v === undefined || v === null || v === '') ? null : Number(v) - state.rules.chipBase;
+      return '<div class="chip-row">' + ptag(p.id) +
+        '<input type="number" step="1" inputmode="numeric" placeholder="' + state.rules.chipBase + '" data-chip="' + p.id + '" value="' + (v === undefined || v === null ? '' : v) + '">枚' +
+        '<span class="chip-calc">' + (diff === null ? '未入力' :
+          ((diff >= 0 ? '+' : '') + diff + '枚 → <b class="' + ptClass(cpt) + '">' + fmtPt(cpt) + 'pt</b>')) + '</span></div>';
+    }).join('');
+    var entered = state.players.map(function (p) { return state.chips[p.id]; })
+      .filter(function (v) { return v !== undefined && v !== null && v !== ''; });
+    var warn = document.getElementById('chip-warn');
+    if (entered.length === state.players.length && state.players.length > 0) {
+      var total = entered.reduce(function (a, b) { return a + Number(b); }, 0);
+      var expect = state.rules.chipBase * state.players.length;
+      warn.textContent = total === expect ? '' :
+        '⚠ 合計 ' + total + '枚(配給合計 ' + expect + '枚と ' + (total > expect ? '+' : '') + (total - expect) + '枚ずれています)';
+    } else warn.textContent = '';
+  }
+
+  /* ---------- history ---------- */
+  function renderHistory() {
+    var el = document.getElementById('history');
+    if (!state.games.length) {
+      el.innerHTML = '<div class="empty">まだ対局結果がありません。上の「対局入力」から記録してください。</div>';
+      return;
+    }
+    var html = '';
+    for (var gi = state.games.length - 1; gi >= 0; gi--) {
+      var g = state.games[gi];
+      var res = calcGame(g.mode, g.scores);
+      var order = g.scores.map(function (_, i) { return i; }).sort(function (a, b) { return res[a].rank - res[b].rank; });
+      html += '<div class="hrow"><span class="h-no">第' + (gi + 1) + '戦<span class="mode-badge">' + g.mode + '麻</span></span>' +
+        '<span class="h-res">' +
+        order.map(function (i) {
+          return '<span class="r"><span class="rk">' + res[i].rank + '位</span>' + ptag(g.pids[i]) +
+            '<span class="sc">' + g.scores[i].toLocaleString() + '点</span>' +
+            '<b class="' + ptClass(res[i].pt) + '">' + fmtPt(res[i].pt) + '</b></span>';
+        }).join('') +
+        '</span><span class="h-act">' +
+        '<button class="btn small" type="button" data-edit="' + gi + '">修正</button>' +
+        '<button class="btn small danger" type="button" data-del="' + gi + '">削除</button>' +
+        '</span></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  /* ---------- players ---------- */
+  function pidUsed(id) {
+    return state.games.some(function (g) { return g.pids.indexOf(id) >= 0; });
+  }
+  function renderPlayers() {
+    var el = document.getElementById('players-edit');
+    el.innerHTML = state.players.map(function (p) {
+      var used = pidUsed(p.id);
+      return '<div class="prow"><i class="dot" style="background:var(--p' + slot(p.id) + ')"></i>' +
+        '<input type="text" maxlength="12" data-player="' + p.id + '" value="' + esc(p.name) + '" aria-label="メンバー名">' +
+        '<button class="btn small danger" type="button" data-remove="' + p.id + '"' + (used ? ' disabled title="対局に参加済みのため削除できません"' : '') + '>削除</button></div>';
+    }).join('');
+  }
+
+  /* ---------- rules ---------- */
+  function renderRules() {
+    var r4 = state.rules.r4, r3 = state.rules.r3;
+    document.getElementById('r4-start').value = r4.start;
+    document.getElementById('r4-target').value = r4.target;
+    [0, 1, 2, 3].forEach(function (i) { document.getElementById('r4-u' + i).value = r4.uma[i]; });
+    document.getElementById('r3-start').value = r3.start;
+    document.getElementById('r3-target').value = r3.target;
+    [0, 1, 2].forEach(function (i) { document.getElementById('r3-u' + i).value = r3.uma[i]; });
+    document.getElementById('oka4').textContent = 'オカ: ' + fmtPt(okaFor(4)) + 'pt が1位に加算(ウマ合計 ' +
+      r4.uma.reduce(function (a, b) { return a + b; }, 0) + ')';
+    document.getElementById('oka3').textContent = 'オカ: ' + fmtPt(okaFor(3)) + 'pt が1位に加算(ウマ合計 ' +
+      r3.uma.reduce(function (a, b) { return a + b; }, 0) + ')';
+  }
+  function readRules() {
+    function num(id, fb) { var v = Number(document.getElementById(id).value); return isFinite(v) ? v : fb; }
+    state.rules.r4 = {
+      start: num('r4-start', 25000), target: num('r4-target', 30000),
+      uma: [num('r4-u0', 20), num('r4-u1', 10), num('r4-u2', -10), num('r4-u3', -20)]
+    };
+    state.rules.r3 = {
+      start: num('r3-start', 35000), target: num('r3-target', 40000),
+      uma: [num('r3-u0', 15), num('r3-u1', 0), num('r3-u2', -15)]
+    };
+    persist();
+    renderRules();
+    renderStandings();
+    renderChips();
+    renderHistory();
+    updateEntryState();
+  }
+
+  /* ---------- render all ---------- */
+  function renderAll() {
+    renderEntry();
+    renderStandings();
+    renderChips();
+    renderHistory();
+    renderPlayers();
+    renderRules();
+  }
+
+  /* ---------- events: entry ---------- */
+  document.getElementById('mode-4').addEventListener('click', function () {
+    if (entryMode !== 4) { entryMode = 4; picked = picked.slice(0, 4); renderEntry(); }
+  });
+  document.getElementById('mode-3').addEventListener('click', function () {
+    if (entryMode !== 3) { entryMode = 3; picked = picked.slice(0, 3); renderEntry(); }
+  });
+  document.getElementById('pick-row').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-pick]');
+    if (!b) return;
+    var id = Number(b.dataset.pick);
+    var i = picked.indexOf(id);
+    if (i >= 0) picked.splice(i, 1);
+    else if (picked.length < entryMode) picked.push(id);
+    renderEntry();
+  });
+  document.getElementById('entry-rows').addEventListener('input', updateEntryState);
+  document.getElementById('btn-autofill').addEventListener('click', function () {
+    var inputs = document.querySelectorAll('#entry-rows input');
+    var sum = 0, empty = null;
+    inputs.forEach(function (inp) {
+      if (inp.value.trim() === '') { empty = inp; return; }
+      var v = Number(inp.value);
+      if (isFinite(v)) sum += v;
+    });
+    if (!empty) return;
+    empty.value = rulesFor(entryMode).start * entryMode - sum;
+    updateEntryState();
+  });
+  document.getElementById('btn-save').addEventListener('click', function () {
+    var e = readScores();
+    if (picked.length !== entryMode || e.filled !== entryMode) return;
+    var target = rulesFor(entryMode).start * entryMode;
+    if (e.vals.reduce(function (a, b) { return a + b; }, 0) !== target) return;
+    var rec = { mode: entryMode, pids: picked.slice(), scores: e.vals.slice() };
+    var label;
+    if (editingIdx !== null) { state.games[editingIdx] = rec; label = '第' + (editingIdx + 1) + '戦を修正しました ✓'; }
+    else { state.games.push(rec); label = '第' + state.games.length + '戦を保存しました ✓'; }
+    editingIdx = null;
+    picked = [];
+    persist();
+    renderAll();
+    showToast(label);
+  });
+  document.getElementById('btn-cancel-edit').addEventListener('click', function () {
+    editingIdx = null;
+    picked = [];
+    renderEntry();
+  });
+
+  /* ---------- events: history ---------- */
+  document.getElementById('history').addEventListener('click', function (ev) {
+    var t = ev.target.closest('button');
+    if (!t) return;
+    if (t.dataset.del !== undefined) {
+      var gi = Number(t.dataset.del);
+      if (confirm('第' + (gi + 1) + '戦の結果を削除しますか?(以降の対局番号は詰まります)')) {
+        state.games.splice(gi, 1);
+        if (editingIdx !== null) { editingIdx = null; picked = []; }
+        persist();
+        renderAll();
+        showToast('削除しました');
+      }
+    } else if (t.dataset.edit !== undefined) {
+      var gj = Number(t.dataset.edit);
+      var g = state.games[gj];
+      editingIdx = gj;
+      entryMode = g.mode;
+      picked = g.pids.slice();
+      renderEntry();
+      var inputs = document.querySelectorAll('#entry-rows input');
+      inputs.forEach(function (inp, i) { inp.value = g.scores[i]; });
+      updateEntryState();
+      document.getElementById('entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
+  /* ---------- events: chips ---------- */
+  document.getElementById('chip-grid').addEventListener('input', function (ev) {
+    var inp = ev.target.closest('input[data-chip]');
+    if (!inp) return;
+    var id = Number(inp.dataset.chip);
+    if (inp.value.trim() === '') delete state.chips[id];
+    else state.chips[id] = Number(inp.value);
+    persist();
+    renderStandings();
+    /* update only the calc text + warning without rebuilding inputs (keeps focus) */
+    var cpt = chipPtFor(id);
+    var diff = state.chips[id] === undefined ? null : Number(state.chips[id]) - state.rules.chipBase;
+    var calc = inp.parentElement.querySelector('.chip-calc');
+    calc.innerHTML = diff === null ? '未入力' :
+      ((diff >= 0 ? '+' : '') + diff + '枚 → <b class="' + ptClass(cpt) + '">' + fmtPt(cpt) + 'pt</b>');
+  });
+  document.getElementById('chip-base').addEventListener('change', function () {
+    var v = Number(document.getElementById('chip-base').value);
+    state.rules.chipBase = isFinite(v) ? v : 20;
+    persist(); renderStandings(); renderChips();
+  });
+  document.getElementById('chip-pt').addEventListener('change', function () {
+    var v = Number(document.getElementById('chip-pt').value);
+    state.rules.chipPt = isFinite(v) ? v : 1;
+    persist(); renderStandings(); renderChips();
+  });
+
+  /* ---------- events: players ---------- */
+  document.getElementById('players-edit').addEventListener('input', function (ev) {
+    var inp = ev.target.closest('input[data-player]');
+    if (!inp) return;
+    var p = pById(Number(inp.dataset.player));
+    if (p) { p.name = inp.value.trim() || p.name; persist(); renderStandings(); renderChips(); renderHistory(); renderEntry(); }
+  });
+  document.getElementById('players-edit').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-remove]');
+    if (!b || b.disabled) return;
+    var id = Number(b.dataset.remove);
+    if (pidUsed(id)) return;
+    state.players = state.players.filter(function (p) { return p.id !== id; });
+    delete state.chips[id];
+    picked = picked.filter(function (x) { return x !== id; });
+    persist();
+    renderAll();
+  });
+  function addPlayer() {
+    var inp = document.getElementById('new-player');
+    var name = inp.value.trim();
+    if (!name) return;
+    state.players.push({ id: state.nextId++, name: name });
+    inp.value = '';
+    persist();
+    renderAll();
+    showToast(name + ' を追加しました');
+  }
+  document.getElementById('btn-add-player').addEventListener('click', addPlayer);
+  document.getElementById('new-player').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); addPlayer(); }
+  });
+
+  /* ---------- events: rules ---------- */
+  ['r4-start', 'r4-target', 'r4-u0', 'r4-u1', 'r4-u2', 'r4-u3',
+   'r3-start', 'r3-target', 'r3-u0', 'r3-u1', 'r3-u2'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', readRules);
+  });
+  document.querySelectorAll('[data-preset4]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = b.dataset.preset4.split(',').map(Number);
+      state.rules.r4 = { start: v[0], target: v[1], uma: [v[2], v[3], v[4], v[5]] };
+      persist(); renderRules(); renderStandings(); renderHistory(); updateEntryState();
+      showToast('4人打ちルールを変更しました');
+    });
+  });
+  document.querySelectorAll('[data-preset3]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = b.dataset.preset3.split(',').map(Number);
+      state.rules.r3 = { start: v[0], target: v[1], uma: [v[2], v[3], v[4]] };
+      persist(); renderRules(); renderStandings(); renderHistory(); updateEntryState();
+      showToast('3人打ちルールを変更しました');
+    });
+  });
+
+  /* ---------- share links ---------- */
+  var SHARE_URL = 'https://claude.ai/code/artifact/d5b6b25f-957c-4192-b295-18b7509907d0';
+  var BASE_KEY = 'street-scorer-shareurl';
+  function shareBase() {
+    var v = '';
+    try { v = localStorage.getItem(BASE_KEY) || ''; } catch (e) { /* blocked */ }
+    v = v.trim();
+    if (/^https?:\/\//.test(v)) return v.split('#')[0];
+    return /^https?:\/\//.test(SHARE_URL) ? SHARE_URL : (location.href.split('#')[0]);
+  }
+  function encodeState() {
+    var json = JSON.stringify({ v: 1, s: state, t: Date.now() });
+    return btoa(unescape(encodeURIComponent(json)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function decodeShare(code) {
+    try {
+      var b = code.replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var o = JSON.parse(decodeURIComponent(escape(atob(b))));
+      var st = o && o.s ? o.s : o;
+      if (isValidState(st)) return { state: st, t: o.t };
+    } catch (e) { /* invalid */ }
+    return null;
+  }
+  function extractCode(text) {
+    var m = String(text).match(/[#?&]d=([A-Za-z0-9\-_]+)/);
+    if (m) return m[1];
+    var t = String(text).trim();
+    return /^[A-Za-z0-9\-_]{16,}$/.test(t) ? t : null;
+  }
+  function importShared(dec, label) {
+    var when = dec.t ? new Date(dec.t).toLocaleString('ja-JP') : '日時不明';
+    if (confirm(label + '(' + when + ' 時点)を読み込みます。\nこのブラウザの今の記録は置き換えられます。よろしいですか?')) {
+      state = dec.state;
+      state.chips = state.chips || {};
+      editingIdx = null; picked = [];
+      persist();
+      renderAll();
+      showToast('共有データを読み込みました ✓');
+      return true;
+    }
+    return false;
+  }
+  var baseInput = document.getElementById('share-base');
+  baseInput.value = shareBase();
+  baseInput.addEventListener('change', function () {
+    var v = baseInput.value.trim();
+    try {
+      if (/^https?:\/\//.test(v)) localStorage.setItem(BASE_KEY, v.split('#')[0]);
+      else localStorage.removeItem(BASE_KEY);
+    } catch (e) { /* blocked */ }
+    baseInput.value = shareBase();
+  });
+  function makeShareLink() {
+    var link = shareBase() + '#d=' + encodeState();
+    var out = document.getElementById('share-out');
+    out.value = link;
+    out.focus();
+    out.select();
+    var btn = document.getElementById('btn-share');
+    function done(ok) {
+      btn.textContent = ok ? 'コピーしました ✓' : 'リンクを選択したのでコピーしてください';
+      setTimeout(function () { btn.textContent = '共有リンクを作成してコピー'; }, 2200);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function () { done(true); }, function () { done(false); });
+    } else done(false);
+  }
+  document.getElementById('btn-share').addEventListener('click', makeShareLink);
+  document.getElementById('btn-share-top').addEventListener('click', function () {
+    document.getElementById('share').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    makeShareLink();
+  });
+  document.getElementById('btn-load-link').addEventListener('click', function () {
+    var inp = document.getElementById('share-in');
+    var code = extractCode(inp.value);
+    var dec = code && decodeShare(code);
+    if (!dec) { alert('このリンクは読み込めません。「共有リンクを作成してコピー」で作ったURLを貼り付けてください。'); return; }
+    if (importShared(dec, '共有リンクのデータ')) inp.value = '';
+  });
+
+  /* ---------- file / reset ---------- */
+  document.getElementById('btn-export').addEventListener('click', function () {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'set-mahjong-backup.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById('btn-import').addEventListener('click', function () {
+    document.getElementById('file-import').click();
+  });
+  document.getElementById('file-import').addEventListener('change', function (ev) {
+    var f = ev.target.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var o = JSON.parse(reader.result);
+        if (!isValidState(o)) throw new Error('bad shape');
+        if (confirm('読み込んだデータで現在の記録を置き換えます。よろしいですか?')) {
+          state = o;
+          state.chips = state.chips || {};
+          editingIdx = null; picked = [];
+          persist();
+          renderAll();
+          showToast('ファイルを読み込みました ✓');
+        }
+      } catch (e) {
+        alert('このファイルは読み込めません。「書き出し」で保存したJSONファイルを選んでください。');
+      }
+      ev.target.value = '';
+    };
+    reader.readAsText(f);
+  });
+  document.getElementById('btn-reset').addEventListener('click', function () {
+    if (confirm('全ての対局結果・チップ・メンバーを削除します。この操作は取り消せません。よろしいですか?')) {
+      state = defaultState();
+      editingIdx = null; picked = [];
+      persist();
+      renderAll();
+    }
+  });
+
+  renderAll();
+
+  /* boot: load from share hash if present */
+  (function () {
+    var code = extractCode(location.hash || '');
+    if (!code) return;
+    var dec = decodeShare(code);
+    if (!dec) return;
+    if (JSON.stringify(dec.state) === JSON.stringify(state)) return;
+    importShared(dec, '共有リンクに入っているデータ');
+  })();
+
+  /* committed baseline: when served next to street-data.json (e.g. GitHub Pages),
+     restore it automatically if this browser has no records */
+  (function () {
+    if (typeof fetch !== 'function') return;
+    fetch('street-data.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (o) {
+        if (!o) return;
+        var st = o && o.s ? o.s : o;
+        if (!isValidState(st)) return;
+        if (st && !st.chips) st.chips = {};
+        var localEmpty = state.games.length === 0 && Object.keys(state.chips).length === 0;
+        if (!localEmpty) return; /* local records win */
+        state = st;
+        persist();
+        renderAll();
+        showToast('保存版データを復元しました \u2713');
+      })
+      .catch(function () { /* no baseline file / blocked */ });
+  })();
+})();
+</script>

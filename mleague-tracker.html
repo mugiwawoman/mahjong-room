@@ -397,7 +397,13 @@
   }
   .share-note { margin: 0 0 14px; }
   .share-label { font-size: 12px; font-weight: 700; color: var(--ink2); white-space: nowrap; }
-  .gh-status { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .gh-status { font-size: 12px; color: var(--muted); }
+  details.adv { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+  details.adv summary {
+    cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--ink2);
+    list-style-position: inside; margin-bottom: 10px;
+  }
+  details.adv summary:hover { color: var(--ink); }
 
   footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
   footer b { color: var(--ink2); }
@@ -417,7 +423,7 @@
       <h1>T.LEAGUE</h1>
     </div>
     <div class="mast-actions">
-      <button class="btn primary" id="btn-share-top" type="button">共有リンク</button>
+      <button class="btn primary" id="btn-share-top" type="button">URLをコピー</button>
       <a class="btn" href="#rules">ルール</a>
       <a class="btn" href="#share">共有・バックアップ</a>
     </div>
@@ -543,10 +549,20 @@
   <section class="card" id="share">
     <h2>共有・バックアップ</h2>
     <div class="share-row">
-      <button class="btn primary" id="btn-share" type="button">共有リンクを作成してコピー</button>
-      <input id="share-out" readonly placeholder="ここに共有リンクが表示されます" aria-label="共有リンク">
+      <button class="btn primary" id="btn-copy-url" type="button">このページのURLをコピー</button>
+      <span class="gh-status">メンバーにはこのURLを送るだけ。開けば常に最新の成績が表示されます。</span>
     </div>
-    <p class="note share-note">現在の成績・組み合わせがすべて入ったURLです。メンバーに送ると、開いた人(または下の欄に貼り付けた人)が同じ画面を見られます。結果を編集したら新しいリンクを送り直してください。</p>
+    <div class="share-row">
+      <span class="share-label">GitHub自動保存</span>
+      <input id="gh-token" type="password" placeholder="Fine-grainedトークンを貼って「設定」" aria-label="GitHub自動保存トークン">
+      <button class="btn" id="btn-gh-save" type="button">設定</button>
+      <span class="gh-status" id="gh-status"></span>
+    </div>
+    <p class="note share-note">設定すると結果を保存するたびにリポジトリのleague-data.jsonへ自動コミットされ、メンバー全員のページに自動反映されます(空欄で「設定」を押すとオフ)。トークンはこのブラウザの中にだけ保存され、共有リンクには含まれません。</p>
+    <details class="adv">
+      <summary>詳細ツール(共有リンク・ファイル入出力・削除)</summary>
+
+    <p class="note share-note">共有リンク(#d=…)はデータそのものを埋め込んだURLです。自動保存が使えない時のバックアップ・引っ越しに使えます。</p>
     <div class="share-row">
       <input id="share-in" placeholder="受け取った共有リンクをここに貼り付け" aria-label="共有リンクの読み込み">
       <button class="btn" id="btn-load-link" type="button">リンクを読み込み</button>
@@ -557,19 +573,18 @@
       <input id="share-base" aria-label="共有リンクのベースURL">
     </div>
     <p class="note share-note">共有リンクの先頭に使うURLです。このページを共有メニューで公開したら、その公開URLをここに貼ると、以後の共有リンクはログイン不要で開けるものになります。</p>
-    <div class="share-row">
-      <span class="share-label">GitHub自動保存</span>
-      <input id="gh-token" type="password" placeholder="Fine-grainedトークンを貼って「設定」" aria-label="GitHub自動保存トークン">
-      <button class="btn" id="btn-gh-save" type="button">設定</button>
-      <span class="gh-status" id="gh-status"></span>
-    </div>
-    <p class="note share-note">設定すると結果を保存するたびにリポジトリのleague-data.jsonへ自動コミットされ、メンバー全員のページに自動反映されます(空欄で「設定」を押すとオフ)。トークンはこのブラウザの中にだけ保存され、共有リンクには含まれません。</p>
+      <div class="share-row">
+        <button class="btn" id="btn-share" type="button">共有リンクを作成してコピー</button>
+        <input id="share-out" readonly placeholder="ここに共有リンクが表示されます" aria-label="共有リンク">
+      </div>
+
     <div class="share-row">
       <button class="btn" id="btn-export" type="button">ファイルに書き出し</button>
       <button class="btn" id="btn-import" type="button">ファイルから読み込み</button>
       <input type="file" id="file-import" accept="application/json" hidden>
       <button class="btn danger" id="btn-reset" type="button">全データ削除</button>
     </div>
+      </details>
   </section>
 
   <div id="toast" role="status" aria-live="polite"></div>
@@ -1417,11 +1432,16 @@
       navigator.clipboard.writeText(link).then(function () { done(true); }, function () { done(false); });
     } else { done(false); }
   }
+  function copyPageUrl() {
+    var url = shareBase();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { showToast('URLをコピーしました \u2713'); },
+        function () { prompt('このURLをコピーしてください', url); });
+    } else { prompt('このURLをコピーしてください', url); }
+  }
+  document.getElementById('btn-copy-url').addEventListener('click', copyPageUrl);
   document.getElementById('btn-share').addEventListener('click', makeShareLink);
-  document.getElementById('btn-share-top').addEventListener('click', function () {
-    document.getElementById('share').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    makeShareLink();
-  });
+  document.getElementById('btn-share-top').addEventListener('click', copyPageUrl);
   document.getElementById('btn-load-link').addEventListener('click', function () {
     var inp = document.getElementById('share-in');
     var code = extractCode(inp.value);

@@ -397,6 +397,7 @@
   }
   .share-note { margin: 0 0 14px; }
   .share-label { font-size: 12px; font-weight: 700; color: var(--ink2); white-space: nowrap; }
+  .gh-status { font-size: 12px; color: var(--muted); white-space: nowrap; }
 
   footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
   footer b { color: var(--ink2); }
@@ -557,6 +558,13 @@
     </div>
     <p class="note share-note">共有リンクの先頭に使うURLです。このページを共有メニューで公開したら、その公開URLをここに貼ると、以後の共有リンクはログイン不要で開けるものになります。</p>
     <div class="share-row">
+      <span class="share-label">GitHub自動保存</span>
+      <input id="gh-token" type="password" placeholder="Fine-grainedトークンを貼って「設定」" aria-label="GitHub自動保存トークン">
+      <button class="btn" id="btn-gh-save" type="button">設定</button>
+      <span class="gh-status" id="gh-status"></span>
+    </div>
+    <p class="note share-note">設定すると結果を保存するたびにリポジトリのleague-data.jsonへ自動コミットされ、メンバー全員のページに自動反映されます(空欄で「設定」を押すとオフ)。トークンはこのブラウザの中にだけ保存され、共有リンクには含まれません。</p>
+    <div class="share-row">
       <button class="btn" id="btn-export" type="button">ファイルに書き出し</button>
       <button class="btn" id="btn-import" type="button">ファイルから読み込み</button>
       <input type="file" id="file-import" accept="application/json" hidden>
@@ -599,15 +607,17 @@
   function load() {
     try {
       var raw = localStorage.getItem(LS_KEY);
-      if (raw) { var o = JSON.parse(raw); if (isValidState(o)) { o.map = o.map || {}; return o; } }
+      if (raw) { var o = JSON.parse(raw); if (isValidState(o)) { o.map = o.map || {}; o.t = o.t || Date.now(); return o; } }
     } catch (e) { /* fall through */ }
     return defaultState();
   }
-  function persist() {
+  function persist(skipAutoPush) {
+    state.t = Date.now();
     try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ }
     /* keep the page URL carrying the latest data, so bookmarks and
        re-shared URLs always restore state even on another browser */
     try { history.replaceState(null, '', '#d=' + encodeState()); } catch (e) { /* sandboxed */ }
+    if (!skipAutoPush) scheduleAutoPush();
   }
   var state = load();
 
@@ -1444,6 +1454,61 @@
 
   renderAll();
 
+  /* ---------- GitHub auto-save (owner only; token stays in this browser) ---------- */
+  var GH_KEY = 'mahjong-room-ghtoken';
+  var GH_API = 'https://api.github.com/repos/mugiwawoman/mahjong-room/contents/league-data.json';
+  function ghToken() { try { return (localStorage.getItem(GH_KEY) || '').trim(); } catch (e) { return ''; } }
+  function setGhStatus(msg) { document.getElementById('gh-status').textContent = msg; }
+  var pushTimer = null;
+  function scheduleAutoPush() {
+    if (!ghToken()) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(autoPush, 1500);
+  }
+  function autoPush() {
+    var token = ghToken();
+    if (!token || typeof fetch !== 'function') return;
+    var headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+    var body = JSON.stringify({ players: state.players, results: state.results, map: state.map, t: state.t }, null, 2);
+    setGhStatus('保存中…');
+    fetch(GH_API, { headers: headers, cache: 'no-store' })
+      .then(function (r) { return r.status === 404 ? null : r.json(); })
+      .then(function (cur) {
+        var payload = {
+          message: 'S\u30ea\u30fc\u30b0\u306e\u6210\u7e3e\u3092\u81ea\u52d5\u4fdd\u5b58',
+          content: btoa(unescape(encodeURIComponent(body)))
+        };
+        if (cur && cur.sha) payload.sha = cur.sha;
+        return fetch(GH_API, { method: 'PUT', headers: headers, body: JSON.stringify(payload) });
+      })
+      .then(function (r) {
+        if (r && r.ok) { setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
+        else { setGhStatus('自動保存に失敗(トークンの権限・期限を確認)'); }
+      })
+      .catch(function () { setGhStatus('自動保存に失敗(通信エラー)'); });
+  }
+  function refreshGhUI() {
+    var has = !!ghToken();
+    document.getElementById('gh-token').value = has ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '';
+    setGhStatus(has ? '自動保存 ON' : '未設定(手動運用)');
+  }
+  document.getElementById('btn-gh-save').addEventListener('click', function () {
+    var inp = document.getElementById('gh-token');
+    var v = inp.value.trim();
+    if (v === '') {
+      try { localStorage.removeItem(GH_KEY); } catch (e) { /* blocked */ }
+      refreshGhUI();
+      showToast('自動保存をオフにしました');
+      return;
+    }
+    if (v === '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') { showToast('トークンは設定済みです'); return; }
+    try { localStorage.setItem(GH_KEY, v); } catch (e) { /* blocked */ }
+    refreshGhUI();
+    showToast('自動保存を設定しました。テスト保存します…');
+    autoPush();
+  });
+  refreshGhUI();
+
   /* if opened via a share link, offer to load its data */
   (function () {
     var code = extractCode(location.hash || '');
@@ -1459,16 +1524,22 @@
   (function () {
     if (typeof fetch !== 'function') return;
     fetch('league-data.json', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        return fetch('leaguedata.json', { cache: 'no-store' })
+          .then(function (r2) { return r2.ok ? r2.json() : null; });
+      })
       .then(function (o) {
         if (!o) return;
         var st = o && o.p ? { players: o.p, results: o.r, map: o.m || {} } : o;
         if (!isValidState(st)) return;
-        if (Object.keys(state.results).length > 0) return; /* local records win */
+        var localEmpty = Object.keys(state.results).length === 0;
+        var newer = o.t && o.t > (state.t || 0);
+        if (!localEmpty && !newer) return; /* local records win unless baseline is newer */
         state = { players: st.players, results: st.results, map: st.map || {} };
-        persist();
+        persist(true); /* adopting the baseline: no need to push it back */
         renderAll();
-        showToast('保存版データを復元しました \u2713');
+        showToast('保存版データを読み込みました \u2713');
       })
       .catch(function () { /* no baseline file / blocked */ });
   })();

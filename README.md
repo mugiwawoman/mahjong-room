@@ -11,6 +11,19 @@
 - どちらのアプリもHTML1枚で完結。ブラウザで開くだけで動きます
 - `index.html` は両アプリへの入口ページ
 
+## 全自動同期(推奨・記録係だけ設定)
+
+記録係のブラウザにGitHubトークンを1回設定すると、**結果を保存するたびに成績が自動でこのリポジトリにコミット**され、メンバー全員のページに自動反映されます。
+
+1. GitHub → Settings → Developer settings → **Fine-grained personal access tokens** → Generate new token
+   - Repository access: **Only select repositories → mahjong-room**
+   - Permissions: **Contents → Read and write**(それ以外は不要)
+   - 有効期限はお好みで(切れたら再発行して貼り直し)
+2. トークンをコピーして、トラッカーの「共有・バックアップ」→ **GitHub自動保存**欄に貼って「設定」
+3. 以後は何もしなくてOK。リーグとセットの両アプリで共通のトークンが使われます
+
+トークンは設定したブラウザの中にだけ保存され、共有リンクやこのリポジトリには含まれません。
+
 ## データが絶対に消えない運用
 
 アプリのデータは「ブラウザ保存+URL埋め込み(#d=…)」に加えて、**このリポジトリを保存版(バックアップの親玉)にできます**:

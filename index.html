@@ -5,24 +5,138 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>麻雀部屋</title>
 <style>
-  body { font-family: system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
-         background: #f4f1e8; color: #1c1e1a; margin: 0; padding: 40px 20px; }
-  .wrap { max-width: 560px; margin: 0 auto; }
-  h1 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 30px; letter-spacing: .05em; }
-  a.room { display: block; text-decoration: none; color: inherit; border-radius: 12px;
-           padding: 20px 22px; margin: 14px 0; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
-  a.room b { font-size: 18px; }
-  a.room span { display: block; font-size: 13px; margin-top: 4px; opacity: .85; }
-  .league { background: linear-gradient(160deg, #0d5f45, #0a4e39); color: #e9f7ef; }
-  .street { background: linear-gradient(160deg, #2b3568, #202950); color: #eceffc; }
-  @media (prefers-color-scheme: dark) { body { background: #101210; color: #ececec; } }
+  :root {
+    --bg: #f2efe5;
+    --ink: #211f1a;
+    --ink2: #5c584e;
+    --muted: #8b877c;
+    --tile: #fbf9ef;
+    --tile-edge: #d8d4c0;
+    --hatsu: #0d6b4a;
+    --chun: #b23a2e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f110f;
+      --ink: #f0eee6;
+      --ink2: #bcb8ab;
+      --muted: #878378;
+      --tile: #f4f1e2;
+      --tile-edge: #b9b5a0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 52px 20px 60px; }
+
+  header { text-align: center; margin-bottom: 34px; }
+  .mark {
+    width: 58px; height: 70px; margin: 0 auto 14px; border-radius: 8px;
+    background: linear-gradient(180deg, var(--tile), #e9e5d2);
+    border: 1px solid var(--tile-edge);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .7);
+    display: grid; place-items: center;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 32px; font-weight: 700; color: #b23a2e;
+  }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 34px; font-weight: 700; margin: 0; letter-spacing: .14em; line-height: 1.3;
+  }
+  .lede { margin: 8px 0 0; font-size: 13.5px; color: var(--ink2); letter-spacing: .04em; }
+
+  .rooms { display: flex; flex-direction: column; gap: 16px; }
+  a.room {
+    display: flex; align-items: center; gap: 18px;
+    text-decoration: none; border-radius: 14px; padding: 20px 22px;
+    box-shadow: 0 2px 6px rgba(15, 15, 10, .12), 0 10px 26px rgba(15, 15, 10, .10);
+  }
+  a.room:hover { filter: brightness(1.05); }
+  a.room:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .room-tile {
+    flex: none; width: 52px; height: 64px; border-radius: 7px;
+    background: linear-gradient(180deg, var(--tile), #e9e5d2);
+    border: 1px solid var(--tile-edge);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .7);
+    display: grid; place-items: center;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: 28px; font-weight: 700;
+  }
+  .room-body b { display: block; font-size: 19px; letter-spacing: .03em; line-height: 1.4; }
+  .room-body span { display: block; font-size: 13px; margin-top: 3px; line-height: 1.55; }
+  .room-arrow { margin-left: auto; font-size: 18px; opacity: .7; flex: none; }
+
+  .league { background: linear-gradient(160deg, #0e6247, #0a4a36); }
+  .league .room-body b, .league .room-arrow { color: #f2fbf6; }
+  .league .room-body span { color: #b9dcc9; }
+  .league .room-tile { color: var(--hatsu); }
+
+  .street { background: linear-gradient(160deg, #2d3970, #1f2850); }
+  .street .room-body b, .street .room-arrow { color: #f0f3fd; }
+  .street .room-body span { color: #b3bdde; }
+  .street .room-tile { color: #2f3b4b; }
+
+  .scoring { background: linear-gradient(160deg, #a83a2e, #832a20); }
+  .scoring .room-body b, .scoring .room-arrow { color: #fdf2ec; }
+  .scoring .room-body span { color: #ecc0b4; }
+  .scoring .room-tile { color: var(--chun); }
+
+  footer { margin-top: 36px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.9; }
+
+  @media (max-width: 480px) {
+    .wrap { padding-top: 40px; }
+    h1 { font-size: 28px; }
+    a.room { padding: 17px 18px; gap: 14px; }
+    .room-tile { width: 46px; height: 57px; font-size: 24px; }
+    .room-body b { font-size: 17px; }
+    .room-body span { font-size: 12.5px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a.room { transition: transform .15s ease, filter .15s ease; }
+    a.room:hover { transform: translateY(-2px); }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>麻雀部屋 🀄</h1>
-  <a class="room league" href="mleague-tracker.html"><b>社内Sリーグ</b><span>Mリーグルール準拠・5人ローテーション・週2半荘</span></a>
-  <a class="room street" href="street-scorer.html"><b>セット麻雀スコアラー</b><span>3麻・4麻対応/メンバー自由/チップpt換算</span></a>
+  <header>
+    <div class="mark" aria-hidden="true">中</div>
+    <h1>麻雀部屋</h1>
+    <p class="lede">記録も、点数計算も、ぜんぶこの部屋で。</p>
+  </header>
+  <nav class="rooms" aria-label="部屋の一覧">
+    <a class="room league" href="mleague-tracker.html">
+      <span class="room-tile" aria-hidden="true">發</span>
+      <span class="room-body">
+        <b>社内Sリーグ</b>
+        <span>Mリーグルール準拠・5人ローテーション。順位表・個人賞・次の対局の座席まで自動管理</span>
+      </span>
+      <span class="room-arrow" aria-hidden="true">→</span>
+    </a>
+    <a class="room street" href="street-scorer.html">
+      <span class="room-tile" aria-hidden="true">東</span>
+      <span class="room-body">
+        <b>セット麻雀スコアラー</b>
+        <span>3麻・4麻対応/その日の面子でポイント記録。ウマ・オカ設定とチップpt換算つき</span>
+      </span>
+      <span class="room-arrow" aria-hidden="true">→</span>
+    </a>
+    <a class="room scoring" href="scoring.html">
+      <span class="room-tile" aria-hidden="true">中</span>
+      <span class="room-body">
+        <b>麻雀の点数下敷き</b>
+        <span>初心者向け。タップで点数計算・符計算チェックリスト・早見表と役一覧</span>
+      </span>
+      <span class="room-arrow" aria-hidden="true">→</span>
+    </a>
+  </nav>
+  <footer>データは各アプリ内で保存・共有できます/ブックマーク推奨</footer>
 </div>
 </body>
 </html>

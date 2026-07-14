@@ -1071,7 +1071,7 @@
     clearTimeout(pushTimer);
     pushTimer = setTimeout(autoPush, 1500);
   }
-  function autoPush() {
+  function autoPush(isRetry) {
     var token = ghToken();
     if (!token || typeof fetch !== 'function') return;
     var headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
@@ -1089,9 +1089,16 @@
       })
       .then(function (r) {
         if (r && r.ok) { setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
-        else { setGhStatus('自動保存に失敗(トークンの権限・期限を確認)'); }
+        else if (r && r.status === 409 && !isRetry) { autoPush(true); }
+        else {
+          setGhStatus('自動保存に失敗(トークンの権限・期限を確認)');
+          showToast('\u26a0 自動保存に失敗しました — トークンを確認してください');
+        }
       })
-      .catch(function () { setGhStatus('自動保存に失敗(通信エラー)'); });
+      .catch(function () {
+        setGhStatus('自動保存に失敗(通信エラー)');
+        showToast('\u26a0 自動保存に失敗(通信エラー)。電波のある所で保存し直してください');
+      });
   }
   function refreshGhUI() {
     var has = !!ghToken();
@@ -1131,10 +1138,10 @@
      restore it automatically if this browser has no records */
   (function () {
     if (typeof fetch !== 'function') return;
-    fetch('street-data.json', { cache: 'no-store' })
+    fetch('street-data.json?v=' + Date.now(), { cache: 'no-store' })
       .then(function (r) {
         if (r.ok) return r.json();
-        return fetch('streetdata.json', { cache: 'no-store' })
+        return fetch('streetdata.json?v=' + Date.now(), { cache: 'no-store' })
           .then(function (r2) { return r2.ok ? r2.json() : null; });
       })
       .then(function (o) {
@@ -1144,7 +1151,10 @@
         if (st && !st.chips) st.chips = {};
         var bt = (o && o.t) || (st && st.t) || 0;
         var localEmpty = state.games.length === 0 && Object.keys(state.chips).length === 0;
-        if (!localEmpty && !(bt && bt > (state.t || 0))) return; /* local wins unless baseline is newer */
+        if (!localEmpty && !(bt && bt > (state.t || 0))) {
+          if (ghToken() && state.t && (!bt || state.t > bt)) scheduleAutoPush();
+          return;
+        }
         state = st;
         editingIdx = null; picked = [];
         persist(true); /* adopting the baseline: no need to push it back */

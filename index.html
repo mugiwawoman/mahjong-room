@@ -36,15 +36,30 @@
   .wrap { max-width: 620px; margin: 0 auto; padding: 52px 20px 60px; }
 
   header { text-align: center; margin-bottom: 34px; }
-  .mark {
-    width: 58px; height: 70px; margin: 0 auto 14px; border-radius: 8px;
+  .kokushi { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; margin: 0 auto 16px; max-width: 440px; }
+  .kt {
+    width: 27px; height: 36px; border-radius: 4px;
     background: linear-gradient(180deg, var(--tile), #e9e5d2);
     border: 1px solid var(--tile-edge);
-    box-shadow: 0 3px 0 rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .7);
-    display: grid; place-items: center;
+    box-shadow: 0 3px 0 #4e8a68, 0 5px 7px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .75);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
-    font-size: 32px; font-weight: 700; color: #b23a2e;
+    font-weight: 700; line-height: 1.05;
   }
+  .kt svg { display: block; }
+  .kt.haku { position: relative; }
+  .kt.haku::after {
+    content: ''; position: absolute; inset: 4px 4px 5px 4px;
+    border: 1.5px solid #9fb8dc; border-radius: 3px;
+  }
+  .kt i, .kt b { font-style: normal; font-weight: 700; font-size: 11.5px; }
+  .kt.man i { color: #26251f; }
+  .kt.man b { color: #b23a2e; }
+  .kt.pin i, .kt.pin b { color: #2d5aa8; }
+  .kt.sou i, .kt.sou b { color: #0d6b4a; }
+  .kt.wind { font-size: 16px; color: #26251f; }
+  .kt.hatsu { font-size: 16px; color: #0d6b4a; }
+  .kt.chun { font-size: 16px; color: #b23a2e; }
   h1 {
     font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
     font-size: 34px; font-weight: 700; margin: 0; letter-spacing: .14em; line-height: 1.3;
@@ -63,7 +78,7 @@
     flex: none; width: 52px; height: 64px; border-radius: 7px;
     background: linear-gradient(180deg, var(--tile), #e9e5d2);
     border: 1px solid var(--tile-edge);
-    box-shadow: 0 2px 0 rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .7);
+    box-shadow: 0 4px 0 #4e8a68, 0 7px 10px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .75);
     display: grid; place-items: center;
     font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
     font-size: 28px; font-weight: 700;
@@ -76,6 +91,12 @@
   .league .room-body b, .league .room-arrow { color: #f2fbf6; }
   .league .room-body span { color: #b9dcc9; }
   .league .room-tile { color: var(--hatsu); }
+  .room-tile.suit { flex-direction: column; line-height: 1.05; }
+  .room-tile.suit i, .room-tile.suit b { font-style: normal; font-weight: 700; }
+  .tman i { font-size: 19px; color: #26251f; }
+  .tman b { font-size: 21px; color: #b23a2e; }
+  .pin1 { display: block; }
+  .sou1 { display: block; }
 
   .street { background: linear-gradient(160deg, #2d3970, #1f2850); }
   .street .room-body b, .street .room-arrow { color: #f0f3fd; }
@@ -106,13 +127,50 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="mark" aria-hidden="true">中</div>
+    <div class="kokushi" aria-hidden="true">
+      <span class="kt man"><i>一</i><b>萬</b></span>
+      <span class="kt man"><i>九</i><b>萬</b></span>
+      <span class="kt"><svg viewBox="0 0 40 40" width="21" height="21">
+        <circle cx="20" cy="20" r="17" fill="none" stroke="#2d5aa8" stroke-width="3.2" stroke-dasharray="3.2 2"/>
+        <circle cx="20" cy="20" r="11.5" fill="none" stroke="#b23a2e" stroke-width="2.6"/>
+        <circle cx="20" cy="20" r="6.5" fill="#2d5aa8"/>
+        <circle cx="20" cy="20" r="2.2" fill="#fbf9ef"/>
+      </svg></span>
+      <span class="kt"><svg viewBox="0 0 40 40" width="21" height="21">
+        <g fill="#2d5aa8"><circle cx="8" cy="8" r="4.6"/><circle cx="20" cy="8" r="4.6"/><circle cx="32" cy="8" r="4.6"/></g>
+        <g fill="#b23a2e"><circle cx="8" cy="20" r="4.6"/><circle cx="20" cy="20" r="4.6"/><circle cx="32" cy="20" r="4.6"/></g>
+        <g fill="#2d5aa8"><circle cx="8" cy="32" r="4.6"/><circle cx="20" cy="32" r="4.6"/><circle cx="32" cy="32" r="4.6"/></g>
+        <g fill="#fbf9ef"><circle cx="8" cy="8" r="1.4"/><circle cx="20" cy="8" r="1.4"/><circle cx="32" cy="8" r="1.4"/><circle cx="8" cy="20" r="1.4"/><circle cx="20" cy="20" r="1.4"/><circle cx="32" cy="20" r="1.4"/><circle cx="8" cy="32" r="1.4"/><circle cx="20" cy="32" r="1.4"/><circle cx="32" cy="32" r="1.4"/></g>
+      </svg></span>
+      <span class="kt"><svg viewBox="0 0 40 56" width="15" height="21">
+        <path d="M20 45 C 13 49, 8 52, 5 55" stroke="#0d6b4a" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <path d="M20 45 C 18 50, 17 53, 16 55.5" stroke="#b23a2e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <path d="M20 45 C 27 49, 32 52, 35 55" stroke="#2ba071" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <ellipse cx="20" cy="31" rx="10" ry="14" fill="#0d6b4a"/>
+        <path d="M14 24 C 10 30, 10 38, 14 42 C 17 38, 17 28, 14 24 Z" fill="#2ba071"/>
+        <circle cx="19.5" cy="8.5" r="5.8" fill="#0d6b4a"/>
+        <path d="M24.5 7.5 L 32.5 6.5 L 25 11 Z" fill="#b23a2e"/>
+        <circle cx="21" cy="7" r="1.5" fill="#fbf9ef"/>
+      </svg></span>
+      <span class="kt"><svg viewBox="0 0 40 40" width="21" height="21">
+        <g fill="#0d6b4a"><rect x="5.5" y="3" width="4" height="10" rx="2"/><rect x="18" y="3" width="4" height="10" rx="2"/><rect x="30.5" y="3" width="4" height="10" rx="2"/></g>
+        <g><rect x="5.5" y="15" width="4" height="10" rx="2" fill="#0d6b4a"/><rect x="18" y="15" width="4" height="10" rx="2" fill="#b23a2e"/><rect x="30.5" y="15" width="4" height="10" rx="2" fill="#0d6b4a"/></g>
+        <g fill="#0d6b4a"><rect x="5.5" y="27" width="4" height="10" rx="2"/><rect x="18" y="27" width="4" height="10" rx="2"/><rect x="30.5" y="27" width="4" height="10" rx="2"/></g>
+      </svg></span>
+      <span class="kt wind">東</span>
+      <span class="kt wind">南</span>
+      <span class="kt wind">西</span>
+      <span class="kt wind">北</span>
+      <span class="kt haku"></span>
+      <span class="kt hatsu">發</span>
+      <span class="kt chun">中</span>
+    </div>
     <h1>麻雀部屋</h1>
     <p class="lede">記録も、点数計算も、ぜんぶこの部屋で。</p>
   </header>
   <nav class="rooms" aria-label="部屋の一覧">
     <a class="room league" href="mleague-tracker.html">
-      <span class="room-tile" aria-hidden="true">發</span>
+      <span class="room-tile suit tman" aria-hidden="true"><i>一</i><b>萬</b></span>
       <span class="room-body">
         <b>社内Sリーグ</b>
         <span>Mリーグルール準拠・5人ローテーション。順位表・個人賞・次の対局の座席まで自動管理</span>
@@ -120,7 +178,13 @@
       <span class="room-arrow" aria-hidden="true">→</span>
     </a>
     <a class="room street" href="street-scorer.html">
-      <span class="room-tile" aria-hidden="true">東</span>
+      <span class="room-tile suit" aria-hidden="true"><svg class="pin1" viewBox="0 0 40 40" width="36" height="36">
+        <circle cx="20" cy="20" r="17.5" fill="none" stroke="#2d5aa8" stroke-width="3" stroke-dasharray="3.2 2"/>
+        <circle cx="20" cy="20" r="12" fill="none" stroke="#b23a2e" stroke-width="2.6"/>
+        <circle cx="20" cy="20" r="12" fill="none" stroke="#b23a2e" stroke-width="1" stroke-dasharray="1.2 3.5" transform="rotate(8 20 20)"/>
+        <circle cx="20" cy="20" r="7" fill="#2d5aa8"/>
+        <path d="M20 15.6 L 21.3 18.4 L 24.4 18.8 L 22.2 21 L 22.7 24 L 20 22.6 L 17.3 24 L 17.8 21 L 15.6 18.8 L 18.7 18.4 Z" fill="#fbf9ef"/>
+      </svg></span>
       <span class="room-body">
         <b>セット麻雀スコアラー</b>
         <span>3麻・4麻対応/その日の面子でポイント記録。ウマ・オカ設定とチップpt換算つき</span>
@@ -128,7 +192,22 @@
       <span class="room-arrow" aria-hidden="true">→</span>
     </a>
     <a class="room scoring" href="scoring.html">
-      <span class="room-tile" aria-hidden="true">中</span>
+      <span class="room-tile suit" aria-hidden="true"><svg class="sou1" viewBox="0 0 40 56" width="32" height="45">
+        <path d="M20 44 C 12 48, 7 51, 4 54.5" stroke="#0d6b4a" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <path d="M20 44 C 17 49, 16 52, 15.5 55" stroke="#b23a2e" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <path d="M20 44 C 23 49, 24 52, 24.5 55" stroke="#0d6b4a" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <path d="M20 44 C 28 48, 33 51, 36 54.5" stroke="#2ba071" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        <ellipse cx="20" cy="30.5" rx="10" ry="14.5" fill="#0d6b4a"/>
+        <path d="M14 22.5 C 9.5 29, 9.5 38, 14 42.5 C 17.5 38, 17.5 27, 14 22.5 Z" fill="#2ba071"/>
+        <path d="M24 25 C 28 30, 28 37, 24.5 41.5" stroke="#b23a2e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M20 21 C 20 16, 18.5 13, 19.3 9.5" stroke="#0d6b4a" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <circle cx="19.5" cy="8.5" r="6" fill="#0d6b4a"/>
+        <path d="M24.8 7.2 L 33.5 6 L 25.3 11.2 Z" fill="#b23a2e"/>
+        <circle cx="21.3" cy="7" r="1.6" fill="#fbf9ef"/>
+        <path d="M16.5 3.6 C 15 2, 14.5 1.4, 14 0.7" stroke="#b23a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M19.5 3 C 19.2 2, 19.2 1.4, 19.4 0.7" stroke="#b23a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M22.5 3.4 C 23.5 2.2, 24 1.6, 24.6 0.9" stroke="#b23a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg></span>
       <span class="room-body">
         <b>麻雀の点数下敷き</b>
         <span>初心者向け。タップで点数計算・符計算チェックリスト・早見表と役一覧</span>

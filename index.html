@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>麻雀部屋</title>
+<title>麻雀部屋|第一期Tリーグ</title>
 <style>
   :root {
     --bg: #f2efe5;
@@ -60,11 +60,15 @@
   .kt.wind { font-size: 16px; color: #26251f; }
   .kt.hatsu { font-size: 16px; color: #0d6b4a; }
   .kt.chun { font-size: 16px; color: #b23a2e; }
+  .eyebrow {
+    margin: 0 0 6px; font-size: 12.5px; font-weight: 700; color: var(--ink2);
+    letter-spacing: .3em; text-indent: .3em;
+  }
   h1 {
     font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
-    font-size: 34px; font-weight: 700; margin: 0; letter-spacing: .14em; line-height: 1.3;
+    font-size: 31px; font-weight: 700; margin: 0; letter-spacing: .1em; line-height: 1.35;
+    text-wrap: balance;
   }
-  .lede { margin: 8px 0 0; font-size: 13.5px; color: var(--ink2); letter-spacing: .04em; }
 
   .rooms { display: flex; flex-direction: column; gap: 16px; }
   a.room {
@@ -165,15 +169,15 @@
       <span class="kt hatsu">發</span>
       <span class="kt chun">中</span>
     </div>
-    <h1>麻雀部屋</h1>
-    <p class="lede">記録も、点数計算も、ぜんぶこの部屋で。</p>
+    <p class="eyebrow">麻雀 トイボックスリーグ戦</p>
+    <h1>第一期 Tリーグ、開幕。</h1>
   </header>
   <nav class="rooms" aria-label="部屋の一覧">
     <a class="room league" href="mleague-tracker.html">
       <span class="room-tile suit tman" aria-hidden="true"><i>一</i><b>萬</b></span>
       <span class="room-body">
-        <b>社内Sリーグ</b>
-        <span>Mリーグルール準拠・5人ローテーション。順位表・個人賞・次の対局の座席まで自動管理</span>
+        <b>T.LEAGUE(Tリーグ)公式</b>
+        <span>数多の麻雀プレイヤーの中から、ほんの一握りのアマチュアだけが出場を許されるナショナルリーグ、始まる。— 2026年7月発足</span>
       </span>
       <span class="room-arrow" aria-hidden="true">→</span>
     </a>
@@ -186,8 +190,8 @@
         <path d="M20 15.6 L 21.3 18.4 L 24.4 18.8 L 22.2 21 L 22.7 24 L 20 22.6 L 17.3 24 L 17.8 21 L 15.6 18.8 L 18.7 18.4 Z" fill="#fbf9ef"/>
       </svg></span>
       <span class="room-body">
-        <b>セット麻雀スコアラー</b>
-        <span>3麻・4麻対応/その日の面子でポイント記録。ウマ・オカ設定とチップpt換算つき</span>
+        <b>ストリート麻雀スコア</b>
+        <span>その日の面子で打つ野良セット用。3麻・4麻対応/ウマ・オカ設定/チップpt換算</span>
       </span>
       <span class="room-arrow" aria-hidden="true">→</span>
     </a>
@@ -209,7 +213,7 @@
         <path d="M22.5 3.4 C 23.5 2.2, 24 1.6, 24.6 0.9" stroke="#b23a2e" stroke-width="2" fill="none" stroke-linecap="round"/>
       </svg></span>
       <span class="room-body">
-        <b>麻雀の点数下敷き</b>
+        <b>点数下敷き</b>
         <span>初心者向け。タップで点数計算・符計算チェックリスト・早見表と役一覧</span>
       </span>
       <span class="room-arrow" aria-hidden="true">→</span>

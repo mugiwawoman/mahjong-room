@@ -30,6 +30,9 @@
     --gold: #97731f;
     --gold-line: rgba(176, 140, 50, .5);
     --gold-bg: rgba(212, 175, 55, .12);
+    --gold-b1: #f8eecb;
+    --gold-b2: #ecd795;
+    --gold-ink: #6b5313;
     --shadow: 0 1px 2px rgba(20, 24, 18, .06), 0 4px 14px rgba(20, 24, 18, .05);
     --radius: 10px;
   }
@@ -63,6 +66,9 @@
     --gold: #e6c96a;
     --gold-line: rgba(230, 201, 106, .38);
     --gold-bg: rgba(230, 201, 106, .10);
+    --gold-b1: #40371a;
+    --gold-b2: #5c4d20;
+    --gold-ink: #f2df95;
       --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
     }
   }
@@ -95,6 +101,9 @@
     --gold: #e6c96a;
     --gold-line: rgba(230, 201, 106, .38);
     --gold-bg: rgba(230, 201, 106, .10);
+    --gold-b1: #40371a;
+    --gold-b2: #5c4d20;
+    --gold-ink: #f2df95;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
   }
   :root[data-theme="light"] {
@@ -126,6 +135,9 @@
     --gold: #97731f;
     --gold-line: rgba(176, 140, 50, .5);
     --gold-bg: rgba(212, 175, 55, .12);
+    --gold-b1: #f8eecb;
+    --gold-b2: #ecd795;
+    --gold-ink: #6b5313;
     --shadow: 0 1px 2px rgba(20, 24, 18, .06), 0 4px 14px rgba(20, 24, 18, .05);
     --radius: 10px;
   }
@@ -169,11 +181,18 @@
   .btn.small { padding: 3px 10px; font-size: 12px; }
   :is(.btn, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  section.card {
+  section.card, details.card {
     background: var(--surface); border: 1px solid var(--line);
     border-radius: var(--radius); box-shadow: var(--shadow);
     padding: 18px 20px; margin-bottom: 18px;
   }
+  details.fold { padding: 14px 20px; }
+  details.fold summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  details.fold summary::-webkit-details-marker { display: none; }
+  details.fold summary h2 { margin: 0; }
+  details.fold summary::after { content: '▸'; color: var(--muted); font-size: 14px; flex: none; transition: transform .15s ease; }
+  details.fold[open] summary::after { transform: rotate(90deg); }
+  details.fold[open] summary { margin-bottom: 12px; }
   h2 {
     font-size: 13px; font-weight: 700; letter-spacing: .12em;
     color: var(--ink2); margin: 0 0 12px; text-transform: uppercase;
@@ -251,6 +270,8 @@
   #standings .total { font-size: 18px; font-weight: 700; white-space: nowrap; }
   #standings .p-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
   #standings .p-sub.adj { white-space: nowrap; }
+  #standings .p-sub .sg { white-space: nowrap; }
+  @media (max-width: 350px) { #standings .p-sub { font-size: 10.5px; } }
   #standings tr.leader td { background: var(--wash); }
   #standings tr.leader td:first-child { border-radius: 8px 0 0 8px; }
   #standings tr.leader td:last-child { border-radius: 0 8px 8px 0; }
@@ -258,12 +279,25 @@
   /* ---- yakuman badge collection ---- */
   .ycount { font-size: 11px; font-weight: 700; color: var(--gold); margin-left: 6px; letter-spacing: .06em; text-transform: none; }
   #yaku-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
-  .ybadge { border: 1.5px dashed var(--line); border-radius: 10px; padding: 10px 6px 8px; text-align: center; color: var(--muted); min-width: 0; }
-  .ybadge .yb-name { font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; font-size: 15px; font-weight: 700; letter-spacing: .08em; display: block; }
-  .ybadge .yb-sub { font-size: 10px; display: block; margin-top: 3px; }
-  .ybadge.got { border: 1px solid var(--gold-line); background: var(--gold-bg); color: var(--ink); box-shadow: 0 1px 6px rgba(212, 175, 55, .16); }
-  .ybadge.got .yb-name { color: var(--gold); }
-  .ybadge.got .yb-sub { color: var(--ink2); font-weight: 600; }
+  .ybadge {
+    border: 1.5px dashed var(--baseline); border-radius: 12px; padding: 12px 6px 9px;
+    text-align: center; color: var(--muted); min-width: 0; position: relative;
+    background: repeating-linear-gradient(-45deg, transparent 0 7px, rgba(127, 127, 127, .05) 7px 14px);
+  }
+  .ybadge .yb-name { font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; font-size: 15px; font-weight: 700; letter-spacing: .08em; display: block; opacity: .6; }
+  .ybadge .yb-sub { font-size: 10px; display: block; margin-top: 3px; opacity: .7; }
+  .ybadge.got {
+    border: 1px solid var(--gold-line);
+    background: linear-gradient(155deg, var(--gold-b1), var(--gold-b2));
+    color: var(--gold-ink);
+    box-shadow: 0 2px 10px rgba(212, 175, 55, .28), inset 0 1px 0 rgba(255, 255, 255, .35);
+  }
+  .ybadge.got .yb-name { color: var(--gold-ink); opacity: 1; font-size: 16px; text-shadow: 0 1px 0 rgba(255, 255, 255, .25); }
+  .ybadge.got .yb-sub { color: var(--gold-ink); font-weight: 700; opacity: .95; }
+  .ybadge.got::after { content: ''; position: absolute; inset: 3px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 9px; pointer-events: none; }
+  .ybar { height: 5px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 2px 0 12px; }
+  .ybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold-b2), var(--gold)); border-radius: 99px; transition: width .4s ease; }
+  .hist-more { text-align: center; padding: 10px 0 2px; }
   .yb-del { border: none; background: none; color: var(--neg); font-size: 11px; cursor: pointer; padding: 0 2px; }
   .prize-line { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink2); }
   .prize-line .pz-head { font-weight: 700; color: var(--gold); white-space: nowrap; }
@@ -526,8 +560,8 @@
     <div id="history"></div>
   </section>
 
-  <section class="card">
-    <h2>ペナルティ(チョンボ等)</h2>
+  <details class="card fold">
+    <summary><h2>ペナルティ(チョンボ等)</h2></summary>
     <div class="share-row admin-only">
       <select id="pen-player" aria-label="対象プレイヤー"></select>
       <input id="pen-pt" type="number" step="10" value="-20" aria-label="調整pt" style="width:84px">
@@ -536,10 +570,10 @@
     </div>
     <div id="pen-list"></div>
     <p class="note">Mリーグ準拠: チョンボは−20pt(故意は−60pt)。合計ptと個人タイトルに即反映されます(ポイント推移グラフは半荘のptのみ表示)。</p>
-  </section>
+  </details>
 
-  <section class="card">
-    <h2>座席表(今のサイクル・10半荘)</h2>
+  <details class="card fold">
+    <summary><h2>座席表(今のサイクル・10半荘)</h2></summary>
     <div class="table-scroll"><table id="cycle"></table></div>
     <p class="note">「東」の列が起家(親スタート)。1サイクル10半荘で、全員が①抜け番ちょうど2回 ②東南西北スタート各2回 ③<b>上家・下家の並び(全20通り)もちょうど2回ずつ</b>になる厳格設計。さらに<b>第6〜125半荘は全120通りの卓の組み合わせを1回ずつ</b>使う完全設計で、同じ座席の配置は二度と現れません。</p>
     <div class="swap-box admin-only">
@@ -553,23 +587,22 @@
       <div id="swap-list"></div>
       <p class="note">まだ結果を入れていない半荘同士なら自由に入れ替えられます。組み合わせの順番が変わるだけなので、サイクル全体の公平性(出場8・抜け番2・各家2回)はそのまま保たれます。</p>
     </div>
-  </section>
+  </details>
 
-  <div class="grid2">
-    <section class="card">
-      <h2>ローテーション状況</h2>
-      <div class="table-scroll"><table id="fairness"></table></div>
-      <p class="note">5週=10半荘を消化するごとに、全員が「出場8・抜け番2・東南西北スタート各2回ずつ」になる設計です。表の順番どおりに消化すれば偏りは出ません。</p>
-    </section>
-    <section class="card">
-      <h2>メンバー</h2>
-      <div class="pedit" id="players-edit"></div>
-      <p class="note">名前はいつでも変更できます(過去の記録にもそのまま反映されます)。</p>
-    </section>
-  </div>
+  <details class="card fold">
+    <summary><h2>ローテーション状況</h2></summary>
+    <div class="table-scroll"><table id="fairness"></table></div>
+    <p class="note">5週=10半荘を消化するごとに、全員が「出場8・抜け番2・東南西北スタート各2回ずつ」になる設計です。表の順番どおりに消化すれば偏りは出ません。</p>
+  </details>
 
-  <section class="card admin-only" id="season-card">
-    <h2>シーズン設定・景品</h2>
+  <details class="card fold admin-only">
+    <summary><h2>メンバー</h2></summary>
+    <div class="pedit" id="players-edit"></div>
+    <p class="note">名前はいつでも変更できます(過去の記録にもそのまま反映されます)。</p>
+  </details>
+
+  <details class="card fold admin-only" id="season-card">
+    <summary><h2>シーズン設定・景品</h2></summary>
     <div class="share-row">
       <span class="share-label">シーズン試合数</span>
       <input id="season-len" class="admin-only" type="number" min="5" max="125" step="5" style="width:84px" aria-label="シーズンの半荘数">
@@ -580,10 +613,11 @@
     <p class="note">この区切りなら出場数・抜け番・東南西北・隣の並びまで<b>完全均等</b>で終われます。125半荘は全120通りの卓を使い切るグランドスラム。それ以外でも5の倍数なら「全員同じ試合数」は保たれます。</p>
     <div class="pedit" id="prizes-edit" style="margin-top:14px"></div>
     <p class="note">景品はレギュレーション欄の最後に表示されます。ここで自由に書き換え可能 — どんどん豪華に。</p>
-  </section>
+  </details>
 
   <section class="card" id="yakuman-card">
     <h2>役満バッジ <span class="ycount" id="yaku-count"></span></h2>
+    <div class="ybar" aria-hidden="true"><i id="yaku-bar"></i></div>
     <div id="yaku-list"></div>
     <div class="share-row admin-only" style="margin-top:12px">
       <select id="yaku-player" aria-label="達成者"></select>
@@ -595,8 +629,8 @@
     <p class="note">役満が出るとバッジが金色に解禁されます。みんなで埋めていく図鑑(達成者と半荘を刻印。対局履歴にも🏆が付きます)。</p>
   </section>
 
-  <section class="card" id="rules">
-    <h2>レギュレーション(Mリーグルール準拠)</h2>
+  <details class="card fold" id="rules">
+    <summary><h2>レギュレーション(Mリーグルール準拠)</h2></summary>
     <div class="rule-cols">
       <div>
         <h3 class="rule-h">スコア計算</h3>
@@ -646,13 +680,17 @@
       </div>
     </div>
     <div class="prize-line" id="prize-line"></div>
-  </section>
+  </details>
 
-  <section class="card" id="share">
-    <h2>共有・バックアップ</h2>
+  <details class="card fold" id="share">
+    <summary><h2>共有・バックアップ</h2></summary>
     <div class="share-row">
       <button class="btn primary" id="btn-copy-url" type="button">このページのURLをコピー</button>
       <span class="gh-status">メンバーにはこのURLを送るだけ。開けば常に最新の成績が表示されます。</span>
+    </div>
+    <div class="share-row">
+      <button class="btn" id="btn-vault-reload" type="button">金庫から最新データを読み込む</button>
+      <span class="gh-status">表示が古い気がしたらこれ。保存版(league-data.json)を取り直します。</span>
     </div>
     <div class="share-row">
       <span class="share-label">GitHub自動保存</span>
@@ -687,7 +725,7 @@
       <button class="btn danger admin-only" id="btn-reset" type="button">全データ削除</button>
     </div>
       </details>
-  </section>
+  </details>
 
   <div id="toast" role="status" aria-live="polite"></div>
 
@@ -941,8 +979,10 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         var d = Math.round((st[order[i - 1]].total - s.total) * 10) / 10;
         gap = '<div class="gap">' + (i === 1 ? '首位' : i + '位') + 'まで ' + d.toFixed(1) + '</div>';
       }
-      var sub = s.games + '戦 トップ' + s.tops + ' ラス' + s.lasts +
-        ' 平均' + (s.games ? (s.rankSum / s.games).toFixed(2) : '–');
+      var thirds = s.games - s.tops - s.seconds - s.lasts;
+      var sub = '<span class="sg">' + s.games + '戦</span> ' +
+        '<span class="sg">①' + s.tops + ' ②' + s.seconds + ' ③' + thirds + ' ④' + s.lasts + '</span> ' +
+        '<span class="sg">平均' + (s.games ? (s.rankSum / s.games).toFixed(2) : '–') + '</span>';
       var adjLine = s.adj ? '<div class="p-sub adj ' + ptClass(s.adj) + '">調整 ' + fmtPt(s.adj) + 'pt</div>' : '';
       html += '<tr class="' + (leader ? 'leader' : '') + '">' +
         '<td class="rank num r' + (i + 1) + '">' + (i + 1) + '</td>' +
@@ -974,6 +1014,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   }
 
   /* ---------- history ---------- */
+  var histShowAll = false;
   function renderHistory() {
     var nums = playedNums().slice().reverse();
     var el = document.getElementById('history');
@@ -981,8 +1022,10 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       el.innerHTML = '<div class="empty">まだ対局結果がありません。上の「結果入力」から記録してください。</div>';
       return;
     }
+    var hidden = histShowAll ? 0 : Math.max(0, nums.length - 5);
+    var shown = histShowAll ? nums : nums.slice(0, 5);
     var html = '';
-    nums.forEach(function (n) {
+    shown.forEach(function (n) {
       var a = comboFor(n);
       var res = calcGame(state.results[n]);
       var order = [0, 1, 2, 3].sort(function (x, y) { return res[x].rank - res[y].rank; });
@@ -1000,8 +1043,17 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         '<button class="btn small danger" type="button" data-del="' + n + '">削除</button>' +
         '</span></div>';
     });
+    if (hidden > 0) {
+      html += '<div class="hist-more"><button class="btn small" type="button" id="btn-hist-more">これより前の' + hidden + '半荘も表示</button></div>';
+    } else if (histShowAll && nums.length > 5) {
+      html += '<div class="hist-more"><button class="btn small" type="button" id="btn-hist-less">直近5半荘だけ表示</button></div>';
+    }
     el.innerHTML = html;
   }
+  document.getElementById('history').addEventListener('click', function (ev) {
+    if (ev.target.closest('#btn-hist-more')) { histShowAll = true; renderHistory(); }
+    else if (ev.target.closest('#btn-hist-less')) { histShowAll = false; renderHistory(); }
+  });
 
   /* ---------- entry ---------- */
   function renderEntrySelect(selected) {
@@ -1160,9 +1212,10 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     if (byKey['その他']) keys.push('その他');
     var got = keys.filter(function (k) { return byKey[k]; }).length;
     document.getElementById('yaku-count').textContent = got + ' / ' + keys.length + ' 解禁';
+    document.getElementById('yaku-bar').style.width = Math.round(got / keys.length * 100) + '%';
     document.getElementById('yaku-list').innerHTML = keys.map(function (k) {
       var hits = byKey[k];
-      if (!hits) return '<div class="ybadge"><span class="yb-name">' + k + '</span><span class="yb-sub">未達成</span></div>';
+      if (!hits) return '<div class="ybadge"><span class="yb-name">' + k + '</span><span class="yb-sub">\uD83D\uDD12 未解禁</span></div>';
       var subs = hits.sort(function (a, b) { return a.e.n - b.e.n; }).map(function (o) {
         return '<span class="yb-sub">🏆 ' + esc(state.players[o.e.p]) + ' 第' + o.e.n + '半荘' +
           (o.e.name !== k ? '（' + esc(o.e.name) + '）' : '') +
@@ -1777,6 +1830,21 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     } else { prompt('このURLをコピーしてください', url); }
   }
   document.getElementById('btn-copy-url').addEventListener('click', copyPageUrl);
+  document.getElementById('btn-vault-reload').addEventListener('click', function () {
+    fetch('league-data.json?v=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
+      .then(function (o) {
+        var st = o && o.p ? { players: o.p, results: o.r, map: o.m || {}, pen: o.e || [], yaku: o.y || o.yaku || [], prizes: o.z || o.prizes, season: o.q || o.season } : o;
+        if (!isValidState(st)) throw new Error('shape');
+        var when = o.t ? new Date(o.t).toLocaleString('ja-JP') : '日時不明';
+        if (!confirm('金庫の保存版(' + when + ' 時点)でこの端末の表示を置き換えます。よろしいですか？')) return;
+        state = fillDefaults({ players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [], yaku: st.yaku || [], prizes: st.prizes, season: st.season });
+        persist(true);
+        renderAll();
+        showToast('金庫の最新データを読み込みました \u2713');
+      })
+      .catch(function () { alert('金庫のデータを取得できませんでした。電波のある場所でもう一度お試しください。'); });
+  });
   document.getElementById('btn-share').addEventListener('click', makeShareLink);
   document.getElementById('btn-share-top').addEventListener('click', copyPageUrl);
   document.getElementById('btn-load-link').addEventListener('click', function () {

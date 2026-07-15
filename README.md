@@ -1,17 +1,37 @@
 # 麻雀部屋 🀄
 
-麻雀の記録ツール置き場。リーグとストリート(セット)は完全に独立したアプリです。
+麻雀の記録ツール置き場。各ページはHTML1枚で完結し、GitHub Pagesでそのまま動きます。
 
-| アプリ | ファイル | 用途 |
+| ページ | ファイル | 用途 |
 |---|---|---|
-| 社内Sリーグ | `mleague-tracker.html` | Mリーグルール準拠・5人固定・週2半荘のリーグ戦 |
+| 入口 | `index.html` | 各部屋への入口 |
+| Tリーグ | `mleague-tracker.html` | Mリーグルール準拠・5人固定リーグ戦(順位表/座席表/役満バッジ/自動保存) |
 | セット麻雀スコアラー | `street-scorer.html` | 3麻・4麻対応のポイント制セット記録(チップpt換算あり) |
+| 点数下敷き | `scoring.html` | 点数計算機・符計算チェックリスト・早見表 |
 
-- [リーグのレギュレーション](regulations.md)/[対局スケジュール](schedule.md)/[成績表テンプレート](results.md)
-- どちらのアプリもHTML1枚で完結。ブラウザで開くだけで動きます
-- `index.html` は両アプリへの入口ページ
+- リーグのルール・個人タイトル・景品・完璧試合数は [regulations.md](regulations.md)
+- リーグの成績データは **`league-data.json`**(記録係の端末から自動コミットされる保存版)。手で編集しない
 
-## 全自動同期(推奨・記録係だけ設定)
+## 公開URL(GitHub Pages)
+
+- 入口: https://mugiwawoman.github.io/mahjong-room/
+- Tリーグ: https://mugiwawoman.github.io/mahjong-room/mleague-tracker.html
+- セット: https://mugiwawoman.github.io/mahjong-room/street-scorer.html
+- 点数下敷き: https://mugiwawoman.github.io/mahjong-room/scoring.html
+
+更新が反映されない端末は、ページを引っ張って再読み込み(Pagesのキャッシュは最大10分)。データだけ古いときはアプリ内「共有・バックアップ → 金庫から最新データを読み込む」。
+
+## アプリ本体の更新のしかた(記録係向け)
+
+**同じファイル名のまま**上書きアップロードするのが鉄則:
+
+1. リポジトリの **Add file → Upload files**
+2. `mleague-tracker.html` などをドラッグ。**ファイル名が `mleague-tracker 2.html` 等の連番付きになっていないか必ず確認**(なっていたらアップ前にリネーム)
+3. Commit changes
+
+名前が1文字でも違うと新規ファイルとして追加され、本命のURLは古いまま残ります。
+
+## 全自動同期(記録係だけ設定)
 
 記録係のブラウザにGitHubトークンを1回設定すると、**結果を保存するたびに成績が自動でこのリポジトリにコミット**され、メンバー全員のページに自動反映されます。
 
@@ -26,20 +46,4 @@
 
 ## データが絶対に消えない運用
 
-アプリのデータは「ブラウザ保存+URL埋め込み(#d=…)」に加えて、**このリポジトリを保存版(バックアップの親玉)にできます**:
-
-1. アプリで「ファイルに書き出し」を押してJSONを保存
-2. そのファイルを **`league-data.json`**(リーグ)または **`street-data.json`**(ストリート)という名前でこのリポジトリにアップロード(上書きコミット)
-3. 以後、ブラウザの記録が空の状態でアプリを開くと(=データが消えたとき・新しい端末のとき)、**保存版が自動で復元されます**
-
-※自動復元が効くのは、アプリをこのリポジトリ経由(GitHub Pagesなど)で配信した場合です。
-
-## GitHub Pagesで公開する(ログイン不要URLにする)
-
-リポジトリをPublicにして Settings → Pages → Branch: `main` / root を選ぶと、
-
-- 入口: `https://<ユーザー名>.github.io/mahjong-room/`
-- リーグ: `https://<ユーザー名>.github.io/mahjong-room/mleague-tracker.html`
-- ストリート: `https://<ユーザー名>.github.io/mahjong-room/street-scorer.html`
-
-が誰でもログインなしで開けるURLになります。
+アプリのデータは「ブラウザ保存+URL埋め込み(#d=…)+このリポジトリの保存版」の3重構え。ブラウザの記録が空の状態でアプリを開くと(=データが消えたとき・新しい端末のとき)、保存版 `league-data.json` が**自動で復元されます**。手動バックアップにはアプリの「ファイルに書き出し」も使えます。

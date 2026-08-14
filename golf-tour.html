@@ -7,7 +7,7 @@
 <style>
   :root {
     --bg: #f4f5ef; --paper: #fdfdf8; --line: #dfe2d4; --baseline: #c3c8b2;
-    --ink: #22271f; --ink2: #59604f; --mut: #8d937f;
+    --ink: #22271f; --ink2: #59604f; --mut: #6f7566;
     --turf: #2e7d32; --turf-deep: #1b5e20; --turf-ink: #eaf5ea; --turf-ink2: #a5d6a7;
     --gold: #9c7c1e; --gold-line: rgba(168, 138, 48, .5); --gold-bg: rgba(212, 175, 55, .13);
     --pos: #1565c0; --neg: #c62828; --flag: #d84315;
@@ -106,10 +106,15 @@
 </head>
 <body>
 
-<header class="hero"><div class="hero-in">
-  <h1 id="tour-title">社内ゴルフツアー</h1>
-  <div class="sub" id="tour-sub">年間ポイントランキング — コンペを重ねるほど、物語が積み上がる</div>
+<header class="hero"><div class="hero-in" style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+  <div style="flex:1;min-width:200px">
+    <h1 id="tour-title">社内ゴルフツアー</h1>
+    <div class="sub" id="tour-sub">年間ポイントランキング — コンペを重ねるほど、物語が積み上がる</div>
+  </div>
+  <a class="btn" href="index.html" style="background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#eaf5ea">⌂ 部屋</a>
 </div></header>
+
+<div class="wrap"><p class="note" style="margin:0 0 12px">あなたのブラウザにだけ保存されるコンペ帳です(登録不要)。メンバー登録→参加者を選んでグロスとハンデを入れるだけ。</p></div>
 
 <div class="wrap">
 
@@ -196,7 +201,17 @@
 
   function def() { return { title: '社内ゴルフツアー', members: [], comps: [], badges: [], t: Date.now() }; }
   function load() {
-    try { var raw = localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw); if (o && Array.isArray(o.members)) return o; } } catch (e) {}
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var o = JSON.parse(raw);
+        if (o && Array.isArray(o.members)) {
+          o.comps = Array.isArray(o.comps) ? o.comps : [];
+          o.badges = Array.isArray(o.badges) ? o.badges : [];
+          return o;
+        }
+      }
+    } catch (e) {}
     return def();
   }
   var state = load();
@@ -267,7 +282,7 @@
       }).join('<br>') + '</div>';
     }).join('');
     var ms = state.members.map(function (m, i) { return '<option value="' + i + '">' + esc(m.name) + '</option>'; }).join('');
-    document.getElementById('bd-member').innerHTML = ms;
+    document.getElementById('bd-member').innerHTML = ms || '<option value="">(メンバーを追加)</option>';
     document.getElementById('bd-name').innerHTML = BADGE_NAMES.map(function (k) { return '<option>' + k + '</option>'; }).join('');
     document.getElementById('bd-comp').innerHTML = '<option value="">(どのコンペ?)</option>' + state.comps.map(function (c) { return '<option>' + esc(c.name) + '</option>'; }).join('');
   }
@@ -278,6 +293,10 @@
       return '<span class="chip ' + (picked[i] ? 'on' : '') + '" data-pick="' + i + '">' + esc(m.name) + '</span>';
     }).join('') || '<span class="empty">まずメンバーを追加してください</span>';
     var ids = Object.keys(picked).filter(function (k) { return picked[k]; }).map(Number);
+    var stash = {};
+    document.querySelectorAll('#c-rows .srow').forEach(function (row) {
+      stash[row.dataset.m] = { g: row.querySelector('.g').value, h: row.querySelector('.h').value };
+    });
     document.getElementById('c-rows').innerHTML = ids.map(function (i) {
       var m = state.members[i];
       return '<div class="srow" data-m="' + i + '"><span class="nm">' + esc(m.name) + '</span>' +
@@ -285,9 +304,16 @@
         '<label>HD <input type="number" class="h" step="0.1" value="' + (m.hd != null ? m.hd : 0) + '"></label>' +
         '<span class="net" data-net>–</span></div>';
     }).join('');
+    document.querySelectorAll('#c-rows .srow').forEach(function (row) {
+      var st2 = stash[row.dataset.m];
+      if (st2) {
+        if (st2.g) row.querySelector('.g').value = st2.g;
+        if (st2.h !== '') row.querySelector('.h').value = st2.h;
+      }
+    });
     document.getElementById('p-target').innerHTML = ids.map(function (i) {
       return '<option value="' + i + '">' + esc(state.members[i].name) + '</option>';
-    }).join('');
+    }).join('') || '<option value="">(参加者を選ぶ)</option>';
     updateNets();
   }
   function updateNets() {
@@ -343,7 +369,10 @@
     var used = state.comps.some(function (c) { return c.rows.some(function (r) { return r.m === i; }); });
     if (used) { alert('コンペ記録があるメンバーは削除できません。'); return; }
     state.members.splice(i, 1);
-    delete picked[i];
+    state.badges = state.badges.filter(function (b) { return b.m !== i; });
+    state.badges.forEach(function (b) { if (b.m > i) b.m--; });
+    state.comps.forEach(function (c) { c.rows.forEach(function (r) { if (r.m > i) r.m--; }); });
+    picked = {};
     persist(); renderAll();
   });
   document.getElementById('c-members').addEventListener('click', function (ev) {
@@ -354,6 +383,16 @@
     renderEntry();
   });
   document.getElementById('c-rows').addEventListener('input', updateNets);
+  var periaHidden = null; /* このコンペ(入力セッション)中は隠しホール固定 — 全員同一条件 */
+  function drawHidden() {
+    var idx = PARS.map(function (_, i) { return i; });
+    var hidden = [];
+    var pool1 = idx.slice(0, 9), pool2 = idx.slice(9);
+    [pool1, pool2].forEach(function (pool) {
+      for (var k = 0; k < 6; k++) hidden.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    });
+    return hidden;
+  }
   document.getElementById('p-calc').addEventListener('click', function () {
     var vals = [], ok = true;
     document.querySelectorAll('#p-out input, #p-in input').forEach(function (inp) {
@@ -362,12 +401,8 @@
       vals[Number(inp.dataset.hole)] = v;
     });
     if (!ok) { alert('18ホールぜんぶ入力してください'); return; }
-    var idx = PARS.map(function (_, i) { return i; });
-    var hidden = [];
-    var pool1 = idx.slice(0, 9), pool2 = idx.slice(9);
-    [pool1, pool2].forEach(function (pool) {
-      for (var k = 0; k < 6; k++) hidden.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-    });
+    if (!periaHidden) periaHidden = drawHidden();
+    var hidden = periaHidden;
     var cap = document.getElementById('p-cap').checked;
     var sum = hidden.reduce(function (a, h) {
       var s = vals[h];
@@ -381,7 +416,7 @@
     var target = Number(document.getElementById('p-target').value);
     var row = document.querySelector('#c-rows .srow[data-m="' + target + '"]');
     if (row) { row.querySelector('.g').value = gross; row.querySelector('.h').value = hd; updateNets(); }
-    document.getElementById('p-result').textContent = 'グロス' + gross + '・新ペリアHD ' + hd + '(隠しH: ' + hidden.map(function (h) { return h + 1; }).sort(function(a,b){return a-b;}).join(',') + ')';
+    document.getElementById('p-result').textContent = 'グロス' + gross + '・新ペリアHD ' + hd + '(隠しH: ' + hidden.map(function (h) { return h + 1; }).sort(function(a,b){return a-b;}).join(',') + '・このコンペ中は全員同じ)';
   });
   document.getElementById('c-save').addEventListener('click', function () {
     var name = document.getElementById('c-name').value.trim() || ('第' + (state.comps.length + 1) + '戦');
@@ -396,6 +431,7 @@
     state.comps.push({ name: name, date: document.getElementById('c-date').value || '', rows: rows });
     rows.forEach(function (r) { state.members[r.m].hd = r.hd; });
     picked = {};
+    periaHidden = null;
     document.getElementById('c-name').value = '';
     persist(); renderAll();
     toast('「' + name + '」を保存しました ⛳');
@@ -466,6 +502,8 @@
       while (b.length % 4) b += '=';
       var o = JSON.parse(decodeURIComponent(escape(atob(b))));
       if (o && Array.isArray(o.members) && (!state.comps.length || (o.t || 0) > (state.t || 0))) {
+        o.comps = Array.isArray(o.comps) ? o.comps : [];
+        o.badges = Array.isArray(o.badges) ? o.badges : [];
         state = o;
         persist();
       }

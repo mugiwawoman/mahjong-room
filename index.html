@@ -79,6 +79,8 @@
     text-wrap: balance;
   }
 
+  .site-note { font-size: 13px; color: var(--ink2, #59604f); margin: 10px 0 0; }
+  .lp-link { display: block; text-align: center; font-size: 13px; margin-top: 18px; color: inherit; }
   .rooms { display: flex; flex-direction: column; gap: 16px; }
   a.room {
     display: flex; align-items: center; gap: 18px;
@@ -117,6 +119,10 @@
   .street .room-tile { color: #2f3b4b; }
 
   .scoring { background: linear-gradient(160deg, #a83a2e, #832a20); }
+  .golf { background: linear-gradient(160deg, #2e7d32, #1b5e20); }
+  .golf .room-body b, .golf .room-arrow { color: #eef7ee; }
+  .golf .room-body span { color: #b7d9b9; }
+  .golf .room-tile { background: #f4f5ef; }
   .scoring .room-body b, .scoring .room-arrow { color: #fdf2ec; }
   .scoring .room-body span { color: #ecc0b4; }
   .scoring .room-tile { color: var(--chun); }
@@ -180,6 +186,7 @@
   <header>
     <p class="eyebrow">麻雀 トイボックスリーグ戦</p>
     <h1>第一期 Tリーグ、開幕。</h1>
+    <p class="site-note">ここは仲間内リーグを回すための自作ツール置き場「麻雀部屋」。成績はブラウザ保存・登録不要で、開けば誰でも見られます。</p>
   </header>
   <nav class="rooms" aria-label="部屋の一覧">
     <a class="room league" href="mleague-tracker.html">
@@ -243,7 +250,9 @@
       <span class="room-arrow" aria-hidden="true">→</span>
     </a>
   </nav>
-  <footer>データは各アプリ内で保存・共有できます/ブックマーク推奨</footer>
+  <a class="lp-link" href="biz-lp.html">🀄 自分の会社・仲間内でも同じリーグを始めたい方はこちら →</a>
+
+<footer>データは各アプリ内で保存・共有できます/ブックマーク推奨</footer>
 </div>
 </body>
 </html>

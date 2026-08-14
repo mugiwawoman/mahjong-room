@@ -7,7 +7,7 @@
     --surface2: #efede1;
     --ink: #1b1e19;
     --ink2: #5b5f54;
-    --muted: #8d9083;
+    --muted: #70746a;
     --line: #e4e2d3;
     --baseline: #c8c6b6;
     --accent: #0e6f4f;
@@ -112,7 +112,7 @@
     --surface2: #efede1;
     --ink: #1b1e19;
     --ink2: #5b5f54;
-    --muted: #8d9083;
+    --muted: #70746a;
     --line: #e4e2d3;
     --baseline: #c8c6b6;
     --accent: #0e6f4f;
@@ -157,6 +157,11 @@
   .aud { display: flex; gap: 10px; padding: 6px 2px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
   .aud:last-child { border-bottom: none; }
   .aud .at { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .toast-undo {
+    margin-left: 8px; border: 1px solid rgba(255, 255, 255, .5); background: transparent;
+    color: inherit; font: inherit; font-size: 12px; font-weight: 700;
+    border-radius: 99px; padding: 2px 10px; cursor: pointer;
+  }
   .qnav {
     position: sticky; top: 0; z-index: 40;
     display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
@@ -290,7 +295,26 @@
   #standings .rank.r1 { color: var(--gold); font-size: 15px; }
   #standings .rank.r2 { color: #8f9aa6; font-size: 14px; }
   #standings .rank.r3 { color: #b0793f; }
-  #standings .total { font-size: 18px; font-weight: 700; white-space: nowrap; }
+  #standings .total { font-size: 21px; font-weight: 800; white-space: nowrap; letter-spacing: -.01em; }
+  .ptbar { height: 4px; border-radius: 99px; background: var(--surface2); margin-top: 5px; overflow: hidden; }
+  .ptbar i { display: block; height: 100%; border-radius: 99px; }
+  .ptbar i.pos { background: var(--pos); }
+  .ptbar i.neg { background: var(--neg); }
+  .fdots { display: inline-flex; gap: 3px; vertical-align: 1px; margin-left: 2px; }
+  .fdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .fdot.fr1 { background: var(--gold); box-shadow: 0 0 4px rgba(212, 175, 55, .6); }
+  .fdot.fr2 { background: var(--pos); }
+  .fdot.fr3 { background: var(--baseline); }
+  .fdot.fr4 { background: var(--neg); }
+  .stakes { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .stake {
+    font-size: 13px; line-height: 1.7; padding: 7px 12px; border-radius: 8px;
+    background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18);
+  }
+  .stake b { font-variant-numeric: tabular-nums; }
+  .stake.hot { border-color: rgba(240, 200, 106, .6); background: rgba(240, 200, 106, .12); }
+  .race-line { font-size: 12.5px; color: var(--ink2); margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .race-line b { color: var(--gold); }
   #standings .p-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
   #standings .p-sub.adj { white-space: nowrap; }
   #standings .p-sub .sg { white-space: nowrap; }
@@ -364,7 +388,8 @@
     padding: 7px 10px;
   }
   .entry-note { font-size: 12px; color: var(--muted); }
-  .skip-toggle { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); margin: -4px 0 12px; cursor: pointer; }
+  .skip-toggle { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: -4px 0 12px; cursor: pointer; }
+  .skip-toggle span { flex: 0 1 auto; }
   .skip-toggle input { accent-color: var(--accent); }
   .erows { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
   @media (max-width: 820px) { .erows { grid-template-columns: repeat(2, 1fr); } }
@@ -594,6 +619,7 @@
   <div class="grid2">
     <section class="card" id="sec-standings">
       <h2>順位表</h2>
+      <div id="race-line" class="race-line" hidden></div>
       <div class="table-scroll"><table id="standings"></table></div>
     </section>
     <section class="card" id="sec-chart">
@@ -631,9 +657,9 @@
       <select id="game-select" aria-label="入力する半荘"></select>
       <span class="entry-note">最終持ち点をそのまま入力(例: 42300)。合計100,000点でptを自動計算します。</span>
     </div>
-    <label class="skip-toggle">欠席がいる日:
+    <label class="skip-toggle"><span>欠席がいる日:</span>
       <select id="absent-sel"><option value="">(選ぶと自動ジャンプ)</option></select>
-      — その人が抜け番の半荘に飛びます。飛ばした半荘は後日そのまま
+      <span>— その人が抜け番の半荘に飛びます。飛ばした半荘は後日そのまま</span>
     </label>
     <label class="skip-toggle"><input type="checkbox" id="skip-mode"> 手動で先の半荘を選ぶ(スキップ入力・上級)</label>
     <div class="erows" id="entry-rows"></div>
@@ -889,6 +915,7 @@
      ever repeated. Any multiple of 5 games keeps play counts equal; ending on
      a cycle boundary (15, 25, ... 125) keeps winds/neighbours perfectly even.
      Wraps after 125. */
+/* 注意: この定数は biz-lp.html にも複製あり。変更時は両方更新 */
 var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,3]],[0,[4,1,2,3]],[1,[3,0,2,4]],[2,[3,1,4,0]],[3,[4,2,1,0]],[4,[0,2,3,1]],[0,[4,1,3,2]],[1,[2,3,0,4]],[2,[1,0,4,3]],[3,[4,0,2,1]],[4,[2,3,0,1]],[0,[1,2,4,3]],[1,[3,4,2,0]],[2,[3,4,1,0]],[3,[0,2,1,4]],[4,[0,1,3,2]],[0,[1,3,2,4]],[1,[0,4,2,3]],[2,[1,3,4,0]],[3,[2,1,4,0]],[4,[3,0,1,2]],[0,[3,2,1,4]],[1,[4,2,0,3]],[2,[0,4,3,1]],[3,[4,1,0,2]],[4,[2,0,3,1]],[0,[1,2,3,4]],[1,[4,3,0,2]],[2,[4,3,1,0]],[3,[0,1,4,2]],[4,[3,2,1,0]],[0,[1,4,2,3]],[1,[2,4,0,3]],[2,[0,1,3,4]],[3,[2,0,4,1]],[4,[3,0,2,1]],[0,[2,3,1,4]],[1,[2,0,4,3]],[2,[4,1,0,3]],[3,[0,4,2,1]],[4,[3,1,2,0]],[0,[3,2,4,1]],[1,[0,2,3,4]],[2,[1,4,3,0]],[3,[4,0,1,2]],[4,[1,3,0,2]],[0,[4,3,2,1]],[1,[4,2,3,0]],[2,[3,4,0,1]],[3,[1,2,4,0]],[4,[0,3,1,2]],[0,[2,1,4,3]],[1,[2,0,3,4]],[2,[0,4,1,3]],[3,[1,0,2,4]],[4,[3,1,0,2]],[0,[3,4,2,1]],[1,[2,3,4,0]],[2,[1,4,0,3]],[3,[0,2,4,1]],[4,[1,0,3,2]],[0,[4,3,1,2]],[1,[3,2,0,4]],[2,[4,1,3,0]],[3,[2,0,1,4]],[4,[0,1,2,3]],[0,[4,2,3,1]],[1,[4,3,2,0]],[2,[3,0,1,4]],[3,[1,0,4,2]],[4,[2,1,3,0]],[0,[2,4,1,3]],[1,[3,4,0,2]],[2,[0,3,4,1]],[3,[0,1,2,4]],[4,[1,2,0,3]],[0,[4,2,1,3]],[1,[3,0,4,2]],[2,[0,1,4,3]],[3,[4,1,2,0]],[4,[2,3,1,0]],[0,[2,4,3,1]],[1,[0,3,2,4]],[2,[1,0,3,4]],[3,[1,4,0,2]],[4,[3,2,0,1]],[0,[3,1,2,4]],[1,[0,4,3,2]],[2,[0,3,1,4]],[3,[2,4,1,0]],[4,[1,2,3,0]],[0,[1,3,4,2]],[1,[4,0,2,3]],[2,[3,0,4,1]],[3,[4,2,0,1]],[4,[2,1,0,3]],[0,[2,1,3,4]],[1,[2,4,3,0]],[2,[4,0,1,3]],[3,[0,4,1,2]],[4,[0,3,2,1]],[0,[3,1,4,2]],[1,[3,2,4,0]],[2,[4,3,0,1]],[3,[1,2,0,4]],[4,[1,0,2,3]],[0,[3,4,1,2]],[1,[0,2,4,3]],[2,[3,1,0,4]],[3,[2,1,0,4]],[4,[0,2,1,3]],[0,[2,3,4,1]],[1,[4,0,3,2]],[2,[4,0,3,1]],[3,[1,4,2,0]],[4,[1,3,2,0]]];
   function seatsFor(n) {
     if (n >= 6) {
@@ -947,7 +974,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var a = comboFor(n);
     var html = '<div class="next-head"><span class="next-pill">次の対局</span>' +
       '<span class="next-title">' + gameLabel(n) +
-      '<small>第' + weekOf(n) + '週・第' + (Math.floor((n - 1) / 10) + 1) + 'サイクル</small></span></div>';
+      '<small>第' + weekOf(n) + '週・第' + (n >= 6 ? Math.floor((n - 6) / 10) + 1 : 1) + 'サイクル</small></span></div>';
     html += '<div class="seats">';
     a.seats.forEach(function (p, si) {
       html += '<div class="seat"><div class="seat-tile">' + SEATS[si] + '</div>' +
@@ -956,6 +983,46 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     html += '<div class="seat bye"><div class="seat-tile">抜け番</div>' +
       '<div class="seat-name"><i class="dot p' + a.bye + '"></i><span>' + esc(state.players[a.bye]) + '</span></div></div>';
     html += '</div>';
+    /* 見どころ: 順位・pt差・連続記録から自動生成 */
+    (function () {
+      var st2 = playerStats();
+      var ord = [0, 1, 2, 3, 4].sort(function (x, y) { return st2[y].total - st2[x].total || x - y; });
+      var rankOf = {};
+      ord.forEach(function (p2, i2) { rankOf[p2] = i2 + 1; });
+      var inGame = {};
+      a.seats.forEach(function (p2) { inGame[p2] = true; });
+      var lines = [];
+      if (inGame[ord[0]] && inGame[ord[1]]) {
+        var gap01 = Math.round((st2[ord[0]].total - st2[ord[1]].total) * 10) / 10;
+        lines.push({ hot: true, t: '首位攻防戦!1位' + esc(state.players[ord[0]]) + ' vs 2位' + esc(state.players[ord[1]]) + ' — 差は<b>' + gap01.toFixed(1) + 'pt</b>' });
+      }
+      for (var i2 = 0; i2 < 4; i2++) {
+        var hi = ord[i2], lo = ord[i2 + 1];
+        if (!inGame[hi] || !inGame[lo]) continue;
+        if (i2 === 0 && lines.length) continue;
+        var g2 = Math.round((st2[hi].total - st2[lo].total) * 10) / 10;
+        if (g2 <= 90) {
+          lines.push({ hot: g2 <= 45, t: (i2 + 1) + '位' + esc(state.players[hi]) + 'と' + (i2 + 2) + '位' + esc(state.players[lo]) + 'が同卓 — <b>' + g2.toFixed(1) + 'pt差</b>、今夜入れ替わり圏内' });
+        }
+      }
+      /* 連続連対中の出場者 */
+      var seqR = [[], [], [], [], []];
+      playedNums().forEach(function (fn) {
+        var fa2 = comboFor(fn);
+        var fr2 = calcGame(state.results[fn]);
+        fa2.seats.forEach(function (fp, fsi) { seqR[fp].push(fr2[fsi].rank); });
+      });
+      a.seats.forEach(function (p2) {
+        var k2 = 0;
+        for (var q2 = seqR[p2].length - 1; q2 >= 0 && seqR[p2][q2] <= 2; q2--) k2++;
+        if (k2 >= 3) lines.push({ hot: false, t: esc(state.players[p2]) + 'は<b>' + k2 + '戦連続連対中</b>の絶好調で参戦' });
+      });
+      if (lines.length) {
+        html += '<div class="stakes">' + lines.slice(0, 2).map(function (l) {
+          return '<div class="stake' + (l.hot ? ' hot' : '') + '">🔥 ' + l.t + '</div>';
+        }).join('') + '</div>';
+      }
+    })();
 
     var ups = [];
     var m = n + 1;
@@ -964,7 +1031,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       m++;
     }
     html += '<button class="btn felt-btn admin-only" id="btn-goto-entry" type="button">この半荘の結果を入力 ↓</button>';
-    html += '<div class="upcoming">この先の組み合わせ';
+    html += '<div class="upcoming admin-only">この先の組み合わせ';
     ups.forEach(function (g) {
       var s = comboFor(g);
       var parts = s.seats.map(function (p, si) { return SEATS[si] + ' ' + esc(state.players[p]); });
@@ -1050,6 +1117,14 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var st = playerStats();
     var order = [0, 1, 2, 3, 4].sort(function (a, b) { return st[b].total - st[a].total || a - b; });
     var anyPlayed = playedNums().length > 0;
+    /* フォームガイド用: 半荘順の着順列 */
+    var formSeq = [[], [], [], [], []];
+    playedNums().forEach(function (fn) {
+      var fa = comboFor(fn);
+      var fres = calcGame(state.results[fn]);
+      fa.seats.forEach(function (fp, fsi) { formSeq[fp].push(fres[fsi].rank); });
+    });
+    var maxAbs = Math.max.apply(null, [1].concat(order.map(function (p2) { return Math.abs(st[p2].total); })));
     /* 直前の半荘を除いた順位と比べて変動矢印を出す */
     var mv = null;
     var nums = playedNums();
@@ -1077,9 +1152,16 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         gap = '<div class="gap">' + (i === 1 ? '首位' : i + '位') + 'まで ' + d.toFixed(1) + '</div>';
       }
       var thirds = s.games - s.tops - s.seconds - s.lasts;
+      /* 直近5戦フォーム(左=古い) */
+      var form = '';
+      if (formSeq && formSeq[p] && formSeq[p].length) {
+        form = ' <span class="fdots" title="直近5戦の着順(左が古い)">' + formSeq[p].slice(-5).map(function (rk) {
+          return '<span class="fdot fr' + rk + '"></span>';
+        }).join('') + '</span>';
+      }
       var sub = '<span class="sg">' + s.games + '戦</span> ' +
         '<span class="sg">①' + s.tops + ' ②' + s.seconds + ' ③' + thirds + ' ④' + s.lasts + '</span> ' +
-        '<span class="sg">平均' + (s.games ? (s.rankSum / s.games).toFixed(2) : '–') + '</span>';
+        '<span class="sg">平均' + (s.games ? (s.rankSum / s.games).toFixed(2) : '–') + '</span>' + form;
       var adjLine = s.adj ? '<div class="p-sub adj ' + ptClass(s.adj) + '">調整 ' + fmtPt(s.adj) + 'pt</div>' : '';
       var arrow = '';
       if (mv) {
@@ -1090,10 +1172,46 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         '<td class="rank num r' + (i + 1) + '">' + (i + 1) + arrow + '</td>' +
         '<td class="p-cell"><div>' + ptag(p) + '</div>' +
         '<div class="p-sub">' + sub + '</div>' + adjLine + '</td>' +
-        '<td class="num total ' + ptClass(s.total) + '">' + fmtPt(s.total) + gap + '</td></tr>';
+        '<td class="num total ' + ptClass(s.total) + '"><span class="tval" data-v="' + s.total + '">' + fmtPt(s.total) + '</span>' +
+        '<div class="ptbar" aria-hidden="true"><i class="' + (s.total >= 0 ? 'pos' : 'neg') + '" style="width:' + Math.max(3, Math.round(Math.abs(s.total) / maxAbs * 100)) + '%"></i></div>' + gap + '</td></tr>';
     });
     html += '</tbody>';
     document.getElementById('standings').innerHTML = html;
+    /* 優勝戦線: 残り試合から理論上の可能性を判定 */
+    var done = playedNums().length;
+    var remainPP = Math.max(0, Math.round((state.season - done) * 4 / 5));
+    var race = document.getElementById('race-line');
+    if (race) race.hidden = !(anyPlayed && done >= 5 && (state.season - done) > 0);
+    if (race && anyPlayed && done >= 5) {
+      var top = st[order[0]].total;
+      var alive = order.filter(function (p2) { return (top - st[p2].total) <= remainPP * 75; });
+      race.innerHTML = remainPP <= 0 ? '' :
+        (alive.length === 5 ?
+          '🏆 優勝戦線: <b>まだ全員に優勝の目があります</b>(1人あたり残り約' + remainPP + '戦)' :
+          '🏆 優勝戦線: 理論上の優勝圏は <b>' + alive.map(function (p2) { return esc(state.players[p2]); }).join('・') + '</b>(残り約' + remainPP + '戦)');
+    }
+    animateTotals();
+  }
+  var totalsAnimated = false;
+  function animateTotals() {
+    if (totalsAnimated) return;
+    totalsAnimated = true;
+    try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
+    var els = document.querySelectorAll('#standings .tval');
+    var t0 = null;
+    var DUR = 750;
+    function frame(ts) {
+      if (t0 === null) t0 = ts;
+      var k = Math.min(1, (ts - t0) / DUR);
+      var ease = 1 - Math.pow(1 - k, 3);
+      els.forEach(function (el) {
+        var v = Number(el.dataset.v) * ease;
+        el.textContent = fmtPt(Math.round(v * 10) / 10);
+      });
+      if (k < 1) requestAnimationFrame(frame);
+      else els.forEach(function (el) { el.textContent = fmtPt(Number(el.dataset.v)); });
+    }
+    requestAnimationFrame(frame);
   }
 
   function renderFairness() {
@@ -1160,10 +1278,12 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   /* ---------- entry ---------- */
   function renderEntrySelect(selected) {
     var asel = document.getElementById('absent-sel');
-    if (asel && asel.options.length !== state.players.length + 1) {
+    if (asel) {
+      var keepAb = asel.value;
       asel.innerHTML = '<option value="">(選ぶと自動ジャンプ)</option>' + state.players.map(function (nm, i) {
         return '<option value="' + i + '">' + esc(nm) + 'が欠席</option>';
       }).join('');
+      asel.value = keepAb;
     }
     var sel = document.getElementById('game-select');
     var next = nextGameNum();
@@ -1225,6 +1345,9 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         'data-seat="' + si + '" value="' + (val === '' ? '' : Math.abs(val)) + '"></div></div>';
     });
     document.getElementById('entry-rows').innerHTML = html;
+    var snap = [];
+    document.querySelectorAll('#entry-rows input').forEach(function (inp) { snap.push(inp.value.trim()); });
+    entrySnapshot = snap.join('|');
     updateEntryState();
   }
   function readEntry() {
@@ -1909,15 +2032,31 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
 
   /* ---------- toast ---------- */
   var toastTimer = null;
-  function showToast(msg) {
+  function showToast(msg, undoFn) {
     var t = document.getElementById('toast');
-    t.textContent = msg;
+    if (undoFn) {
+      t.textContent = '';
+      t.appendChild(document.createTextNode(msg + ' '));
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'toast-undo';
+      b.textContent = '元に戻す';
+      b.addEventListener('click', function () {
+        undoFn();
+        t.classList.remove('show');
+      });
+      t.appendChild(b);
+    } else {
+      t.textContent = msg;
+    }
     t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, undoFn ? 6000 : 2400);
   }
 
   /* ---------- render all ---------- */
+  var entrySnapshot = '';
+  var undoAction = null;
   var lastAction = '';
   function logAdd(m) {
     state.log = state.log || [];
@@ -2009,11 +2148,19 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     if (t.dataset.del) {
       var n = Number(t.dataset.del);
       if (confirm(gameLabel(n) + 'の結果を削除しますか?')) {
+        var undoVals = state.results[n];
+        var undoN = n;
         delete state.results[n];
         logAdd(gameLabel(n) + 'の結果を削除');
+        undoAction = function () {
+          state.results[undoN] = undoVals;
+          logAdd(gameLabel(undoN) + 'の削除を取り消し');
+          persist();
+          renderAll();
+        };
         persist();
         renderAll();
-        showToast(gameLabel(n) + 'の結果を削除しました');
+        showToast(gameLabel(n) + 'の結果を削除しました', undoAction);
       }
     } else if (t.dataset.edit) {
       renderEntrySelect(Number(t.dataset.edit));
@@ -2185,11 +2332,14 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   });
 
   document.getElementById('btn-reset').addEventListener('click', function () {
-    if (confirm('全ての対局結果とメンバー名を削除します。この操作は取り消せません。よろしいですか?')) {
-      state = defaultState();
-      persist();
-      renderAll();
-    }
+    if (!confirm('全ての対局結果とメンバー名を削除します。この操作は取り消せません。よろしいですか?')) return;
+    var word = prompt('確認のため「削除」と入力してください(金庫への反映は、この後あなたが何かを保存した時だけ行われます)');
+    if (word !== '削除') { showToast('キャンセルしました(「削除」と入力された時だけ実行します)'); return; }
+    state = defaultState();
+    logAdd('全データを削除(この端末)');
+    persist(true); /* 金庫へは自動送信しない */
+    renderAll();
+    showToast('この端末のデータを削除しました(金庫は未変更)');
   });
 
   /* redraw chart on theme / size change */
@@ -2204,11 +2354,9 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   new MutationObserver(renderChart).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   window.addEventListener('beforeunload', function (ev) {
-    var dirty = false;
-    document.querySelectorAll('#entry-rows input').forEach(function (inp) {
-      if (inp.value.trim() !== '') dirty = true;
-    });
-    if (dirty) { ev.preventDefault(); ev.returnValue = ''; }
+    var now = [];
+    document.querySelectorAll('#entry-rows input').forEach(function (inp) { now.push(inp.value.trim()); });
+    if (now.join('|') !== entrySnapshot) { ev.preventDefault(); ev.returnValue = ''; }
   });
 
   document.querySelector('.qnav').addEventListener('click', function (ev) {
@@ -2298,6 +2446,16 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       return JSON.stringify({ p: st.players, r: st.results, m: st.map || {}, e: st.pen || [], y: st.yaku || [], z: st.prizes, q: st.season });
     };
     if (comparable(dec.state) === comparable(state)) return;
+    /* ブックマークの古いリンクで毎回confirmが出ないように:
+       古いデータは無視、新しいデータは閲覧者なら無言で適用(記録係のみ確認) */
+    if (!dec.t || dec.t <= (state.t || 0)) return;
+    if (!ghToken()) {
+      state = fillDefaults(dec.state);
+      persist(true);
+      renderAll();
+      showToast('共有リンクの最新データを読み込みました ✓');
+      return;
+    }
     importShared(dec, '共有リンクに入っているデータ');
   })();
 
@@ -2329,5 +2487,26 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       })
       .catch(function () { /* no baseline file / blocked */ });
   })();
+
+  /* タブ復帰時に金庫を再取得(新しければ無言で反映) */
+  var lastVaultCheck = Date.now();
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    if (Date.now() - lastVaultCheck < 60000) return;
+    lastVaultCheck = Date.now();
+    fetch('league-data.json?v=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (o) {
+        if (!o || !o.t || o.t <= (state.t || 0)) return;
+        var st = o.p ? { players: o.p, results: o.r, map: o.m || {}, pen: o.e || [], yaku: o.y || o.yaku || [], prizes: o.z || o.prizes, season: o.q || o.season } : o;
+        if (!isValidState(st)) return;
+        state = fillDefaults({ players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [], yaku: st.yaku || [], prizes: st.prizes, season: st.season });
+        state.t = o.t;
+        persist(true);
+        renderAll();
+        showToast('最新の成績に更新しました ✓');
+      })
+      .catch(function () { /* offline */ });
+  });
 })();
 </script>

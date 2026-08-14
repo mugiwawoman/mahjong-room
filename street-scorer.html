@@ -7,7 +7,7 @@
     --surface2: #efebdd;
     --ink: #1c1c1f;
     --ink2: #595a60;
-    --muted: #8d8d90;
+    --muted: #6f7075;
     --line: #e3e0d2;
     --baseline: #c7c4b4;
     --accent: #3b4a9e;
@@ -85,7 +85,7 @@
     --surface2: #efebdd;
     --ink: #1c1c1f;
     --ink2: #595a60;
-    --muted: #8d8d90;
+    --muted: #6f7075;
     --line: #e3e0d2;
     --baseline: #c7c4b4;
     --accent: #3b4a9e;
@@ -208,7 +208,6 @@
   }
   .pv .pv-rank { font-size: 11px; font-weight: 700; color: var(--night-ink2); }
   .pv .pv-pt { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .tie-note { font-size: 11.5px; color: var(--night-ink2); margin-top: 10px; }
 
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
   .ptag { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
@@ -222,6 +221,7 @@
   .neg { color: var(--neg); }
   .table-scroll { overflow-x: auto; }
   #standings td, #standings th, #totals td, #totals th { white-space: nowrap; }
+  #standings td.empty, #totals td.empty { white-space: normal; }
   #standings .rank { font-size: 13px; font-weight: 700; color: var(--muted); width: 30px; }
   #standings .total { font-size: 16.5px; font-weight: 700; }
   #standings tr.leader td { background: var(--wash); }
@@ -314,8 +314,11 @@
     <div class="mast-actions">
       <button class="btn primary" id="btn-share-top" type="button">URLをコピー</button>
       <a class="btn" href="#rules-card">ルール設定</a>
+      <a class="btn" href="index.html">⌂ 部屋</a>
     </div>
   </header>
+
+  <p class="note" style="margin:-8px 0 14px">あなたのブラウザにだけ保存されるスコア帳です(登録不要・誰かのデータを壊す心配なし)。打った人をタップ→±ptを入れるだけ。</p>
 
   <section class="entry-card" id="entry">
     <h2>対局入力</h2>
@@ -1298,6 +1301,7 @@
       var d = state.days[i];
       if (!confirm((d.date || 'この日') + ' の記録(' + d.games.length + '半荘)をまるごと削除しますか?この操作は取り消せません。')) return;
       state.days.splice(i, 1);
+      if (i < state.cur) state.cur--;
       if (!state.days.length) state.days.push(newDay());
       if (state.cur >= state.days.length) state.cur = state.days.length - 1;
       editingIdx = null; picked = [];

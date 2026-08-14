@@ -528,8 +528,26 @@
   #lab-facts { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 6px; }
   .fact { font-size: 13.5px; line-height: 1.7; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--wash); border-radius: 0 8px 8px 0; }
   .fact b { font-variant-numeric: tabular-nums; }
-  #lab-pair td, #lab-kami td, #lab-h2h td, #lab-wind td,
-  #lab-pair th, #lab-kami th, #lab-h2h th, #lab-wind th { white-space: nowrap; font-size: 12.5px; }
+  #lab-cards { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 680px) { #lab-cards { grid-template-columns: 1fr 1fr; } }
+  .lc { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 10px; background: var(--surface); }
+  .lc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .lc-head .ptag { font-weight: 700; }
+  .lc-head .avg { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .lc-row { display: flex; align-items: flex-start; gap: 7px; flex-wrap: wrap; padding: 6px 0; border-top: 1px dashed var(--line); }
+  .lc-lab { flex: none; width: 62px; font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: .04em; padding-top: 3px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 99px;
+    padding: 2px 10px; font-size: 12px; background: var(--bg); white-space: nowrap; }
+  .pill b { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .pill .up { color: var(--pos); }
+  .pill .dn { color: var(--neg); }
+  .pill .pico { font-size: 10px; color: var(--muted); }
+  .winds { display: flex; gap: 8px; flex: 1; max-width: 240px; }
+  .wind { flex: 1; text-align: center; }
+  .wind .wbar { height: 30px; display: flex; align-items: flex-end; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .wind .wbar i { display: block; width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; }
+  .wind small { display: block; font-size: 9.5px; color: var(--muted); line-height: 1.5; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .wind.best small { color: var(--ink); font-weight: 700; }
   .lab-n { color: var(--muted); font-size: 10.5px; }
   .good { color: var(--pos); font-weight: 700; }
   .bad { color: var(--neg); font-weight: 700; }
@@ -634,14 +652,8 @@
   <details class="card fold" id="lab">
     <summary><h2>データラボ🔬(相性・上家ガチャ・風)</h2></summary>
     <div id="lab-facts"></div>
-    <h3 class="lab-h">同卓相性 — 追い風の相手・向かい風の相手</h3>
-    <div class="table-scroll"><table id="lab-pair"></table></div>
-    <h3 class="lab-h">上家ガチャ — 上家に誰が座ると順位が変わるか</h3>
-    <div class="table-scroll"><table id="lab-kami"></table></div>
-    <h3 class="lab-h">直接対決 — 同卓時に相手より上の順位で終えた率</h3>
-    <div class="table-scroll"><table id="lab-h2h"></table></div>
-    <h3 class="lab-h">スタート風別の平均順位</h3>
-    <div class="table-scroll"><table id="lab-wind"></table></div>
+    <h3 class="lab-h">プレイヤー別カルテ</h3>
+    <div id="lab-cards"></div>
     <p class="note">※データラボは「巡り合わせ(運)」の観察日記です。腕前の査定ではありません。対局数が少ないうちは偏って出るので、笑って眺めてください(数字の後ろは対象半荘数)。毎半荘の保存で自動更新。</p>
   </details>
 
@@ -1292,7 +1304,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var gs = labGames();
     if (gs.length < 5) {
       document.getElementById('lab-facts').innerHTML = '<div class="fact">半荘が貯まると、ここに相性データが浮かび上がります(あと' + (5 - gs.length) + '半荘)</div>';
-      ['lab-pair', 'lab-kami', 'lab-h2h', 'lab-wind'].forEach(function (id) { document.getElementById(id).innerHTML = ''; });
+      document.getElementById('lab-cards').innerHTML = '';
       return;
     }
     var P = state.players.length;
@@ -1396,59 +1408,71 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     });
     document.getElementById('lab-facts').innerHTML = top.map(function (f) { return '<div class="fact">' + f.html + '</div>'; }).join('') ||
       '<div class="fact">まだ大きな偏りは出ていません。回すほど面白くなります。</div>';
-    var html = '<thead><tr><th>プレイヤー</th><th>追い風の相手(平均pt/戦)</th><th>向かい風の相手(平均pt/戦)</th></tr></thead><tbody>';
+    /* ---- プレイヤー別カルテ ---- */
+    function pill(inner, title) {
+      return '<span class="pill"' + (title ? ' title="' + title + '"' : '') + '>' + inner + '</span>';
+    }
+    var cards = '';
     for (pi = 0; pi < P; pi++) {
+      var baseAvg = avg(overall[pi]);
+      if (baseAvg === null) continue;
+      /* 相性 */
       var best = null, worst = null;
       Object.keys(withPair[pi]).forEach(function (q) {
         var l = withPair[pi][q];
         if (l.length < 3) return;
         var m = avg(l);
-        if (!best || m > best.m) best = { q: q, m: m, n: l.length };
-        if (!worst || m < worst.m) worst = { q: q, m: m, n: l.length };
+        if (!best || m > best.m) best = { q: Number(q), m: m, n: l.length };
+        if (!worst || m < worst.m) worst = { q: Number(q), m: m, n: l.length };
       });
-      html += '<tr><td>' + ptag(pi) + '</td>' +
-        '<td>' + (best ? ptag(Number(best.q)) + ' <span class="good">' + (best.m > 0 ? '+' : '▲') + Math.abs(Math.round(best.m * 10) / 10) + '</span><span class="lab-n">(' + best.n + '戦)</span>' : '–') + '</td>' +
-        '<td>' + (worst ? ptag(Number(worst.q)) + ' <span class="bad">' + (worst.m > 0 ? '+' : '▲') + Math.abs(Math.round(worst.m * 10) / 10) + '</span><span class="lab-n">(' + worst.n + '戦)</span>' : '–') + '</td></tr>';
-    }
-    document.getElementById('lab-pair').innerHTML = html + '</tbody>';
-    html = '<thead><tr><th>プレイヤー</th><th>神上家(平均順位)</th><th>試練の上家(平均順位)</th></tr></thead><tbody>';
-    for (pi = 0; pi < P; pi++) {
+      var pairRow = '—';
+      if (best && worst) {
+        pairRow = pill('<span class="up">↗</span><i class="dot p' + best.q + '"></i>' + esc(state.players[best.q]) + '<b class="up">' + (best.m > 0 ? '+' : '▲') + Math.abs(Math.round(best.m * 10) / 10) + '</b><span class="pico">' + best.n + '戦</span>', '一緒に打つと平均ptが最も良い相手') +
+          pill('<span class="dn">↘</span><i class="dot p' + worst.q + '"></i>' + esc(state.players[worst.q]) + '<b class="dn">' + (worst.m > 0 ? '+' : '▲') + Math.abs(Math.round(worst.m * 10) / 10) + '</b><span class="pico">' + worst.n + '戦</span>', '一緒に打つと平均ptが最も渋い相手');
+      }
+      /* 上家 */
       var kb = null, kw = null;
       Object.keys(kami[pi]).forEach(function (q) {
         var l = kami[pi][q];
         if (l.length < 2) return;
         var m = avg(l);
-        if (!kb || m < kb.m) kb = { q: q, m: m, n: l.length };
-        if (!kw || m > kw.m) kw = { q: q, m: m, n: l.length };
+        if (!kb || m < kb.m) kb = { q: Number(q), m: m, n: l.length };
+        if (!kw || m > kw.m) kw = { q: Number(q), m: m, n: l.length };
       });
-      html += '<tr><td>' + ptag(pi) + '</td>' +
-        '<td>' + (kb ? ptag(Number(kb.q)) + ' <span class="good">' + f1(kb.m) + '</span><span class="lab-n">(' + kb.n + '戦)</span>' : '–') + '</td>' +
-        '<td>' + (kw ? ptag(Number(kw.q)) + ' <span class="bad">' + f1(kw.m) + '</span><span class="lab-n">(' + kw.n + '戦)</span>' : '–') + '</td></tr>';
-    }
-    document.getElementById('lab-kami').innerHTML = html + '</tbody>';
-    html = '<thead><tr><th>↓が→より上</th>' + state.players.map(function (nm) { return '<th class="num">' + esc(nm) + '</th>'; }).join('') + '</tr></thead><tbody>';
-    for (pi = 0; pi < P; pi++) {
-      html += '<tr><td>' + ptag(pi) + '</td>';
-      for (var qi = 0; qi < P; qi++) {
-        if (pi === qi) { html += '<td class="num">–</td>'; continue; }
-        var ab = above[pi][qi];
-        if (!ab || !ab.n) { html += '<td class="num">–</td>'; continue; }
-        var rate = Math.round(ab.w / ab.n * 100);
-        html += '<td class="num ' + (rate >= 60 ? 'good' : rate <= 40 ? 'bad' : '') + '">' + rate + '%<span class="lab-n">(' + ab.n + ')</span></td>';
+      var kamiRow = '—';
+      if (kb && kw) {
+        kamiRow = pill('神<i class="dot p' + kb.q + '"></i>' + esc(state.players[kb.q]) + '<b class="up">' + f1(kb.m) + '</b><span class="pico">' + kb.n + '戦</span>', 'この人が上家のとき平均順位が最も良い') +
+          pill('試練<i class="dot p' + kw.q + '"></i>' + esc(state.players[kw.q]) + '<b class="dn">' + f1(kw.m) + '</b><span class="pico">' + kw.n + '戦</span>', 'この人が上家のとき平均順位が最も渋い');
       }
-      html += '</tr>';
-    }
-    document.getElementById('lab-h2h').innerHTML = html + '</tbody>';
-    html = '<thead><tr><th>プレイヤー</th>' + SEATS.map(function (w) { return '<th class="num">' + w + '</th>'; }).join('') + '</tr></thead><tbody>';
-    for (pi = 0; pi < P; pi++) {
+      /* 風バー(棒が高い=順位が良い) */
       var rowVals = wind[pi].map(function (l) { return avg(l); });
       var bestW = -1;
-      rowVals.forEach(function (v, i) { if (v !== null && (bestW < 0 || v < rowVals[bestW])) bestW = i; });
-      html += '<tr><td>' + ptag(pi) + '</td>' + rowVals.map(function (v, i) {
-        return '<td class="num ' + (i === bestW ? 'good' : '') + '">' + f1(v) + (v !== null ? '<span class="lab-n">(' + wind[pi][i].length + ')</span>' : '') + '</td>';
-      }).join('') + '</tr>';
+      rowVals.forEach(function (v, i2) { if (v !== null && (bestW < 0 || v < rowVals[bestW])) bestW = i2; });
+      var windsHtml = '<div class="winds">' + rowVals.map(function (v, i2) {
+        var h = v === null ? 0 : Math.max(10, Math.round((4 - v) / 3 * 100));
+        return '<div class="wind ' + (i2 === bestW ? 'best' : '') + '" title="' + SEATS[i2] + 'スタート ' + (v === null ? 'データなし' : '平均順位' + f1(v) + '(' + wind[pi][i2].length + '戦)') + '">' +
+          '<div class="wbar"><i style="height:' + h + '%"></i></div>' +
+          '<small>' + SEATS[i2] + (i2 === bestW ? '◎' : '') + '<br>' + (v === null ? '–' : f1(v)) + '</small></div>';
+      }).join('') + '</div>';
+      /* 直接対決 */
+      var h2h = '';
+      for (var qi = 0; qi < P; qi++) {
+        if (qi === pi) continue;
+        var ab = above[pi][qi];
+        if (!ab || !ab.n) continue;
+        var rate = Math.round(ab.w / ab.n * 100);
+        h2h += pill('<i class="dot p' + qi + '"></i><b class="' + (rate >= 60 ? 'up' : rate <= 40 ? 'dn' : '') + '">' + rate + '%</b><span class="pico">' + ab.n + '戦</span>',
+          esc(state.players[qi]) + 'より上の順位で終えた率');
+      }
+      cards += '<div class="lc"><div class="lc-head">' + ptag(pi) +
+        '<span class="avg">平均順位 ' + f1(baseAvg) + '・' + overall[pi].length + '戦</span></div>' +
+        '<div class="lc-row"><span class="lc-lab">同卓相性</span><span style="display:flex;gap:6px;flex-wrap:wrap">' + pairRow + '</span></div>' +
+        '<div class="lc-row"><span class="lc-lab">上家</span><span style="display:flex;gap:6px;flex-wrap:wrap">' + kamiRow + '</span></div>' +
+        '<div class="lc-row"><span class="lc-lab">スタート風</span>' + windsHtml + '</div>' +
+        '<div class="lc-row"><span class="lc-lab">直接対決</span><span style="display:flex;gap:6px;flex-wrap:wrap">' + h2h + '</span></div>' +
+        '</div>';
     }
-    document.getElementById('lab-wind').innerHTML = html + '</tbody>';
+    document.getElementById('lab-cards').innerHTML = cards;
   }
 
   /* ---------- penalties ---------- */

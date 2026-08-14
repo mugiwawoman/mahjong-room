@@ -153,6 +153,29 @@
   }
   .wrap { max-width: 1060px; margin: 0 auto; padding: 24px 18px 48px; }
 
+  #audit-list { display: flex; flex-direction: column; }
+  .aud { display: flex; gap: 10px; padding: 6px 2px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  .aud:last-child { border-bottom: none; }
+  .aud .at { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .qnav {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding: 8px 2px; margin: 0 0 14px; background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .qnav a {
+    flex: none; border: 1px solid var(--line); border-radius: 99px; padding: 5px 13px;
+    font-size: 12.5px; font-weight: 700; color: var(--ink2); text-decoration: none;
+    background: var(--surface); white-space: nowrap;
+  }
+  .qnav a:hover { color: var(--accent); border-color: var(--accent); }
+  section.card, details.card, .next-card { scroll-margin-top: 54px; }
+  .season-mini { display: flex; align-items: center; gap: 10px; margin: -6px 0 10px; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .season-mini .smbar { flex: 1; height: 5px; border-radius: 99px; background: var(--surface2); overflow: hidden; }
+  .season-mini i { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s ease; }
+  .mv { display: block; font-size: 9px; line-height: 1; margin-top: 2px; }
+  .mv.up { color: var(--pos); }
+  .mv.dn { color: var(--neg); }
   .masthead {
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
@@ -361,6 +384,13 @@
     width: 100%; padding: 7px 9px; border: 1px solid var(--baseline);
     border-radius: 7px; background: var(--surface); color: var(--ink);
   }
+  .erow .inrow { display: flex; gap: 6px; }
+  .sgn {
+    flex: none; width: 44px; font: inherit; font-size: 18px; font-weight: 700;
+    border: 1px solid var(--baseline); border-radius: 7px; cursor: pointer;
+    background: var(--surface); color: var(--pos);
+  }
+  .sgn.neg { color: var(--neg); }
   .entry-foot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
   #sum-line { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink2); }
   #sum-line.ok { color: var(--pos); font-weight: 700; }
@@ -426,10 +456,6 @@
   .a-val { font-size: 19px; font-weight: 700; }
   .a-val small { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 7px; }
 
-  .swap-box { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; }
-  .swap-title { font-size: 12.5px; font-weight: 700; color: var(--ink2); margin-bottom: 8px; }
-  .swap-box select { flex: 0 1 auto; min-width: 0; }
-  #swap-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
   .swap-item {
     display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
     background: var(--surface2); border: 1px solid var(--line);
@@ -498,6 +524,15 @@
   footer b { color: var(--ink2); }
 
   .table-scroll { overflow-x: auto; }
+  .lab-h { font-size: 12.5px; font-weight: 700; color: var(--accent); letter-spacing: .06em; margin: 16px 0 6px; }
+  #lab-facts { display: flex; flex-direction: column; gap: 7px; margin: 4px 0 6px; }
+  .fact { font-size: 13.5px; line-height: 1.7; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--wash); border-radius: 0 8px 8px 0; }
+  .fact b { font-variant-numeric: tabular-nums; }
+  #lab-pair td, #lab-kami td, #lab-h2h td, #lab-wind td,
+  #lab-pair th, #lab-kami th, #lab-h2h th, #lab-wind th { white-space: nowrap; font-size: 12.5px; }
+  .lab-n { color: var(--muted); font-size: 10.5px; }
+  .good { color: var(--pos); font-weight: 700; }
+  .bad { color: var(--neg); font-weight: 700; }
 
   @media (prefers-reduced-motion: no-preference) {
     .btn { transition: background .12s ease, filter .12s ease; }
@@ -513,21 +548,37 @@
     </div>
     <div class="mast-actions">
       <button class="btn primary" id="btn-share-top" type="button">URLをコピー</button>
-      <a class="btn" href="#rules">ルール</a>
-      <a class="btn" href="#share">共有・バックアップ</a>
+      <a class="btn" href="index.html">⌂ 部屋</a>
     </div>
   </header>
+
+  <div class="season-mini" id="season-mini" hidden>
+    <span id="sm-label"></span>
+    <div class="smbar"><i id="sm-fill"></i></div>
+  </div>
+
+  <nav class="qnav" aria-label="ページ内メニュー">
+    <a href="#sec-standings">順位</a>
+    <a href="#sec-chart">推移</a>
+    <a href="#yakuman-card">図鑑</a>
+    <a class="admin-only" href="#entry">入力</a>
+    <a href="#sec-history">履歴</a>
+    <a href="#lab">ラボ</a>
+    <a href="#sec-cycle">座席</a>
+    <a href="#rules">ルール</a>
+    <a href="#share">共有</a>
+  </nav>
 
   <div class="sync-banner" id="sync-banner">…</div>
 
   <section class="next-card" id="next-card" aria-label="次の対局"></section>
 
   <div class="grid2">
-    <section class="card">
+    <section class="card" id="sec-standings">
       <h2>順位表</h2>
       <div class="table-scroll"><table id="standings"></table></div>
     </section>
-    <section class="card">
+    <section class="card" id="sec-chart">
       <h2>ポイント推移</h2>
       <div class="legend" id="legend"></div>
       <div id="chart-wrap">
@@ -542,32 +593,64 @@
     <div class="awards" id="awards"></div>
   </section>
 
+  <section class="card" id="yakuman-card">
+    <h2>役満バッジ <span class="ycount" id="yaku-count"></span></h2>
+    <div class="ybar" aria-hidden="true"><i id="yaku-bar"></i></div>
+    <div id="yaku-list"></div>
+    <div class="share-row admin-only" style="margin-top:12px">
+      <select id="yaku-player" aria-label="達成者"></select>
+      <select id="yaku-game" aria-label="半荘"></select>
+      <select id="yaku-name" aria-label="役満の種類"></select>
+      <input id="yaku-note" type="text" maxlength="40" placeholder="メモ（任意）" aria-label="メモ" style="flex:1;min-width:130px">
+      <button class="btn" id="btn-yaku-add" type="button">記録する</button>
+    </div>
+    <p class="note">役満が出るとバッジが金色に解禁されます。みんなで埋めていく図鑑(達成者と半荘を刻印。対局履歴にも🏆が付きます)。</p>
+  </section>
+
   <section class="card admin-only" id="entry">
     <h2>結果入力</h2>
     <div class="entry-top">
       <select id="game-select" aria-label="入力する半荘"></select>
       <span class="entry-note">最終持ち点をそのまま入力(例: 42300)。合計100,000点でptを自動計算します。</span>
     </div>
-    <label class="skip-toggle"><input type="checkbox" id="skip-mode"> 欠席者がいる日は先の半荘を選んで進行(スキップ入力) — 飛ばした半荘は後日そのまま打てます</label>
+    <label class="skip-toggle">欠席がいる日:
+      <select id="absent-sel"><option value="">(選ぶと自動ジャンプ)</option></select>
+      — その人が抜け番の半荘に飛びます。飛ばした半荘は後日そのまま
+    </label>
+    <label class="skip-toggle"><input type="checkbox" id="skip-mode"> 手動で先の半荘を選ぶ(スキップ入力・上級)</label>
     <div class="erows" id="entry-rows"></div>
     <div id="preview"></div>
     <div class="entry-foot">
       <button class="btn primary" id="btn-save" type="button" disabled>結果を保存</button>
-      <button class="btn" id="btn-autofill" type="button" hidden></button>
       <span id="sum-line"></span>
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" id="sec-history">
     <h2>対局履歴</h2>
     <div id="history"></div>
   </section>
+
+  <details class="card fold" id="lab">
+    <summary><h2>データラボ🔬(相性・上家ガチャ・風)</h2></summary>
+    <div id="lab-facts"></div>
+    <h3 class="lab-h">同卓相性 — 追い風の相手・向かい風の相手</h3>
+    <div class="table-scroll"><table id="lab-pair"></table></div>
+    <h3 class="lab-h">上家ガチャ — 上家に誰が座ると順位が変わるか</h3>
+    <div class="table-scroll"><table id="lab-kami"></table></div>
+    <h3 class="lab-h">直接対決 — 同卓時に相手より上の順位で終えた率</h3>
+    <div class="table-scroll"><table id="lab-h2h"></table></div>
+    <h3 class="lab-h">スタート風別の平均順位</h3>
+    <div class="table-scroll"><table id="lab-wind"></table></div>
+    <p class="note">※データラボは「巡り合わせ(運)」の観察日記です。腕前の査定ではありません。対局数が少ないうちは偏って出るので、笑って眺めてください(数字の後ろは対象半荘数)。毎半荘の保存で自動更新。</p>
+  </details>
 
   <details class="card fold">
     <summary><h2>ペナルティ(チョンボ等)</h2></summary>
     <div class="share-row admin-only">
       <select id="pen-player" aria-label="対象プレイヤー"></select>
-      <input id="pen-pt" type="number" step="10" value="-20" aria-label="調整pt" style="width:84px">
+      <button type="button" class="sgn neg" id="pen-sgn" data-sgn="-1" aria-label="プラスマイナス切替" style="width:40px">−</button>
+      <input id="pen-pt" type="number" step="10" min="0" value="20" aria-label="調整pt(絶対値)" style="width:74px">
       <input id="pen-note" type="text" maxlength="40" placeholder="例: チョンボ(第6半荘・ノーテンリーチ)" aria-label="メモ" style="flex:1;min-width:180px">
       <button class="btn" id="btn-pen-add" type="button">追加</button>
     </div>
@@ -575,21 +658,11 @@
     <p class="note">Mリーグ準拠: チョンボは−20pt(故意は−60pt)。合計ptと個人タイトルに即反映されます(ポイント推移グラフは半荘のptのみ表示)。</p>
   </details>
 
-  <details class="card fold">
+  <details class="card fold" id="sec-cycle">
     <summary><h2>座席表(今のサイクル・10半荘)</h2></summary>
     <div class="table-scroll"><table id="cycle"></table></div>
     <p class="note">「東」の列が起家(親スタート)。1サイクル10半荘で、全員が①抜け番ちょうど2回 ②東南西北スタート各2回 ③<b>上家・下家の並び(全20通り)もちょうど2回ずつ</b>になる厳格設計。さらに<b>第6〜125半荘は全120通りの卓の組み合わせを1回ずつ</b>使う完全設計で、同じ座席の配置は二度と現れません。</p>
-    <div class="swap-box admin-only">
-      <div class="swap-title">予定が合わない週は組み合わせを入れ替え</div>
-      <div class="share-row">
-        <select id="swap-a" aria-label="入れ替える半荘1"></select>
-        <span aria-hidden="true">⇄</span>
-        <select id="swap-b" aria-label="入れ替える半荘2"></select>
-        <button class="btn" id="btn-swap" type="button">入れ替える</button>
-      </div>
-      <div id="swap-list"></div>
-      <p class="note">まだ結果を入れていない半荘同士なら自由に入れ替えられます。組み合わせの順番が変わるだけなので、サイクル全体の公平性(出場8・抜け番2・各家2回)はそのまま保たれます。</p>
-    </div>
+    <p class="note admin-only">欠席者がいる日は、結果入力の「スキップ入力」でその人が抜け番の半荘に飛んで進行できます(飛ばした半荘は後日そのまま)。</p>
   </details>
 
   <details class="card fold">
@@ -617,20 +690,6 @@
     <div class="pedit" id="prizes-edit" style="margin-top:14px"></div>
     <p class="note">景品はレギュレーション欄の最後に表示されます。ここで自由に書き換え可能 — どんどん豪華に。</p>
   </details>
-
-  <section class="card" id="yakuman-card">
-    <h2>役満バッジ <span class="ycount" id="yaku-count"></span></h2>
-    <div class="ybar" aria-hidden="true"><i id="yaku-bar"></i></div>
-    <div id="yaku-list"></div>
-    <div class="share-row admin-only" style="margin-top:12px">
-      <select id="yaku-player" aria-label="達成者"></select>
-      <select id="yaku-game" aria-label="半荘"></select>
-      <select id="yaku-name" aria-label="役満の種類"></select>
-      <input id="yaku-note" type="text" maxlength="40" placeholder="メモ（任意）" aria-label="メモ" style="flex:1;min-width:130px">
-      <button class="btn" id="btn-yaku-add" type="button">記録する</button>
-    </div>
-    <p class="note">役満が出るとバッジが金色に解禁されます。みんなで埋めていく図鑑(達成者と半荘を刻印。対局履歴にも🏆が付きます)。</p>
-  </section>
 
   <details class="card fold" id="rules">
     <summary><h2>レギュレーション(Mリーグルール準拠)</h2></summary>
@@ -683,6 +742,12 @@
       </div>
     </div>
     <div class="prize-line" id="prize-line"></div>
+  </details>
+
+  <details class="card fold" id="audit">
+    <summary><h2>変更ログ(自動記録)</h2></summary>
+    <div id="audit-list"></div>
+    <p class="note">結果の保存・修正・削除・調整・役満記録は、時刻つきでここに自動で残ります(この端末とデータの控え)。さらに自動保存のたびにGitHubへ<b>コミット履歴</b>として永久記録されるため、<a href="https://github.com/mugiwawoman/mahjong-room/commits/main/league-data.json" target="_blank" rel="noopener">改ざんできない公式ログ</a>を誰でもいつでも確認できます。過去のコミットは書き換え不可能なので、後からこっそり数字を直すと必ず痕跡が残ります。</p>
   </details>
 
   <details class="card fold" id="share">
@@ -973,6 +1038,23 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var st = playerStats();
     var order = [0, 1, 2, 3, 4].sort(function (a, b) { return st[b].total - st[a].total || a - b; });
     var anyPlayed = playedNums().length > 0;
+    /* 直前の半荘を除いた順位と比べて変動矢印を出す */
+    var mv = null;
+    var nums = playedNums();
+    if (nums.length >= 2) {
+      var last = nums[nums.length - 1];
+      var totals = [0, 0, 0, 0, 0];
+      nums.forEach(function (n) {
+        if (n === last) return;
+        var a = comboFor(n);
+        var res = calcGame(state.results[n]);
+        a.seats.forEach(function (pp, si) { totals[pp] = Math.round((totals[pp] + res[si].pt) * 10) / 10; });
+      });
+      (state.pen || []).forEach(function (e) { totals[e.p] = Math.round((totals[e.p] + e.pt) * 10) / 10; });
+      var prevOrder = [0, 1, 2, 3, 4].sort(function (a, b) { return totals[b] - totals[a] || a - b; });
+      mv = [];
+      prevOrder.forEach(function (pp, idx) { mv[pp] = idx; });
+    }
     var html = '<thead><tr><th></th><th>プレイヤー</th><th class="num">合計pt</th></tr></thead><tbody>';
     order.forEach(function (p, i) {
       var s = st[p];
@@ -987,8 +1069,13 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         '<span class="sg">①' + s.tops + ' ②' + s.seconds + ' ③' + thirds + ' ④' + s.lasts + '</span> ' +
         '<span class="sg">平均' + (s.games ? (s.rankSum / s.games).toFixed(2) : '–') + '</span>';
       var adjLine = s.adj ? '<div class="p-sub adj ' + ptClass(s.adj) + '">調整 ' + fmtPt(s.adj) + 'pt</div>' : '';
+      var arrow = '';
+      if (mv) {
+        if (mv[p] > i) arrow = '<span class="mv up">▲' + (mv[p] - i) + '</span>';
+        else if (mv[p] < i) arrow = '<span class="mv dn">▼' + (i - mv[p]) + '</span>';
+      }
       html += '<tr class="' + (leader ? 'leader' : '') + '">' +
-        '<td class="rank num r' + (i + 1) + '">' + (i + 1) + '</td>' +
+        '<td class="rank num r' + (i + 1) + '">' + (i + 1) + arrow + '</td>' +
         '<td class="p-cell"><div>' + ptag(p) + '</div>' +
         '<div class="p-sub">' + sub + '</div>' + adjLine + '</td>' +
         '<td class="num total ' + ptClass(s.total) + '">' + fmtPt(s.total) + gap + '</td></tr>';
@@ -1060,6 +1147,12 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
 
   /* ---------- entry ---------- */
   function renderEntrySelect(selected) {
+    var asel = document.getElementById('absent-sel');
+    if (asel && asel.options.length !== state.players.length + 1) {
+      asel.innerHTML = '<option value="">(選ぶと自動ジャンプ)</option>' + state.players.map(function (nm, i) {
+        return '<option value="' + i + '">' + esc(nm) + 'が欠席</option>';
+      }).join('');
+    }
     var sel = document.getElementById('game-select');
     var next = nextGameNum();
     var items = playedNums().map(function (n) {
@@ -1086,6 +1179,25 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     renderEntrySelect();
     renderEntryRows();
   });
+  document.getElementById('absent-sel').addEventListener('change', function () {
+    if (this.value === '') {
+      document.getElementById('skip-mode').checked = false;
+      renderEntrySelect();
+      renderEntryRows();
+      return;
+    }
+    var idx = Number(this.value);
+    var found = -1;
+    for (var k = nextGameNum(); k <= 125; k++) {
+      if (state.results[k]) continue;
+      if (comboFor(k).bye === idx) { found = k; break; }
+    }
+    if (found < 0) { alert('この先に該当の抜け番が見つかりません'); return; }
+    document.getElementById('skip-mode').checked = true;
+    renderEntrySelect(found);
+    renderEntryRows();
+    showToast(gameLabel(found) + '(' + state.players[idx] + 'が抜け番)にジャンプしました');
+  });
   function renderEntryRows() {
     var n = Number(document.getElementById('game-select').value);
     var a = comboFor(n);
@@ -1093,47 +1205,55 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var html = '';
     a.seats.forEach(function (p, si) {
       var val = existing ? existing[si] : '';
+      var neg = val !== '' && val < 0;
       html += '<div class="erow"><div class="ehead"><span class="etile">' + SEATS[si] + '</span>' + ptag(p) + '</div>' +
-        '<input type="number" step="100" inputmode="numeric" placeholder="25000" ' +
+        '<div class="inrow"><button type="button" class="sgn' + (neg ? ' neg' : '') + '" data-sgn="' + (neg ? -1 : 1) + '" aria-label="プラスマイナス切替(箱下は−に)">' + (neg ? '−' : '＋') + '</button>' +
+        '<input type="number" step="100" min="0" inputmode="numeric" placeholder="25000" ' +
         'aria-label="' + SEATS[si] + ' ' + esc(state.players[p]) + ' の最終持ち点" ' +
-        'data-seat="' + si + '" value="' + val + '"></div>';
+        'data-seat="' + si + '" value="' + (val === '' ? '' : Math.abs(val)) + '"></div></div>';
     });
     document.getElementById('entry-rows').innerHTML = html;
     updateEntryState();
   }
   function readEntry() {
-    var inputs = document.querySelectorAll('#entry-rows input');
     var vals = [];
     var filled = 0;
-    inputs.forEach(function (inp) {
-      if (inp.value.trim() === '') { vals.push(null); return; }
-      var v = Number(inp.value);
-      if (!isFinite(v)) { vals.push(null); return; }
-      vals.push(v); filled++;
+    var emptyInput = null;
+    document.querySelectorAll('#entry-rows .erow').forEach(function (row) {
+      var inp = row.querySelector('input');
+      var sgn = Number(row.querySelector('.sgn').dataset.sgn) || 1;
+      if (inp.value.trim() === '' || !isFinite(Number(inp.value))) {
+        vals.push(null);
+        emptyInput = inp;
+        return;
+      }
+      vals.push(sgn * Math.abs(Number(inp.value)));
+      filled++;
     });
-    return { vals: vals, complete: filled === 4 };
+    return { vals: vals, complete: filled === 4, filled: filled, emptyInput: emptyInput };
   }
   function updateEntryState() {
     var e = readEntry();
     var sumEl = document.getElementById('sum-line');
     var pv = document.getElementById('preview');
     var save = document.getElementById('btn-save');
-    var auto = document.getElementById('btn-autofill');
-    var filled = e.vals.filter(function (v) { return v !== null; });
-    if (filled.length === 3) {
-      var rem = 100000 - filled.reduce(function (a, b) { return a + b; }, 0);
-      auto.textContent = '残りの1人に ' + rem.toLocaleString() + '点 を自動入力';
-      auto.hidden = false;
-    } else {
-      auto.hidden = true;
-    }
-    if (!e.complete) {
+    var vals = e.vals.slice();
+    var autoIdx = -1;
+    if (e.filled === 3) {
+      /* 残り1人は自動で帳尻(箱下ならマイナス) */
+      var rem = 100000 - vals.reduce(function (a, b) { return a + (b || 0); }, 0);
+      autoIdx = vals.indexOf(null);
+      vals[autoIdx] = rem;
+      if (e.emptyInput) e.emptyInput.placeholder = '自動 ' + rem.toLocaleString();
+    } else if (e.emptyInput) e.emptyInput.placeholder = '25000';
+    if (vals.indexOf(null) >= 0) {
       sumEl.className = '';
-      sumEl.textContent = '4人分の持ち点を入力してください';
+      sumEl.textContent = 'あと' + (4 - e.filled) + '人分 — 最後の1人は自動で埋まります';
       pv.innerHTML = '';
       save.disabled = true;
       return;
     }
+    e = { vals: vals };
     var sum = e.vals.reduce(function (a, b) { return a + b; }, 0);
     if (sum !== 100000) {
       sumEl.className = 'err';
@@ -1144,7 +1264,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       return;
     }
     sumEl.className = 'ok';
-    sumEl.textContent = '合計 100,000 点 OK';
+    sumEl.textContent = autoIdx >= 0 ? '合計10万点 OK(1人は自動計算) — このまま保存できます' : '合計 100,000 点 OK';
     var n = Number(document.getElementById('game-select').value);
     var a = comboFor(n);
     var res = calcGame(e.vals);
@@ -1152,9 +1272,183 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     pv.innerHTML = order.map(function (si) {
       var p = a.seats[si];
       return '<span class="pv"><span class="pv-rank">' + res[si].rank + '位</span>' + ptag(p) +
-        '<span class="pv-pt ' + ptClass(res[si].pt) + '">' + fmtPt(res[si].pt) + '</span></span>';
+        '<span class="pv-pt ' + ptClass(res[si].pt) + '">' + fmtPt(res[si].pt) + (si === autoIdx ? '(自動)' : '') + '</span></span>';
     }).join('');
     save.disabled = false;
+  }
+
+  /* ---------- data lab ---------- */
+  function labGames() {
+    return playedNums().map(function (n) {
+      var a = comboFor(n);
+      return { seats: a.seats, res: calcGame(state.results[n]) };
+    });
+  }
+  function avg(list) {
+    return list.length ? list.reduce(function (a, b) { return a + b; }, 0) / list.length : null;
+  }
+  function f1(v) { return v === null ? '–' : (Math.round(v * 100) / 100).toFixed(2); }
+  function renderLab() {
+    var gs = labGames();
+    if (gs.length < 5) {
+      document.getElementById('lab-facts').innerHTML = '<div class="fact">半荘が貯まると、ここに相性データが浮かび上がります(あと' + (5 - gs.length) + '半荘)</div>';
+      ['lab-pair', 'lab-kami', 'lab-h2h', 'lab-wind'].forEach(function (id) { document.getElementById(id).innerHTML = ''; });
+      return;
+    }
+    var P = state.players.length;
+    var overall = [], withPair = {}, kami = {}, wind = {}, above = {};
+    for (var i = 0; i < P; i++) {
+      overall[i] = [];
+      withPair[i] = {}; kami[i] = {}; above[i] = {};
+      wind[i] = [[], [], [], []];
+    }
+    gs.forEach(function (g) {
+      g.seats.forEach(function (p, si) {
+        var rk = g.res[si].rank, pt = g.res[si].pt;
+        overall[p].push(rk);
+        wind[p][si].push(rk);
+        /* 上家 = 打順(東→南→西→北)で自分の一つ前の席 */
+        var kp = g.seats[(si + 3) % 4];
+        (kami[p][kp] = kami[p][kp] || []).push(rk);
+        g.seats.forEach(function (q, sj) {
+          if (q === p) return;
+          (withPair[p][q] = withPair[p][q] || []).push(pt);
+          var ab = above[p][q] = above[p][q] || { w: 0, n: 0 };
+          if (g.res[si].rank < g.res[sj].rank) ab.w++;
+          ab.n++;
+        });
+      });
+    });
+    /* 時系列(フォーム・連続記録用): 半荘番号順のpt/順位 */
+    var seqPt = [], seqRk = [];
+    for (i = 0; i < P; i++) { seqPt[i] = []; seqRk[i] = []; }
+    gs.forEach(function (g) {
+      g.seats.forEach(function (p, si) {
+        seqPt[p].push(g.res[si].pt);
+        seqRk[p].push(g.res[si].rank);
+      });
+    });
+    var facts = [];
+    for (var pi = 0; pi < P; pi++) {
+      var base = avg(overall[pi]);
+      if (base === null) continue;
+      /* フォーム: 直近5戦 vs シーズン平均pt */
+      if (seqPt[pi].length >= 8) {
+        var recent = avg(seqPt[pi].slice(-5));
+        var season = avg(seqPt[pi]);
+        var fd = recent - season;
+        if (Math.abs(fd) >= 15) {
+          facts.push({ cat: 'form', score: Math.abs(fd) / 14, html: esc(state.players[pi]) + 'は<b>直近5戦</b>で平均 <b class="' + (fd > 0 ? 'good' : 'bad') + '">' + (recent > 0 ? '+' : '▲') + Math.abs(Math.round(recent * 10) / 10) + 'pt</b>/半荘<span class="lab-n">(シーズン平均' + (season > 0 ? '+' : '▲') + Math.abs(Math.round(season * 10) / 10) + ')</span> ' + (fd > 0 ? '<span class="good">📈 上げ潮</span>' : '<span class="bad">📉 我慢の時期</span>') });
+        }
+      }
+      /* 連続記録(ポジティブのみ) */
+      var streak = 0;
+      for (var k = seqRk[pi].length - 1; k >= 0 && seqRk[pi][k] <= 2; k--) streak++;
+      if (streak >= 3) facts.push({ cat: 'streak', score: streak * 0.45, html: esc(state.players[pi]) + 'は現在 <b class="good">' + streak + '戦連続で連対中</b>(1・2位)🔥' });
+      streak = 0;
+      for (k = seqRk[pi].length - 1; k >= 0 && seqRk[pi][k] < 4; k--) streak++;
+      if (streak >= 6) facts.push({ cat: 'streak', score: streak * 0.28, html: esc(state.players[pi]) + 'は現在 <b class="good">' + streak + '戦連続ラス回避中</b>🛡️' });
+      Object.keys(kami[pi]).forEach(function (q) {
+        var l = kami[pi][q];
+        if (l.length < 3) return;
+        var d = avg(l) - base;
+        if (Math.abs(d) < 0.4) return;
+        facts.push({ cat: 'kami', score: Math.abs(d), html: esc(state.players[pi]) + 'は<b>' + esc(state.players[q]) + 'が上家</b>だと平均順位 <b>' + f1(avg(l)) + '</b><span class="lab-n">(' + l.length + '戦・普段' + f1(base) + ')</span> ' + (d < 0 ? '<span class="good">◎追い風</span>' : '<span class="bad">✗向かい風</span>') });
+      });
+      Object.keys(withPair[pi]).forEach(function (q) {
+        var l = withPair[pi][q];
+        if (l.length < 4) return;
+        var m = avg(l);
+        if (Math.abs(m) < 8) return;
+        facts.push({ cat: 'pair', score: Math.abs(m) / 12, html: esc(state.players[pi]) + 'は<b>' + esc(state.players[q]) + 'と同卓</b>のとき平均 <b class="' + (m > 0 ? 'good' : 'bad') + '">' + (m > 0 ? '+' : '▲') + Math.abs(Math.round(m * 10) / 10) + 'pt</b>/半荘<span class="lab-n">(' + l.length + '戦)</span>' });
+      });
+      [0, 1, 2, 3].forEach(function (w) {
+        var l = wind[pi][w];
+        if (l.length < 3) return;
+        var d = avg(l) - base;
+        if (Math.abs(d) < 0.7) return;
+        facts.push({ cat: 'wind', score: Math.abs(d) * 0.9, html: esc(state.players[pi]) + 'は<b>' + SEATS[w] + 'スタート</b>で平均順位 <b>' + f1(avg(l)) + '</b><span class="lab-n">(' + l.length + '戦・普段' + f1(base) + ')</span> ' + (d < 0 ? '<span class="good">◎</span>' : '<span class="bad">✗</span>') });
+      });
+    }
+    /* 安定王とジェットコースター賞(順位のブレ) */
+    var sd = [];
+    for (i = 0; i < P; i++) {
+      if (seqRk[i].length < 6) { sd[i] = null; continue; }
+      var m = avg(seqRk[i]);
+      sd[i] = Math.sqrt(avg(seqRk[i].map(function (r) { return (r - m) * (r - m); })));
+    }
+    var stMin = -1, stMax = -1;
+    sd.forEach(function (v, i) {
+      if (v === null) return;
+      if (stMin < 0 || v < sd[stMin]) stMin = i;
+      if (stMax < 0 || v > sd[stMax]) stMax = i;
+    });
+    if (stMin >= 0 && stMax >= 0 && stMin !== stMax) {
+      facts.push({ cat: 'style', score: 1.05, html: '🧘 <b>安定王</b>: ' + esc(state.players[stMin]) + '<span class="lab-n">(順位のブレが最小 σ=' + f1(sd[stMin]) + ')</span> / 🎢 <b>ジェットコースター賞</b>: ' + esc(state.players[stMax]) + '<span class="lab-n">(σ=' + f1(sd[stMax]) + ')</span>' });
+    }
+    facts.sort(function (a, b) { return b.score - a.score; });
+    /* カテゴリ混合で上位10件(同種は3件まで) */
+    var catCount = {}, top = [];
+    facts.forEach(function (f) {
+      var c = f.cat || 'x';
+      catCount[c] = (catCount[c] || 0) + 1;
+      if (catCount[c] <= 3 && top.length < 10) top.push(f);
+    });
+    document.getElementById('lab-facts').innerHTML = top.map(function (f) { return '<div class="fact">' + f.html + '</div>'; }).join('') ||
+      '<div class="fact">まだ大きな偏りは出ていません。回すほど面白くなります。</div>';
+    var html = '<thead><tr><th>プレイヤー</th><th>追い風の相手(平均pt/戦)</th><th>向かい風の相手(平均pt/戦)</th></tr></thead><tbody>';
+    for (pi = 0; pi < P; pi++) {
+      var best = null, worst = null;
+      Object.keys(withPair[pi]).forEach(function (q) {
+        var l = withPair[pi][q];
+        if (l.length < 3) return;
+        var m = avg(l);
+        if (!best || m > best.m) best = { q: q, m: m, n: l.length };
+        if (!worst || m < worst.m) worst = { q: q, m: m, n: l.length };
+      });
+      html += '<tr><td>' + ptag(pi) + '</td>' +
+        '<td>' + (best ? ptag(Number(best.q)) + ' <span class="good">' + (best.m > 0 ? '+' : '▲') + Math.abs(Math.round(best.m * 10) / 10) + '</span><span class="lab-n">(' + best.n + '戦)</span>' : '–') + '</td>' +
+        '<td>' + (worst ? ptag(Number(worst.q)) + ' <span class="bad">' + (worst.m > 0 ? '+' : '▲') + Math.abs(Math.round(worst.m * 10) / 10) + '</span><span class="lab-n">(' + worst.n + '戦)</span>' : '–') + '</td></tr>';
+    }
+    document.getElementById('lab-pair').innerHTML = html + '</tbody>';
+    html = '<thead><tr><th>プレイヤー</th><th>神上家(平均順位)</th><th>試練の上家(平均順位)</th></tr></thead><tbody>';
+    for (pi = 0; pi < P; pi++) {
+      var kb = null, kw = null;
+      Object.keys(kami[pi]).forEach(function (q) {
+        var l = kami[pi][q];
+        if (l.length < 2) return;
+        var m = avg(l);
+        if (!kb || m < kb.m) kb = { q: q, m: m, n: l.length };
+        if (!kw || m > kw.m) kw = { q: q, m: m, n: l.length };
+      });
+      html += '<tr><td>' + ptag(pi) + '</td>' +
+        '<td>' + (kb ? ptag(Number(kb.q)) + ' <span class="good">' + f1(kb.m) + '</span><span class="lab-n">(' + kb.n + '戦)</span>' : '–') + '</td>' +
+        '<td>' + (kw ? ptag(Number(kw.q)) + ' <span class="bad">' + f1(kw.m) + '</span><span class="lab-n">(' + kw.n + '戦)</span>' : '–') + '</td></tr>';
+    }
+    document.getElementById('lab-kami').innerHTML = html + '</tbody>';
+    html = '<thead><tr><th>↓が→より上</th>' + state.players.map(function (nm) { return '<th class="num">' + esc(nm) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    for (pi = 0; pi < P; pi++) {
+      html += '<tr><td>' + ptag(pi) + '</td>';
+      for (var qi = 0; qi < P; qi++) {
+        if (pi === qi) { html += '<td class="num">–</td>'; continue; }
+        var ab = above[pi][qi];
+        if (!ab || !ab.n) { html += '<td class="num">–</td>'; continue; }
+        var rate = Math.round(ab.w / ab.n * 100);
+        html += '<td class="num ' + (rate >= 60 ? 'good' : rate <= 40 ? 'bad' : '') + '">' + rate + '%<span class="lab-n">(' + ab.n + ')</span></td>';
+      }
+      html += '</tr>';
+    }
+    document.getElementById('lab-h2h').innerHTML = html + '</tbody>';
+    html = '<thead><tr><th>プレイヤー</th>' + SEATS.map(function (w) { return '<th class="num">' + w + '</th>'; }).join('') + '</tr></thead><tbody>';
+    for (pi = 0; pi < P; pi++) {
+      var rowVals = wind[pi].map(function (l) { return avg(l); });
+      var bestW = -1;
+      rowVals.forEach(function (v, i) { if (v !== null && (bestW < 0 || v < rowVals[bestW])) bestW = i; });
+      html += '<tr><td>' + ptag(pi) + '</td>' + rowVals.map(function (v, i) {
+        return '<td class="num ' + (i === bestW ? 'good' : '') + '">' + f1(v) + (v !== null ? '<span class="lab-n">(' + wind[pi][i].length + ')</span>' : '') + '</td>';
+      }).join('') + '</tr>';
+    }
+    document.getElementById('lab-wind').innerHTML = html + '</tbody>';
   }
 
   /* ---------- penalties ---------- */
@@ -1174,24 +1468,36 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         '<span class="h-act admin-only"><button class="btn small danger" type="button" data-pendel="' + i + '">削除</button></span></div>';
     }).join('');
   }
+  document.getElementById('pen-sgn').addEventListener('click', function () {
+    var neg = this.dataset.sgn === '1';
+    this.dataset.sgn = neg ? '-1' : '1';
+    this.textContent = neg ? '−' : '＋';
+    this.classList.toggle('neg', neg);
+  });
   document.getElementById('btn-pen-add').addEventListener('click', function () {
     var pIdx = Number(document.getElementById('pen-player').value);
-    var pt = Number(document.getElementById('pen-pt').value);
+    var sgnBtn = document.getElementById('pen-sgn');
+    var pt = Number(sgnBtn.dataset.sgn) * Math.abs(Number(document.getElementById('pen-pt').value));
     var note = document.getElementById('pen-note').value.trim();
     if (!isFinite(pt) || pt === 0) { alert('調整ptを入力してください(チョンボは-20)'); return; }
     if (!confirm(state.players[pIdx] + ' に ' + fmtPt(pt) + 'pt の調整を追加します。よろしいですか?')) return;
     state.pen.push({ p: pIdx, pt: pt, note: note });
+    logAdd('調整を追加: ' + state.players[pIdx] + ' ' + fmtPt(pt) + 'pt' + (note ? '(' + note + ')' : ''));
     persist();
     renderAll();
     showToast('ペナルティを記録しました');
     document.getElementById('pen-note').value = '';
-    document.getElementById('pen-pt').value = -20;
+    document.getElementById('pen-pt').value = 20;
+    var sb = document.getElementById('pen-sgn');
+    sb.dataset.sgn = '-1'; sb.textContent = '−'; sb.classList.add('neg');
   });
   document.getElementById('pen-list').addEventListener('click', function (ev) {
     var t = ev.target.closest('button');
     if (!t || t.dataset.pendel === undefined) return;
     var i = Number(t.dataset.pendel);
     if (confirm('この調整を削除しますか?')) {
+      var pe = state.pen[i];
+      logAdd('調整を削除: ' + state.players[pe.p] + ' ' + fmtPt(pe.pt) + 'pt');
       state.pen.splice(i, 1);
       persist();
       renderAll();
@@ -1254,6 +1560,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var entry = { p: pIdx, n: n, name: name };
     if (note) entry.note = note;
     state.yaku.push(entry);
+    logAdd('役満を記録: ' + state.players[pIdx] + '「' + name + '」' + gameLabel(n));
     persist();
     renderAll();
     showToast('🏆 役満バッジを解禁しました');
@@ -1263,6 +1570,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var t = ev.target.closest('button');
     if (!t || t.dataset.yakudel === undefined) return;
     if (confirm('この役満記録を削除しますか？')) {
+      var ye = state.yaku[Number(t.dataset.yakudel)];
+      if (ye) logAdd('役満記録を削除: ' + state.players[ye.p] + '「' + ye.name + '」');
       state.yaku.splice(Number(t.dataset.yakudel), 1);
       persist();
       renderAll();
@@ -1289,46 +1598,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     }
     html += '</tbody>';
     document.getElementById('cycle').innerHTML = html;
-    renderSwapUI();
   }
 
-  function unplayedUpcoming(count) {
-    var list = [];
-    var n = nextGameNum();
-    while (list.length < count) {
-      if (!state.results[n]) list.push(n);
-      n++;
-    }
-    return list;
-  }
-  function renderSwapUI() {
-    var cands = unplayedUpcoming(12);
-    var opts = cands.map(function (n) {
-      var a = comboFor(n);
-      return '<option value="' + n + '">第' + n + '半荘(抜け番 ' + esc(state.players[a.bye]) + ')</option>';
-    }).join('');
-    document.getElementById('swap-a').innerHTML = opts;
-    var selB = document.getElementById('swap-b');
-    selB.innerHTML = opts;
-    if (cands.length > 1) selB.value = String(cands[1]);
-    /* list active clean pair-swaps that can still be undone */
-    var seen = {}, pairs = [];
-    Object.keys(state.map).forEach(function (k) {
-      var n = Number(k), m = Number(state.map[k]);
-      if (seen[n] || seen[m]) return;
-      if (Number(state.map[m]) === n) {
-        seen[n] = seen[m] = true;
-        pairs.push([Math.min(n, m), Math.max(n, m)]);
-      }
-    });
-    var el = document.getElementById('swap-list');
-    el.innerHTML = pairs.map(function (pr) {
-      var undoable = !state.results[pr[0]] && !state.results[pr[1]];
-      return '<span class="swap-item">第' + pr[0] + '半荘 ⇄ 第' + pr[1] + '半荘' +
-        (undoable ? ' <button class="btn small" type="button" data-unswap="' + pr[0] + ',' + pr[1] + '">解除</button>' : '') +
-        '</span>';
-    }).join('');
-  }
 
   /* ---------- season settings & prizes ---------- */
   function renderPrizeLine() {
@@ -1623,7 +1894,37 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   }
 
   /* ---------- render all ---------- */
+  var lastAction = '';
+  function logAdd(m) {
+    state.log = state.log || [];
+    state.log.push({ t: Date.now(), m: m });
+    if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
+    lastAction = m;
+  }
+  function renderAudit() {
+    var el = document.getElementById('audit-list');
+    var log = (state.log || []).slice(-50).reverse();
+    if (!log.length) {
+      el.innerHTML = '<div class="empty" style="padding:10px 0">まだ記録がありません。次の保存からここに残ります。</div>';
+      return;
+    }
+    el.innerHTML = log.map(function (e) {
+      var d = new Date(e.t);
+      return '<div class="aud"><span class="at">' + d.toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</span><span>' + esc(e.m) + '</span></div>';
+    }).join('');
+  }
+  function renderSeasonMini() {
+    var el = document.getElementById('season-mini');
+    var done = playedNums().length;
+    var total = state.season || 65;
+    if (!done) { el.hidden = true; return; }
+    el.hidden = false;
+    var pct = Math.min(100, Math.round(done / total * 100));
+    document.getElementById('sm-label').textContent = done + ' / ' + total + '半荘(' + pct + '%)';
+    document.getElementById('sm-fill').style.width = pct + '%';
+  }
   function renderAll(keepGame) {
+    renderSeasonMini();
     renderNext();
     renderStandings();
     renderAwards();
@@ -1633,6 +1934,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     renderEntrySelect(keepGame);
     renderEntryRows();
     renderHistory();
+    renderLab();
+    renderAudit();
     renderPen();
     renderCycle();
     renderFairness();
@@ -1642,62 +1945,38 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
 
   /* ---------- events ---------- */
   document.getElementById('game-select').addEventListener('change', renderEntryRows);
+  document.getElementById('entry-rows').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.sgn');
+    if (!b) return;
+    var neg = b.dataset.sgn === '1';
+    b.dataset.sgn = neg ? '-1' : '1';
+    b.textContent = neg ? '−' : '＋';
+    b.classList.toggle('neg', neg);
+    updateEntryState();
+  });
   document.getElementById('entry-rows').addEventListener('input', updateEntryState);
 
   document.getElementById('btn-save').addEventListener('click', function () {
     var e = readEntry();
-    if (!e.complete) return;
+    var vals = e.vals.slice();
+    if (e.filled === 3) vals[vals.indexOf(null)] = 100000 - vals.reduce(function (a, b) { return a + (b || 0); }, 0);
+    if (vals.indexOf(null) >= 0) return;
+    e = { vals: vals };
     var sum = e.vals.reduce(function (a, b) { return a + b; }, 0);
     if (sum !== 100000) return;
     var n = Number(document.getElementById('game-select').value);
+    var wasEdit = !!state.results[n];
     state.results[n] = e.vals;
+    logAdd(gameLabel(n) + (wasEdit ? 'を修正' : 'を保存') + '(' + e.vals.map(function (v) { return v.toLocaleString(); }).join(' / ') + ')');
     persist();
     renderAll();
     showToast('第' + n + '半荘を保存しました ✓');
-  });
-
-  document.getElementById('btn-autofill').addEventListener('click', function () {
-    var inputs = document.querySelectorAll('#entry-rows input');
-    var sum = 0, empty = null;
-    inputs.forEach(function (inp) {
-      if (inp.value.trim() === '') { empty = inp; return; }
-      var v = Number(inp.value);
-      if (isFinite(v)) sum += v;
-    });
-    if (!empty) return;
-    empty.value = 100000 - sum;
-    updateEntryState();
   });
 
   document.getElementById('next-card').addEventListener('click', function (ev) {
     if (ev.target.closest('#btn-goto-entry')) {
       document.getElementById('entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  });
-
-  /* ---------- schedule swaps ---------- */
-  document.getElementById('btn-swap').addEventListener('click', function () {
-    var x = Number(document.getElementById('swap-a').value);
-    var y = Number(document.getElementById('swap-b').value);
-    if (!x || !y || x === y) { alert('別の半荘同士を選んでください。'); return; }
-    if (state.results[x] || state.results[y]) { alert('結果を入力済みの半荘は入れ替えられません。'); return; }
-    var cx = effectiveNum(x), cy = effectiveNum(y);
-    if (cy === x) delete state.map[x]; else state.map[x] = cy;
-    if (cx === y) delete state.map[y]; else state.map[y] = cx;
-    persist();
-    renderAll();
-    showToast('第' + x + '半荘と第' + y + '半荘を入れ替えました');
-  });
-  document.getElementById('swap-list').addEventListener('click', function (ev) {
-    var t = ev.target.closest('button');
-    if (!t || !t.dataset.unswap) return;
-    var pr = t.dataset.unswap.split(',').map(Number);
-    if (state.results[pr[0]] || state.results[pr[1]]) return;
-    delete state.map[pr[0]];
-    delete state.map[pr[1]];
-    persist();
-    renderAll();
-    showToast('入れ替えを解除しました');
   });
 
   document.getElementById('history').addEventListener('click', function (ev) {
@@ -1707,6 +1986,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       var n = Number(t.dataset.del);
       if (confirm(gameLabel(n) + 'の結果を削除しますか?')) {
         delete state.results[n];
+        logAdd(gameLabel(n) + 'の結果を削除');
         persist();
         renderAll();
         showToast(gameLabel(n) + 'の結果を削除しました');
@@ -1731,6 +2011,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     renderLegend();
     renderChart();
     renderHistory();
+    renderLab();
+    renderAudit();
     renderPen();
     renderCycle();
     renderFairness();
@@ -1905,6 +2187,13 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     if (dirty) { ev.preventDefault(); ev.returnValue = ''; }
   });
 
+  document.querySelector('.qnav').addEventListener('click', function (ev) {
+    var a = ev.target.closest('a[href^="#"]');
+    if (!a) return;
+    var el = document.querySelector(a.getAttribute('href'));
+    if (el && el.tagName === 'DETAILS') el.setAttribute('open', '');
+  });
+
   renderAll();
 
   /* ---------- GitHub auto-save (owner only; token stays in this browser) ---------- */
@@ -1928,7 +2217,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       .then(function (r) { return r.status === 404 ? null : r.json(); })
       .then(function (cur) {
         var payload = {
-          message: 'S\u30ea\u30fc\u30b0\u306e\u6210\u7e3e\u3092\u81ea\u52d5\u4fdd\u5b58',
+          message: lastAction || 'リーグの成績を自動保存',
           content: btoa(unescape(encodeURIComponent(body)))
         };
         if (cur && cur.sha) payload.sha = cur.sha;

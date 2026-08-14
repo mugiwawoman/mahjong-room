@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>社内ゴルフツアー</title>
+<style>
+  :root {
+    --bg: #f4f5ef; --paper: #fdfdf8; --line: #dfe2d4; --baseline: #c3c8b2;
+    --ink: #22271f; --ink2: #59604f; --mut: #8d937f;
+    --turf: #2e7d32; --turf-deep: #1b5e20; --turf-ink: #eaf5ea; --turf-ink2: #a5d6a7;
+    --gold: #9c7c1e; --gold-line: rgba(168, 138, 48, .5); --gold-bg: rgba(212, 175, 55, .13);
+    --pos: #1565c0; --neg: #c62828; --flag: #d84315;
+    --shadow: 0 1px 2px rgba(30, 40, 25, .07), 0 4px 14px rgba(30, 40, 25, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #10130e; --paper: #191e16; --line: #2a3125; --baseline: #3d4635;
+      --ink: #edf0e6; --ink2: #b7bdaa; --mut: #81877a; --turf: #2e7d32; --turf-deep: #17421a;
+      --gold: #d9bf6a; --gold-line: rgba(217, 191, 106, .4); --gold-bg: rgba(217, 191, 106, .1);
+      --pos: #64b5f6; --neg: #ef9a9a; --shadow: 0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.3); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+    font-size: 14.5px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
+  header.hero { background: linear-gradient(165deg, var(--turf), var(--turf-deep)); color: var(--turf-ink);
+    padding: 34px 20px 26px; margin-bottom: 18px; }
+  .hero-in { max-width: 760px; margin: 0 auto; }
+  .hero h1 { margin: 0; font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: clamp(24px, 6vw, 34px); letter-spacing: .1em; }
+  .hero .sub { color: var(--turf-ink2); font-size: 12.5px; letter-spacing: .08em; margin-top: 4px; }
+  section.card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 16px; }
+  h2 { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--ink2); margin: 0 0 12px; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: var(--mut);
+    padding: 4px 6px; border-bottom: 1px solid var(--baseline); white-space: nowrap; }
+  td { padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rank1 { color: var(--gold); font-weight: 700; }
+  .btn { border: 1px solid var(--baseline); background: var(--paper); color: var(--ink);
+    border-radius: 8px; padding: 8px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .btn.primary { background: var(--turf); border-color: var(--turf); color: #fff; }
+  .btn.small { padding: 3px 10px; font-size: 12px; }
+  .btn.danger { color: var(--neg); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  input, select { border: 1px solid var(--baseline); background: var(--paper); color: var(--ink);
+    border-radius: 8px; padding: 7px 9px; font-size: 15px; }
+  input[type="number"] { width: 74px; text-align: right; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  .note { font-size: 11.5px; color: var(--mut); margin: 8px 0 0; }
+  .empty { color: var(--mut); font-size: 13px; text-align: center; padding: 18px 0; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 1px 8px;
+    border: 1px solid var(--gold-line); color: var(--gold); background: var(--gold-bg); white-space: nowrap; }
+  /* badges */
+  .bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(102px, 1fr)); gap: 8px; }
+  .gb { border: 1.5px dashed var(--baseline); border-radius: 10px; padding: 10px 6px 8px; text-align: center;
+    color: var(--mut); background: repeating-linear-gradient(-45deg, transparent 0 7px, rgba(127,127,127,.05) 7px 14px); }
+  .gb b { display: block; font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 14px; letter-spacing: .06em; opacity: .65; }
+  .gb small { font-size: 10px; opacity: .75; }
+  .gb.got { border: 1px solid var(--gold-line); background: linear-gradient(155deg, var(--gold-bg), transparent 70%), var(--paper);
+    color: var(--ink); box-shadow: 0 2px 8px rgba(212, 175, 55, .2); }
+  .gb.got b { color: var(--gold); opacity: 1; }
+  .gb .del { border: none; background: none; color: var(--neg); font-size: 11px; cursor: pointer; padding: 0 3px; }
+  /* member chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line);
+    border-radius: 99px; padding: 5px 12px; font-size: 13.5px; cursor: pointer; user-select: none; }
+  .chip.on { border-color: var(--turf); background: rgba(46, 125, 50, .1); font-weight: 700; }
+  /* score rows */
+  .srow { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+  .srow:last-child { border-bottom: none; }
+  .srow .nm { flex: 1 1 90px; font-weight: 600; min-width: 80px; }
+  .srow label { font-size: 11px; color: var(--mut); }
+  .net { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 52px; text-align: right; }
+  /* peria */
+  .peria-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin: 8px 0; }
+  .peria-grid input { width: 100%; padding: 6px 2px; text-align: center; }
+  .peria-grid .ph { font-size: 9.5px; color: var(--mut); text-align: center; }
+  /* history */
+  .hrow { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .hrow:last-child { border-bottom: none; }
+  .hrow .t { font-weight: 700; font-size: 13.5px; }
+  .hrow .d { font-size: 11.5px; color: var(--mut); }
+  .hrow .w { font-size: 12.5px; color: var(--ink2); flex: 1; }
+  /* ceremony overlay */
+  #stage { position: fixed; inset: 0; background: linear-gradient(170deg, var(--turf-deep), #0c2e0e);
+    color: #eef7ee; display: none; z-index: 50; padding: 24px; overflow-y: auto; }
+  #stage.show { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  #stage .st-comp { font-size: 12px; letter-spacing: .3em; color: var(--turf-ink2); }
+  #stage .st-rank { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: clamp(40px, 12vw, 84px); margin: 8px 0 0; letter-spacing: .1em; }
+  #stage .st-name { font-size: clamp(30px, 9vw, 60px); font-weight: 700; margin: 4px 0 8px; }
+  #stage .st-sc { font-size: 15px; color: var(--turf-ink2); font-variant-numeric: tabular-nums; }
+  #stage .st-gold .st-rank, #stage .st-gold .st-name { color: #f3dd8b; text-shadow: 0 0 30px rgba(243, 221, 139, .45); }
+  #stage .st-btns { margin-top: 40px; display: flex; gap: 12px; }
+  #stage .btn { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); color: #eef7ee; }
+  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--bg); border-radius: 99px; padding: 9px 20px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 60; white-space: nowrap; }
+  #toast.show { opacity: 1; transform: translateX(-50%); }
+  details.fold { border-top: 1px dashed var(--line); margin-top: 10px; padding-top: 8px; }
+  details.fold summary { cursor: pointer; font-size: 12.5px; color: var(--ink2); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="hero-in">
+  <h1 id="tour-title">社内ゴルフツアー</h1>
+  <div class="sub" id="tour-sub">年間ポイントランキング — コンペを重ねるほど、物語が積み上がる</div>
+</div></header>
+
+<div class="wrap">
+
+  <section class="card">
+    <h2>年間ランキング</h2>
+    <table id="season"></table>
+    <p class="note">ツアーpt: 各コンペのネット順位に応じて 15・12・10・8・7・6・5・4・3・2・1pt。ベスグロ賞は+2pt。</p>
+  </section>
+
+  <section class="card">
+    <h2>殿堂バッジ <span class="tag" id="badge-count"></span></h2>
+    <div class="bgrid" id="badges"></div>
+    <div class="row" style="margin-top:10px">
+      <select id="bd-member"></select>
+      <select id="bd-name"></select>
+      <select id="bd-comp"></select>
+      <button class="btn small" id="bd-add" type="button">記録</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>新しいコンペ</h2>
+    <div class="row">
+      <input id="c-name" type="text" placeholder="第1戦 〇〇カントリー" style="flex:1;min-width:150px" maxlength="30">
+      <input id="c-date" type="date">
+    </div>
+    <div class="chips" id="c-members" style="margin:10px 0"></div>
+    <div id="c-rows"></div>
+    <details class="fold">
+      <summary>新ペリア計算機(18ホール入力 → ハンデ自動計算)</summary>
+      <div class="row"><select id="p-target"></select><span class="note" style="margin:0">の18ホール打数:</span></div>
+      <div class="peria-grid" id="p-out"></div>
+      <div class="peria-grid" id="p-in"></div>
+      <div class="row">
+        <label><input type="checkbox" id="p-cap" checked> 各ホール パー2倍打ち切り</label>
+        <label><input type="checkbox" id="p-max" checked> ハンデ上限36</label>
+        <button class="btn small" id="p-calc" type="button">計算してハンデ欄へ</button>
+        <span id="p-result" class="note" style="margin:0"></span>
+      </div>
+      <p class="note">隠し12ホールはこのページがランダムに選びます(パー配列: 標準72)。</p>
+    </details>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="c-save" type="button">このコンペを保存</button>
+      <span class="note" style="margin:0">グロスとハンデを入れるとネット順位を自動計算</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>コンペの記録</h2>
+    <div id="history"></div>
+  </section>
+
+  <section class="card">
+    <h2>メンバー</h2>
+    <div class="row"><input id="m-name" type="text" placeholder="名前" maxlength="12"><button class="btn small" id="m-add" type="button">追加</button></div>
+    <div class="chips" id="m-list"></div>
+  </section>
+
+  <section class="card">
+    <h2>共有</h2>
+    <div class="row"><button class="btn" id="share" type="button">このページのURLをコピー(データ入り)</button></div>
+    <p class="note">URLに全データが埋め込まれます。メンバーに送れば同じランキングが見られます。</p>
+  </section>
+
+</div>
+
+<div id="stage" role="dialog" aria-label="表彰式">
+  <div class="st-comp" id="st-comp"></div>
+  <div id="st-body"><div class="st-rank" id="st-rank">表彰式</div><div class="st-name" id="st-name">準備OK?</div><div class="st-sc" id="st-sc"></div></div>
+  <div class="st-btns">
+    <button class="btn" id="st-next" type="button">下位から発表 ▶</button>
+    <button class="btn" id="st-close" type="button">閉じる</button>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'golf-tour-v1';
+  var PARS = [4,4,3,4,5,4,3,4,5,4,4,3,4,5,4,3,4,5];
+  var PTS = [15,12,10,8,7,6,5,4,3,2];
+  var BADGE_NAMES = ['ホールインワン','アルバトロス','イーグル','チップイン','砂神(バンカー一発)','ナイスパー拾い'];
+
+  function def() { return { title: '社内ゴルフツアー', members: [], comps: [], badges: [], t: Date.now() }; }
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw); if (o && Array.isArray(o.members)) return o; } } catch (e) {}
+    return def();
+  }
+  var state = load();
+  function persist() {
+    state.t = Date.now();
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    try { history.replaceState(null, '', '#d=' + btoa(unescape(encodeURIComponent(JSON.stringify(state)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')); } catch (e) {}
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
+  function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._x); toast._x = setTimeout(function () { t.classList.remove('show'); }, 2200); }
+
+  /* ---- comp results: rows [{m, gross, hd}] -> ranked by net ---- */
+  function ranked(comp) {
+    return comp.rows.slice().sort(function (a, b) {
+      var na = a.gross - a.hd, nb = b.gross - b.hd;
+      return na - nb || a.gross - b.gross;
+    });
+  }
+  function seasonStats() {
+    var st = state.members.map(function () { return { pt: 0, wins: 0, played: 0, bestGross: null }; });
+    state.comps.forEach(function (c) {
+      var r = ranked(c);
+      var bg = Math.min.apply(null, c.rows.map(function (x) { return x.gross; }));
+      r.forEach(function (row, i) {
+        var s = st[row.m]; if (!s) return;
+        s.pt += (PTS[i] || 1);
+        s.played++;
+        if (i === 0) s.wins++;
+        if (row.gross === bg) s.pt += 2;
+        if (s.bestGross === null || row.gross < s.bestGross) s.bestGross = row.gross;
+      });
+    });
+    return st;
+  }
+
+  function renderSeason() {
+    var el = document.getElementById('season');
+    if (!state.comps.length) { el.innerHTML = '<tbody><tr><td class="empty">コンペを保存すると年間ランキングが始まります。</td></tr></tbody>'; return; }
+    var st = seasonStats();
+    var order = state.members.map(function (_, i) { return i; })
+      .filter(function (i) { return st[i].played > 0; })
+      .sort(function (a, b) { return st[b].pt - st[a].pt || (st[a].bestGross || 999) - (st[b].bestGross || 999); });
+    var html = '<thead><tr><th></th><th>プレイヤー</th><th class="num">ツアーpt</th><th class="num">優勝</th><th class="num">出場</th><th class="num">ベスグロ</th></tr></thead><tbody>';
+    order.forEach(function (m, i) {
+      var s = st[m];
+      html += '<tr><td class="num ' + (i === 0 ? 'rank1' : '') + '" style="width:26px">' + (i + 1) + '</td>' +
+        '<td>' + esc(state.members[m].name) + (i === 0 ? ' <span class="tag">首位</span>' : '') + '</td>' +
+        '<td class="num" style="font-weight:700">' + s.pt + '</td>' +
+        '<td class="num">' + s.wins + '</td><td class="num">' + s.played + '</td>' +
+        '<td class="num">' + (s.bestGross === null ? '–' : s.bestGross) + '</td></tr>';
+    });
+    document.getElementById('season').innerHTML = html + '</tbody>';
+  }
+
+  function renderBadges() {
+    var got = {};
+    state.badges.forEach(function (b, i) { (got[b.name] = got[b.name] || []).push({ b: b, i: i }); });
+    var names = BADGE_NAMES.slice();
+    state.badges.forEach(function (b) { if (names.indexOf(b.name) < 0) names.push(b.name); });
+    var n = names.filter(function (k) { return got[k]; }).length;
+    document.getElementById('badge-count').textContent = n + ' / ' + names.length;
+    document.getElementById('badges').innerHTML = names.map(function (k) {
+      var hs = got[k];
+      if (!hs) return '<div class="gb"><b>' + esc(k) + '</b><small>未達成</small></div>';
+      return '<div class="gb got"><b>' + esc(k) + '</b>' + hs.map(function (h) {
+        var mem = state.members[h.b.m];
+        return '<small>' + esc(mem ? mem.name : '?') + '(' + esc(h.b.comp || '') + ')<button class="del" data-bd="' + h.i + '">✕</button></small>';
+      }).join('<br>') + '</div>';
+    }).join('');
+    var ms = state.members.map(function (m, i) { return '<option value="' + i + '">' + esc(m.name) + '</option>'; }).join('');
+    document.getElementById('bd-member').innerHTML = ms;
+    document.getElementById('bd-name').innerHTML = BADGE_NAMES.map(function (k) { return '<option>' + k + '</option>'; }).join('');
+    document.getElementById('bd-comp').innerHTML = '<option value="">(どのコンペ?)</option>' + state.comps.map(function (c) { return '<option>' + esc(c.name) + '</option>'; }).join('');
+  }
+
+  var picked = {};
+  function renderEntry() {
+    document.getElementById('c-members').innerHTML = state.members.map(function (m, i) {
+      return '<span class="chip ' + (picked[i] ? 'on' : '') + '" data-pick="' + i + '">' + esc(m.name) + '</span>';
+    }).join('') || '<span class="empty">まずメンバーを追加してください</span>';
+    var ids = Object.keys(picked).filter(function (k) { return picked[k]; }).map(Number);
+    document.getElementById('c-rows').innerHTML = ids.map(function (i) {
+      var m = state.members[i];
+      return '<div class="srow" data-m="' + i + '"><span class="nm">' + esc(m.name) + '</span>' +
+        '<label>グロス <input type="number" class="g" min="50" max="160"></label>' +
+        '<label>HD <input type="number" class="h" step="0.1" value="' + (m.hd != null ? m.hd : 0) + '"></label>' +
+        '<span class="net" data-net>–</span></div>';
+    }).join('');
+    document.getElementById('p-target').innerHTML = ids.map(function (i) {
+      return '<option value="' + i + '">' + esc(state.members[i].name) + '</option>';
+    }).join('');
+    updateNets();
+  }
+  function updateNets() {
+    document.querySelectorAll('#c-rows .srow').forEach(function (row) {
+      var g = Number(row.querySelector('.g').value), h = Number(row.querySelector('.h').value);
+      row.querySelector('[data-net]').textContent = g ? 'NET ' + (Math.round((g - h) * 10) / 10) : '–';
+    });
+  }
+
+  function renderHistory() {
+    var el = document.getElementById('history');
+    if (!state.comps.length) { el.innerHTML = '<div class="empty">まだコンペがありません。</div>'; return; }
+    el.innerHTML = state.comps.map(function (c, i) {
+      var r = ranked(c);
+      var w = r[0] ? state.members[r[0].m] : null;
+      return '<div class="hrow"><span class="t">' + esc(c.name) + '</span><span class="d">' + esc(c.date || '') + '</span>' +
+        '<span class="w">優勝 ' + (w ? esc(w.name) : '?') + '(NET ' + (r[0] ? Math.round((r[0].gross - r[0].hd) * 10) / 10 : '') + ')・' + c.rows.length + '名</span>' +
+        '<button class="btn small" data-stage="' + i + '">表彰式</button>' +
+        '<button class="btn small danger" data-cdel="' + i + '">削除</button></div>';
+    }).join('');
+  }
+
+  function renderMembers() {
+    document.getElementById('m-list').innerHTML = state.members.map(function (m, i) {
+      return '<span class="chip">' + esc(m.name) + ' <button class="del btn small danger" style="border:none;padding:0 3px" data-mdel="' + i + '">✕</button></span>';
+    }).join('');
+  }
+  function renderPeria() {
+    var mk = function (id, start) {
+      var g = document.getElementById(id);
+      var h = '';
+      for (var k = 0; k < 9; k++) h += '<div class="ph">' + (start + k) + 'H<br>P' + PARS[start + k - 1] + '</div>';
+      for (k = 0; k < 9; k++) h += '<input type="number" min="1" max="15" data-hole="' + (start + k - 1) + '">';
+      g.innerHTML = h;
+    };
+    mk('p-out', 1); mk('p-in', 10);
+  }
+  function renderAll() { renderSeason(); renderBadges(); renderEntry(); renderHistory(); renderMembers(); }
+
+  /* ---- events ---- */
+  document.getElementById('m-add').addEventListener('click', function () {
+    var v = document.getElementById('m-name').value.trim();
+    if (!v) return;
+    state.members.push({ name: v, hd: 0 });
+    document.getElementById('m-name').value = '';
+    persist(); renderAll();
+  });
+  document.getElementById('m-list').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-mdel]');
+    if (!t) return;
+    if (!confirm('メンバーを削除しますか?(過去の記録の名前表示も消えます)')) return;
+    var i = Number(t.dataset.mdel);
+    var used = state.comps.some(function (c) { return c.rows.some(function (r) { return r.m === i; }); });
+    if (used) { alert('コンペ記録があるメンバーは削除できません。'); return; }
+    state.members.splice(i, 1);
+    delete picked[i];
+    persist(); renderAll();
+  });
+  document.getElementById('c-members').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-pick]');
+    if (!t) return;
+    var i = Number(t.dataset.pick);
+    picked[i] = !picked[i];
+    renderEntry();
+  });
+  document.getElementById('c-rows').addEventListener('input', updateNets);
+  document.getElementById('p-calc').addEventListener('click', function () {
+    var vals = [], ok = true;
+    document.querySelectorAll('#p-out input, #p-in input').forEach(function (inp) {
+      var v = Number(inp.value);
+      if (!v) ok = false;
+      vals[Number(inp.dataset.hole)] = v;
+    });
+    if (!ok) { alert('18ホールぜんぶ入力してください'); return; }
+    var idx = PARS.map(function (_, i) { return i; });
+    var hidden = [];
+    var pool1 = idx.slice(0, 9), pool2 = idx.slice(9);
+    [pool1, pool2].forEach(function (pool) {
+      for (var k = 0; k < 6; k++) hidden.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    });
+    var cap = document.getElementById('p-cap').checked;
+    var sum = hidden.reduce(function (a, h) {
+      var s = vals[h];
+      if (cap) s = Math.min(s, PARS[h] * 2);
+      return a + s;
+    }, 0);
+    var gross = vals.reduce(function (a, b) { return a + b; }, 0);
+    var hd = Math.round((sum * 1.5 - 72) * 10) / 10;
+    if (document.getElementById('p-max').checked) hd = Math.min(hd, 36);
+    if (hd < 0) hd = 0;
+    var target = Number(document.getElementById('p-target').value);
+    var row = document.querySelector('#c-rows .srow[data-m="' + target + '"]');
+    if (row) { row.querySelector('.g').value = gross; row.querySelector('.h').value = hd; updateNets(); }
+    document.getElementById('p-result').textContent = 'グロス' + gross + '・新ペリアHD ' + hd + '(隠しH: ' + hidden.map(function (h) { return h + 1; }).sort(function(a,b){return a-b;}).join(',') + ')';
+  });
+  document.getElementById('c-save').addEventListener('click', function () {
+    var name = document.getElementById('c-name').value.trim() || ('第' + (state.comps.length + 1) + '戦');
+    var rows = [];
+    var bad = false;
+    document.querySelectorAll('#c-rows .srow').forEach(function (row) {
+      var g = Number(row.querySelector('.g').value), h = Number(row.querySelector('.h').value);
+      if (!g) { bad = true; return; }
+      rows.push({ m: Number(row.dataset.m), gross: g, hd: isFinite(h) ? h : 0 });
+    });
+    if (bad || rows.length < 2) { alert('参加者を選んで、全員のグロスを入力してください(2名以上)'); return; }
+    state.comps.push({ name: name, date: document.getElementById('c-date').value || '', rows: rows });
+    rows.forEach(function (r) { state.members[r.m].hd = r.hd; });
+    picked = {};
+    document.getElementById('c-name').value = '';
+    persist(); renderAll();
+    toast('「' + name + '」を保存しました ⛳');
+  });
+  document.getElementById('history').addEventListener('click', function (ev) {
+    var d = ev.target.closest('[data-cdel]');
+    if (d) {
+      if (confirm('このコンペを削除しますか?')) { state.comps.splice(Number(d.dataset.cdel), 1); persist(); renderAll(); }
+      return;
+    }
+    var s = ev.target.closest('[data-stage]');
+    if (s) openStage(Number(s.dataset.stage));
+  });
+  document.getElementById('bd-add').addEventListener('click', function () {
+    if (!state.members.length) return;
+    state.badges.push({ m: Number(document.getElementById('bd-member').value),
+      name: document.getElementById('bd-name').value,
+      comp: document.getElementById('bd-comp').value });
+    persist(); renderAll();
+    toast('殿堂入り🏆');
+  });
+  document.getElementById('badges').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-bd]');
+    if (t && confirm('この記録を削除しますか?')) { state.badges.splice(Number(t.dataset.bd), 1); persist(); renderAll(); }
+  });
+  document.getElementById('share').addEventListener('click', function () {
+    persist();
+    var url = location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { toast('URLをコピーしました ✓'); }, function () { prompt('コピーしてください', url); });
+    } else prompt('コピーしてください', url);
+  });
+
+  /* ---- ceremony ---- */
+  var stageQueue = [], stageComp = null;
+  function openStage(i) {
+    stageComp = state.comps[i];
+    stageQueue = ranked(stageComp).slice().reverse(); // worst first
+    document.getElementById('st-comp').textContent = stageComp.name + ' 表彰式';
+    document.getElementById('st-rank').textContent = '表彰式';
+    document.getElementById('st-name').textContent = '結果発表、いきます';
+    document.getElementById('st-sc').textContent = '';
+    document.getElementById('st-body').classList.remove('st-gold');
+    document.getElementById('st-next').disabled = false;
+    document.getElementById('stage').classList.add('show');
+  }
+  document.getElementById('st-next').addEventListener('click', function () {
+    if (!stageQueue.length) return;
+    var row = stageQueue.shift();
+    var rank = stageQueue.length + 1;
+    var body = document.getElementById('st-body');
+    body.classList.toggle('st-gold', rank === 1);
+    document.getElementById('st-rank').textContent = rank === 1 ? '優勝' : rank + '位';
+    document.getElementById('st-name').textContent = state.members[row.m] ? state.members[row.m].name : '?';
+    document.getElementById('st-sc').textContent = 'GROSS ' + row.gross + ' / HD ' + row.hd + ' / NET ' + Math.round((row.gross - row.hd) * 10) / 10;
+    if (!stageQueue.length) { this.disabled = true; }
+  });
+  document.getElementById('st-close').addEventListener('click', function () {
+    document.getElementById('stage').classList.remove('show');
+  });
+
+  /* ---- share link import ---- */
+  (function () {
+    var m = location.hash.match(/#d=([A-Za-z0-9\-_]+)/);
+    if (!m) return;
+    try {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var o = JSON.parse(decodeURIComponent(escape(atob(b))));
+      if (o && Array.isArray(o.members) && (!state.comps.length || (o.t || 0) > (state.t || 0))) {
+        state = o;
+        persist();
+      }
+    } catch (e) {}
+  })();
+
+  renderPeria();
+  renderAll();
+})();
+</script>
+</body>
+</html>

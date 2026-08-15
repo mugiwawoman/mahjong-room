@@ -306,13 +306,6 @@
   .fdot.fr2 { background: var(--pos); }
   .fdot.fr3 { background: var(--baseline); }
   .fdot.fr4 { background: var(--neg); }
-  .stakes { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-  .stake {
-    font-size: 13px; line-height: 1.7; padding: 7px 12px; border-radius: 8px;
-    background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .18);
-  }
-  .stake b { font-variant-numeric: tabular-nums; }
-  .stake.hot { border-color: rgba(240, 200, 106, .6); background: rgba(240, 200, 106, .12); }
   .race-line { font-size: 12.5px; color: var(--ink2); margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
   .race-line b { color: var(--gold); }
   #standings .p-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
@@ -619,7 +612,6 @@
   <div class="grid2">
     <section class="card" id="sec-standings">
       <h2>順位表</h2>
-      <div id="race-line" class="race-line" hidden></div>
       <div class="table-scroll"><table id="standings"></table></div>
     </section>
     <section class="card" id="sec-chart">
@@ -983,46 +975,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     html += '<div class="seat bye"><div class="seat-tile">抜け番</div>' +
       '<div class="seat-name"><i class="dot p' + a.bye + '"></i><span>' + esc(state.players[a.bye]) + '</span></div></div>';
     html += '</div>';
-    /* 見どころ: 順位・pt差・連続記録から自動生成 */
-    (function () {
-      var st2 = playerStats();
-      var ord = [0, 1, 2, 3, 4].sort(function (x, y) { return st2[y].total - st2[x].total || x - y; });
-      var rankOf = {};
-      ord.forEach(function (p2, i2) { rankOf[p2] = i2 + 1; });
-      var inGame = {};
-      a.seats.forEach(function (p2) { inGame[p2] = true; });
-      var lines = [];
-      if (inGame[ord[0]] && inGame[ord[1]]) {
-        var gap01 = Math.round((st2[ord[0]].total - st2[ord[1]].total) * 10) / 10;
-        lines.push({ hot: true, t: '首位攻防戦!1位' + esc(state.players[ord[0]]) + ' vs 2位' + esc(state.players[ord[1]]) + ' — 差は<b>' + gap01.toFixed(1) + 'pt</b>' });
-      }
-      for (var i2 = 0; i2 < 4; i2++) {
-        var hi = ord[i2], lo = ord[i2 + 1];
-        if (!inGame[hi] || !inGame[lo]) continue;
-        if (i2 === 0 && lines.length) continue;
-        var g2 = Math.round((st2[hi].total - st2[lo].total) * 10) / 10;
-        if (g2 <= 90) {
-          lines.push({ hot: g2 <= 45, t: (i2 + 1) + '位' + esc(state.players[hi]) + 'と' + (i2 + 2) + '位' + esc(state.players[lo]) + 'が同卓 — <b>' + g2.toFixed(1) + 'pt差</b>、今夜入れ替わり圏内' });
-        }
-      }
-      /* 連続連対中の出場者 */
-      var seqR = [[], [], [], [], []];
-      playedNums().forEach(function (fn) {
-        var fa2 = comboFor(fn);
-        var fr2 = calcGame(state.results[fn]);
-        fa2.seats.forEach(function (fp, fsi) { seqR[fp].push(fr2[fsi].rank); });
-      });
-      a.seats.forEach(function (p2) {
-        var k2 = 0;
-        for (var q2 = seqR[p2].length - 1; q2 >= 0 && seqR[p2][q2] <= 2; q2--) k2++;
-        if (k2 >= 3) lines.push({ hot: false, t: esc(state.players[p2]) + 'は<b>' + k2 + '戦連続連対中</b>の絶好調で参戦' });
-      });
-      if (lines.length) {
-        html += '<div class="stakes">' + lines.slice(0, 2).map(function (l) {
-          return '<div class="stake' + (l.hot ? ' hot' : '') + '">🔥 ' + l.t + '</div>';
-        }).join('') + '</div>';
-      }
-    })();
+
 
     var ups = [];
     var m = n + 1;
@@ -1177,19 +1130,6 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     });
     html += '</tbody>';
     document.getElementById('standings').innerHTML = html;
-    /* 優勝戦線: 残り試合から理論上の可能性を判定 */
-    var done = playedNums().length;
-    var remainPP = Math.max(0, Math.round((state.season - done) * 4 / 5));
-    var race = document.getElementById('race-line');
-    if (race) race.hidden = !(anyPlayed && done >= 5 && (state.season - done) > 0);
-    if (race && anyPlayed && done >= 5) {
-      var top = st[order[0]].total;
-      var alive = order.filter(function (p2) { return (top - st[p2].total) <= remainPP * 75; });
-      race.innerHTML = remainPP <= 0 ? '' :
-        (alive.length === 5 ?
-          '🏆 優勝戦線: <b>まだ全員に優勝の目があります</b>(1人あたり残り約' + remainPP + '戦)' :
-          '🏆 優勝戦線: 理論上の優勝圏は <b>' + alive.map(function (p2) { return esc(state.players[p2]); }).join('・') + '</b>(残り約' + remainPP + '戦)');
-    }
     animateTotals();
   }
   var totalsAnimated = false;

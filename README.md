@@ -8,7 +8,6 @@
 | Tリーグ | `mleague-tracker.html` | Mリーグルール準拠・5人固定リーグ戦(順位表/座席表/役満バッジ/自動保存) |
 | セット麻雀スコアラー | `street-scorer.html` | 3麻・4麻対応のポイント制セット記録(チップpt換算あり) |
 | 点数下敷き | `scoring.html` | 点数計算機・符計算チェックリスト・早見表 |
-| 社内ゴルフツアー | `golf-tour.html` | ゴルフコンペの年間シーズン管理(新ペリア自動計算/ツアーpt/表彰式モード) |
 | 紹介ページ | `biz-lp.html` | 社内麻雀部キットの営業LP(OGP画像は `ogp-lp.png`) |
 
 - リーグのルール・個人タイトル・景品・完璧試合数は [regulations.md](regulations.md)
@@ -20,8 +19,11 @@
 - Tリーグ: https://mugiwawoman.github.io/mahjong-room/mleague-tracker.html
 - セット: https://mugiwawoman.github.io/mahjong-room/street-scorer.html
 - 点数下敷き: https://mugiwawoman.github.io/mahjong-room/scoring.html
-- ゴルフツアー: https://mugiwawoman.github.io/mahjong-room/golf-tour.html
 - 紹介LP: https://mugiwawoman.github.io/mahjong-room/biz-lp.html
+
+## アーカイブ
+
+使っていないものは [archive/](archive/) に置いてある(消してはいない)。戻し方も同ディレクトリに。
 
 更新が反映されない端末は、ページを引っ張って再読み込み(Pagesのキャッシュは最大10分)。データだけ古いときはアプリ内「共有・バックアップ → 金庫から最新データを読み込む」。
 

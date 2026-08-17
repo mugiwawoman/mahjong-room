@@ -1,9 +1,9 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { run, settle } = require('./dom');
-const NEW = path.join(__dirname, '..', 'golf-tour.html');
-const OLD = path.join(__dirname, 'old', 'golf-tour.html');
+const { run, settle } = require('../tests/dom');
+const NEW = path.join(__dirname, 'golf-tour.html');
+const OLD = path.join(__dirname, '..', 'tests', 'old', 'golf-tour.html');
 /* tests/old/ は「修正前」のコピー。無ければ再現テストは飛ばす。
    作り直す時: git show <修正前のrev>:golf-tour.html > tests/old/golf-tour.html */
 const HAS_OLD = fs.existsSync(OLD);

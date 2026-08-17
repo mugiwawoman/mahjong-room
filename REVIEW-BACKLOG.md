@@ -1,6 +1,7 @@
 # 審査員5人レビュー：改修バックログ
 
-更新: 2026-08-17 ／ 対象: mleague-tracker.html, street-scorer.html, golf-tour.html, index.html
+更新: 2026-08-17 ／ 対象: mleague-tracker.html, street-scorer.html, index.html
+※ golf-tour.html は 2026-08-17 に archive/ へ移動（動く状態で凍結。以降の項目は対象外）
 
 ## 済（このセッションで再現→修正→テスト green）
 - [x] 色が並び順依存でメンバー削除時にズレる（street）→ 色を本人に固定
@@ -79,7 +80,7 @@
 
 ## P1（初見・プロダクト：審査員C/E）未着手
 - [ ] 既定名「プレイヤー1〜4」→ 空＋プレースホルダ、入力カードから直接リネーム
-- [ ] golfがスマホで横スクロール（.table-scroll欠落、@mediaがdarkのみ）
+- [-] ~~golfがスマホで横スクロール~~ → アーカイブにつき対象外
 - [ ] リーグ→LPリンクが0本（逆は3本）／indexのLP導線をカード化
 - [ ] scoringに⌂部屋リンクなし
 - [ ] 平均着順・連対率・ラス率（率指標）を通算表に

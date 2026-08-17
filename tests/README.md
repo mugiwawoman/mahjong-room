@@ -5,7 +5,12 @@
 ```
 node tests/mleague.test.js
 node tests/street.test.js
-node tests/golf.test.js
+```
+
+アーカイブしたものも走る:
+
+```
+node archive/golf.test.js
 ```
 
 `dom.js` は最小のDOM/localStorage/fetchのスタブ。各HTMLの `<script>` を抜き出して
@@ -28,8 +33,8 @@ node tests/golf.test.js
 「修正前はこう壊れた」を並べて確認したい時だけ置く。無ければその項目は自動で省略。
 
 ```
-git show 9674188:golf-tour.html      > tests/old/golf-tour.html
 git show 9674188:mleague-tracker.html > tests/old/mleague-tracker.html
+git show 9674188:golf-tour.html       > tests/old/golf-tour.html   # archive/golf.test.js 用
 ```
 
 (9674188 = データ保護を入れる前のコミット)

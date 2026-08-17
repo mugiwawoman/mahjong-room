@@ -1893,15 +1893,29 @@
     clearTimeout(pushTimer);
     pushTimer = setTimeout(autoPush, 1500);
   }
-  /* いま把握しているリモートの世代。これより先に進んでいたら他の端末が保存している */
-  var syncedT = 0;
-  function remoteTOf(cur) {
+  /* 最後に突き合わせた金庫の「中身」を覚えておく。
+     時計(t)ではなく内容そのもので比べるので、端末の時刻ズレが判断に入らない。 */
+  var syncedSig = null;
+  function sigOf(txt) {
+    var h = 5381, i;
+    txt = String(txt == null ? '' : txt);
+    for (i = 0; i < txt.length; i++) h = ((h << 5) + h + txt.charCodeAt(i)) | 0;
+    return txt.length + ':' + (h >>> 0);
+  }
+  function remoteBodyOf(cur) {
     try {
-      if (!cur || !cur.content) return 0;
-      var txt = decodeURIComponent(escape(atob(String(cur.content).replace(/\s/g, ''))));
-      var o = JSON.parse(txt);
-      return Number((o && o.t) || 0) || 0;
-    } catch (e) { return 0; }
+      if (!cur || !cur.content) return '';
+      return decodeURIComponent(escape(atob(String(cur.content).replace(/\s/g, ''))));
+    } catch (e) { return ''; }
+  }
+  /* 記録係の端末は起動時に金庫の中身を一度読んで基準にする(CDNのキャッシュ差を挟まない) */
+  function primeSync() {
+    var token = ghToken();
+    if (!token || typeof fetch !== 'function' || syncedSig !== null) return;
+    fetch(GH_API, { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }, cache: 'no-store' })
+      .then(function (r) { return r.status === 404 ? null : r.json(); })
+      .then(function (cur) { if (syncedSig === null) syncedSig = sigOf(remoteBodyOf(cur)); })
+      .catch(function () { /* 取れなければ初回pushで基準にする */ });
   }
   function conflictStop() {
     setGhStatus('他の端末が先に保存しています — 上書きを中止しました');
@@ -1912,15 +1926,14 @@
     if (!token || typeof fetch !== 'function') return;
     var headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
     var body = JSON.stringify(state, null, 2);
-    var pushedT = state.t;
     setGhStatus('保存中…');
     fetch(GH_API, { headers: headers, cache: 'no-store' })
       .then(function (r) { return r.status === 404 ? null : r.json(); })
       .then(function (cur) {
-        var rt = remoteTOf(cur);
-        /* 自分が最後に見た世代よりリモートが進んでいたら、他人の記録を消さずに止める */
-        if (syncedT && rt > syncedT) { conflictStop(); return null; }
-        if (!syncedT) syncedT = rt;   /* 初回はリモートの世代を基準に採用 */
+        var sig = sigOf(remoteBodyOf(cur));
+        /* 自分が最後に見た中身から動いていたら、他人の記録を消さずに止める */
+        if (syncedSig !== null && sig !== syncedSig) { conflictStop(); return null; }
+        if (syncedSig === null) syncedSig = sig;   /* 基準が無ければ今の中身を基準にする */
         var payload = {
           message: '\u30bb\u30c3\u30c8\u306e\u6210\u7e3e\u3092\u81ea\u52d5\u4fdd\u5b58',
           content: btoa(unescape(encodeURIComponent(body)))
@@ -1930,7 +1943,7 @@
       })
       .then(function (r) {
         if (!r) return;   /* 競合で中止済み */
-        if (r.ok) { syncedT = pushedT; setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
+        if (r.ok) { syncedSig = sigOf(body); setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
         else if (r.status === 409) { conflictStop(); }
         else {
           setGhStatus('自動保存に失敗(トークンの権限・期限を確認)');
@@ -1944,6 +1957,7 @@
   }
   function refreshGhUI() {
     var has = !!ghToken();
+    if (has) primeSync();
     document.getElementById('gh-token').value = has ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '';
     setGhStatus(has ? '自動保存 ON' : '未設定(手動運用)');
   }
@@ -1993,13 +2007,11 @@
         var bt = (o && o.t) || (st && st.t) || 0;
         var localEmpty = state.days.length === 1 && curDay().games.length === 0 && Object.keys(curDay().chips).length === 0;
         if (!localEmpty && !(bt && bt > (state.t || 0))) {
-          syncedT = bt;
           if (ghToken() && state.t && (!bt || state.t > bt)) scheduleAutoPush();
           return;
         }
         state = st;
         editingIdx = null; picked = []; exPre = -1;
-        syncedT = bt;   /* この世代を基準にする(以後、他端末が進めたら検知できる) */
         persist(true); /* adopting the baseline: no need to push it back */
         renderAll();
         showToast('保存版データを読み込みました \u2713');

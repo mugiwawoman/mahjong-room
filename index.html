@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>麻雀部屋|第一期Tリーグ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f2efe5;
@@ -102,7 +105,7 @@
   .room-body span { display: block; font-size: 13px; margin-top: 3px; line-height: 1.55; }
   .room-arrow { margin-left: auto; font-size: 18px; opacity: .7; flex: none; }
 
-  .league { background: linear-gradient(160deg, #0e6247, #0a4a36); }
+  .league { background: #0d5a41; }
   .league .room-body b, .league .room-arrow { color: #f2fbf6; }
   .league .room-body span { color: #b9dcc9; }
   .league .room-tile { color: var(--hatsu); }
@@ -113,13 +116,13 @@
   .pin1 { display: block; }
   .sou1 { display: block; }
 
-  .street { background: linear-gradient(160deg, #2d3970, #1f2850); }
+  .street { background: #29335f; }
   .street .room-body b, .street .room-arrow { color: #f0f3fd; }
   .street .room-body span { color: #b3bdde; }
   .street .room-tile { color: #2f3b4b; }
 
-  .scoring { background: linear-gradient(160deg, #a83a2e, #832a20); }
-  .golf { background: linear-gradient(160deg, #2e7d32, #1b5e20); }
+  .scoring { background: #973327; }
+  .golf { background: #2a6f2e; }
   .golf .room-body b, .golf .room-arrow { color: #eef7ee; }
   .golf .room-body span { color: #b7d9b9; }
   .golf .room-tile { background: #f4f5ef; }
@@ -127,6 +130,9 @@
   .scoring .room-body span { color: #ecc0b4; }
   .scoring .room-tile { color: var(--chun); }
 
+  .site-note, .room-body span, .lp-link, footer {
+    font-family: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  }
   footer { margin-top: 36px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.9; }
 
   @media (max-width: 480px) {

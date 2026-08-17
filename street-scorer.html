@@ -1,5 +1,11 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
 <title>ストリート麻雀スコア</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f4f1e8;
@@ -22,8 +28,10 @@
     --tile-edge: #d9d5c2;
     --pos: #03630a;
     --neg: #c03535;
-    --p1: #2a78d6; --p2: #1baf7a; --p3: #eda100; --p4: #008300;
-    --p5: #4a3aa7; --p6: #e34948; --p7: #e87ba4; --p8: #eb6834;
+    --p1: #2a78d6; --p2: #eda100; --p3: #4a3aa7; --p4: #e0561c;
+    --p5: #e87ba4; --p6: #0e8a9e; --p7: #a9642c; --p8: #6b7a99;
+    --marker: rgba(242, 201, 76, .5);
+    --grain: rgba(84, 72, 40, .05);
     --shadow: 0 1px 2px rgba(24, 22, 18, .06), 0 4px 14px rgba(24, 22, 18, .05);
     --radius: 10px;
   }
@@ -49,8 +57,10 @@
       --tile-edge: #b9b5a0;
       --pos: #35b364;
       --neg: #e66767;
-      --p1: #3987e5; --p2: #199e70; --p3: #c98500; --p4: #008300;
-      --p5: #9085e9; --p6: #e66767; --p7: #d55181; --p8: #d95926;
+      --p1: #3987e5; --p2: #c98500; --p3: #9085e9; --p4: #d05416;
+      --p5: #d75da2; --p6: #2ba0b4; --p7: #b5763a; --p8: #8493b8;
+      --marker: rgba(242, 201, 76, .22);
+      --grain: rgba(255, 255, 255, .025);
       --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
     }
   }
@@ -75,8 +85,10 @@
     --tile-edge: #b9b5a0;
     --pos: #35b364;
     --neg: #e66767;
-    --p1: #3987e5; --p2: #199e70; --p3: #c98500; --p4: #008300;
-    --p5: #9085e9; --p6: #e66767; --p7: #d55181; --p8: #d95926;
+    --p1: #3987e5; --p2: #c98500; --p3: #9085e9; --p4: #d05416;
+    --p5: #d75da2; --p6: #2ba0b4; --p7: #b5763a; --p8: #8493b8;
+    --marker: rgba(242, 201, 76, .22);
+    --grain: rgba(255, 255, 255, .025);
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
   }
   :root[data-theme="light"] {
@@ -100,8 +112,10 @@
     --tile-edge: #d9d5c2;
     --pos: #03630a;
     --neg: #c03535;
-    --p1: #2a78d6; --p2: #1baf7a; --p3: #eda100; --p4: #008300;
-    --p5: #4a3aa7; --p6: #e34948; --p7: #e87ba4; --p8: #eb6834;
+    --p1: #2a78d6; --p2: #eda100; --p3: #4a3aa7; --p4: #e0561c;
+    --p5: #e87ba4; --p6: #0e8a9e; --p7: #a9642c; --p8: #6b7a99;
+    --marker: rgba(242, 201, 76, .5);
+    --grain: rgba(84, 72, 40, .05);
     --shadow: 0 1px 2px rgba(24, 22, 18, .06), 0 4px 14px rgba(24, 22, 18, .05);
   }
 
@@ -109,6 +123,8 @@
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg);
+    background-image: radial-gradient(var(--grain) 1px, transparent 1.3px);
+    background-size: 5px 5px;
     color: var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
     font-size: 15px;
@@ -117,11 +133,8 @@
   .wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px 48px; }
 
   .masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-  .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; margin-bottom: 2px; }
-  h1 {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
-    font-size: 28px; font-weight: 700; margin: 0; line-height: 1.25; letter-spacing: .04em;
-  }
+  .eyebrow { color: var(--accent); font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  h1 { font-size: 27px; font-weight: 600; margin: 0; line-height: 1.3; }
   .mast-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .btn {
@@ -142,16 +155,24 @@
     border-radius: var(--radius); box-shadow: var(--shadow);
     padding: 18px 20px; margin-bottom: 18px;
   }
-  h2 { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--ink2); margin: 0 0 12px; text-transform: uppercase; }
+  h2 {
+    font-size: 15px; font-weight: 600; color: var(--ink); margin: 0 0 12px;
+    display: table; padding: 0 3px;
+    background: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 94%, transparent 94%);
+  }
   .note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
 
   /* entry hero (the night table) */
   .entry-card {
-    background: linear-gradient(160deg, var(--night), var(--night-deep));
+    background: var(--night);
+    border: 1px solid rgba(255, 255, 255, .07);
     border-radius: var(--radius); box-shadow: var(--shadow);
     padding: 20px 22px; margin-bottom: 18px; color: var(--night-ink);
   }
-  .entry-card h2 { color: var(--night-ink2); }
+  .entry-card h2 {
+    color: var(--night-ink);
+    background: linear-gradient(transparent 62%, rgba(255, 255, 255, .16) 62%, rgba(255, 255, 255, .16) 94%, transparent 94%);
+  }
   .mode-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
   .mode-row[hidden] { display: none; }
   .mode-btn {
@@ -164,7 +185,7 @@
     font-size: 11px; font-weight: 700; color: var(--night-deep);
     background: #f0c86a; border-radius: 99px; padding: 3px 10px;
   }
-  .pick-label { font-size: 12px; font-weight: 700; color: var(--night-ink2); margin: 10px 0 6px; letter-spacing: .06em; }
+  .pick-label { font-size: 12.5px; font-weight: 600; color: var(--night-ink2); margin: 10px 0 6px; }
   .pick-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .pick {
     display: inline-flex; align-items: center; gap: 7px;
@@ -193,6 +214,7 @@
     background: rgba(0, 0, 0, .18); color: #7fe0a0;
   }
   .sgn.neg { color: #f4a3a3; }
+  .erow input.negv { color: #f4a3a3; }
   .erow input::placeholder { color: rgba(255, 255, 255, .35); }
   .entry-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
   .entry-card .btn.primary { background: var(--tile); border-color: var(--tile); color: var(--tile-ink); font-weight: 700; }
@@ -270,6 +292,24 @@
     background: var(--surface); color: var(--ink); font-family: inherit;
   }
   .rchip.on { border-color: var(--accent); background: var(--wash); }
+  .ex-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .ex-form select {
+    font: inherit; font-size: 13.5px; padding: 7px 8px; max-width: 140px;
+    border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink);
+  }
+  .ex-form input {
+    font: inherit; font-size: 14px; width: 78px; padding: 6px 9px;
+    border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .ex-arrow { color: var(--muted); font-weight: 700; }
+  #ex-list input {
+    font: inherit; font-size: 13px; width: 64px; padding: 3px 7px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .exr-row input[type="text"] { max-width: 140px; }
+  .exr-row input[type="number"] { max-width: 90px; flex: none; width: 90px; }
   .rmode { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
   #rota-table { font-size: 13px; }
   #rota-table td, #rota-table th { white-space: nowrap; }
@@ -297,6 +337,11 @@
     font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap;
   }
   #toast.show { opacity: .95; }
+  h1, h2, .eyebrow, .note, .pick-label, .btn, .mode-btn, .pick, .rchip, .edit-flag,
+  details.adv summary, .empty, .share-label, .chip-set label, .rule-fields label,
+  .rule-h, .oka-note, footer, .crown, .mode-badge {
+    font-family: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  }
   footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
   footer b { color: var(--ink2); }
   @media (prefers-reduced-motion: no-preference) {
@@ -365,6 +410,20 @@
     <p class="note">終了時に手元のチップ枚数を入れると、配給枚数との差分がptに換算されて合計に反映されます(チップもその日ごとの記録です)。</p>
   </section>
 
+  <section class="card" id="ex-card">
+    <h2>ご祝儀・ローカルルール</h2>
+    <div class="preset-row" id="ex-presets" style="margin:0"></div>
+    <div class="ex-form">
+      <select id="ex-from" aria-label="払う人"></select>
+      <span class="ex-arrow">→</span>
+      <select id="ex-to" aria-label="もらう人"></select>
+      <input type="number" id="ex-pt" step="0.1" min="0" inputmode="decimal" placeholder="pt" aria-label="pt">
+      <button class="btn" id="btn-ex-add" type="button">記録</button>
+    </div>
+    <div id="ex-list"></div>
+    <p class="note">飛ばし賞・役満ご祝儀など、対局の外のptのやりとり。この日の合計ptに足し引きされます。ボタンの種類とptは「ルール設定」で自由に作れます。</p>
+  </section>
+
   <section class="card">
     <h2>日ごとの記録</h2>
     <div id="days-list"></div>
@@ -383,7 +442,7 @@
 
   <section class="card" id="rota-card">
     <details class="adv" style="margin-top:0;border-top:none;padding-top:0">
-    <summary style="font-size:13px;letter-spacing:.08em">座席ローテーション(ぴったり公平表)— 使いたい時だけ開く</summary>
+    <summary style="font-size:13px">座席ローテーション(ぴったり公平表)— 使いたい時だけ開く</summary>
     <div class="rmode">
       <button class="btn small" id="r-mode-4" type="button">4人打ち</button>
       <button class="btn small" id="r-mode-3" type="button">3人打ち</button>
@@ -442,6 +501,14 @@
       </div>
     </div>
     <p class="note">ウマは1位から順にpt。オカ(返し点と持ち点の差×人数)は自動で1位に加算されます。</p>
+    <h3 class="rule-h" style="margin-top:16px">ご祝儀・ローカルルール(プリセット)</h3>
+    <div class="pedit" id="ex-rules"></div>
+    <div class="add-row">
+      <input type="text" id="new-ex-name" maxlength="8" placeholder="名前(例: 焼き鳥)">
+      <input type="number" id="new-ex-pt" step="0.1" min="0" inputmode="decimal" placeholder="pt" style="max-width:90px;flex:none">
+      <button class="btn" id="btn-add-ex" type="button">追加</button>
+    </div>
+    <p class="note">ここで作った項目が「ご祝儀・ローカルルール」のワンタップボタンになります。ptはいつでも変更OK(記録済みの分はそのまま残ります)。</p>
   </section>
 
   <section class="card" id="share">
@@ -501,12 +568,12 @@
   /* ---------- state ---------- */
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
   function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-  function newDay() { return { date: todayStr(), games: [], chips: {} }; }
+  function newDay() { return { date: todayStr(), games: [], chips: {}, ex: [] }; }
   function defaultState() {
     return {
       players: [
-        { id: 1, name: 'プレイヤー1' }, { id: 2, name: 'プレイヤー2' },
-        { id: 3, name: 'プレイヤー3' }, { id: 4, name: 'プレイヤー4' }
+        { id: 1, name: 'プレイヤー1', c: 1 }, { id: 2, name: 'プレイヤー2', c: 2 },
+        { id: 3, name: 'プレイヤー3', c: 3 }, { id: 4, name: 'プレイヤー4', c: 4 }
       ],
       nextId: 5,
       days: [newDay()],    // {date, games:[{mode,pids,scores}], chips:{pid:count}}
@@ -516,7 +583,8 @@
       rules: {
         r4: { start: 25000, target: 30000, uma: [20, 10, -10, -20] },
         r3: { start: 35000, target: 40000, uma: [15, 0, -15] },
-        chipBase: 20, chipPt: 1
+        chipBase: 20, chipPt: 1,
+        ex: [{ n: '飛ばし', pt: 10 }]
       }
     };
   }
@@ -533,18 +601,28 @@
     });
   }
   /* 旧形式(games/chipsが直下)は自動で1日分に包む */
+  /* 既存データ: 今出ている色をそのまま本人に固定する(見た目は変わらない) */
+  function fixColors(o) {
+    if (o && Array.isArray(o.players)) {
+      o.players.forEach(function (p, i) {
+        if (!(p.c >= 1 && p.c <= 8)) p.c = i % 8 + 1;
+      });
+    }
+    return o;
+  }
   function migrate(o) {
     if (o && !o.days && Array.isArray(o.games)) {
       o.days = [{ date: null, games: o.games, chips: o.chips || {} }];
       delete o.games; delete o.chips;
     }
     if (o && Array.isArray(o.days)) {
-      o.days.forEach(function (d) { if (d) d.chips = d.chips || {}; });
+      o.days.forEach(function (d) { if (d) { d.chips = d.chips || {}; d.ex = Array.isArray(d.ex) ? d.ex : []; } });
       if (typeof o.cur !== 'number' || o.cur < 0 || o.cur >= o.days.length) o.cur = o.days.length - 1;
     }
     if (o && (!o.rota || !Array.isArray(o.rota.ids))) o.rota = { ids: [], mode: 4 };
+    if (o && o.rules && !Array.isArray(o.rules.ex)) o.rules.ex = [{ n: '飛ばし', pt: 10 }];
     if (o && o.im !== 'pt' && o.im !== 'score') o.im = 'pt';
-    return o;
+    return fixColors(o);
   }
   function isValidState(o) {
     if (!o || typeof o !== 'object') return false;
@@ -552,7 +630,11 @@
       return p && typeof p.id === 'number' && typeof p.name === 'string';
     })) return false;
     if (!Array.isArray(o.days) || !o.days.length || !o.days.every(function (d) {
-      return d && typeof d === 'object' && validGames(d.games) && typeof d.chips === 'object';
+      return d && typeof d === 'object' && validGames(d.games) && typeof d.chips === 'object' &&
+        (d.ex === undefined || (Array.isArray(d.ex) && d.ex.every(function (e) {
+          return e && typeof e.f === 'number' && typeof e.t === 'number' &&
+            typeof e.pt === 'number' && isFinite(e.pt);
+        })));
     })) return false;
     if (typeof o.cur !== 'number' || o.cur < 0 || o.cur >= o.days.length) return false;
     if (!o.rules || !o.rules.r4 || !o.rules.r3) return false;
@@ -571,6 +653,7 @@
     var seen = {}, out = [];
     day.games.forEach(function (g) { g.pids.forEach(function (id) { if (!seen[id]) { seen[id] = 1; out.push(id); } }); });
     Object.keys(day.chips).forEach(function (k) { var id = Number(k); if (!seen[id]) { seen[id] = 1; out.push(id); } });
+    (day.ex || []).forEach(function (e) { [e.f, e.t].forEach(function (id) { if (!seen[id]) { seen[id] = 1; out.push(id); } }); });
     return out;
   }
   function persist(skipAutoPush) {
@@ -595,9 +678,18 @@
     for (var i = 0; i < state.players.length; i++) if (state.players[i].id === id) return state.players[i];
     return null;
   }
+  /* 色はメンバー本人に固定(並び順や削除で他人の色が変わらないように) */
   function slot(id) {
-    var idx = state.players.findIndex(function (p) { return p.id === id; });
+    var p = pById(id);
+    if (p && p.c >= 1 && p.c <= 8) return p.c;
+    var idx = state.players.findIndex(function (q) { return q.id === id; });
     return (idx < 0 ? 0 : idx) % 8 + 1;
+  }
+  function freeSlot() {
+    var used = {};
+    state.players.forEach(function (p) { if (p.c) used[p.c] = 1; });
+    for (var i = 1; i <= 8; i++) if (!used[i]) return i;
+    return state.players.length % 8 + 1;
   }
   function ptag(id) {
     var p = pById(id);
@@ -617,6 +709,9 @@
       var pt = (scores[si] - r.target) / 1000 + r.uma[rank] + (rank === 0 ? okaFor(mode) : 0);
       out[si] = { rank: rank + 1, pt: Math.round(pt * 10) / 10 };
     });
+    /* 0.1丸めの端数で合計が0からずれることがあるので、1位に寄せて必ずゼロサムにする */
+    var resid = Math.round(out.reduce(function (a, x) { return a + x.pt; }, 0) * 10) / 10;
+    if (resid) out[order[0]].pt = Math.round((out[order[0]].pt - resid) * 10) / 10;
     return out;
   }
   function resOf(g) {
@@ -631,6 +726,7 @@
   }
   function fmtPt(v) {
     var x = Math.round(v * 10) / 10;
+    if (!isFinite(x)) return '—';
     if (x > 0) return '+' + x.toFixed(1);
     if (x < 0) return '▲' + Math.abs(x).toFixed(1);
     return '0.0';
@@ -754,7 +850,7 @@
     document.getElementById('mode-4').className = 'mode-btn' + (entryMode === 4 ? ' on' : '');
     document.getElementById('mode-3').className = 'mode-btn' + (entryMode === 3 ? ' on' : '');
     document.getElementById('pick-label').textContent = pt ?
-      '打った人をタップ(2人以上・何人でも)' :
+      '打った人をタップ(3人以上・何人でも)' :
       '打った人を順番にタップ(同点のときは先に選んだ人が上位)';
     var flag = document.getElementById('edit-flag');
     flag.hidden = editingIdx === null;
@@ -777,7 +873,7 @@
         (pt ?
           '<div class="inrow"><button type="button" class="sgn" data-sgn="1" aria-label="プラスマイナス切替">＋</button>' +
           '<input type="number" step="0.1" min="0" inputmode="decimal" placeholder="pt" data-eid="' + id + '" data-ei="' + i + '"></div>' :
-          '<input type="number" step="100" inputmode="numeric" placeholder="' + r.start + '" data-eid="' + id + '" data-ei="' + i + '">') +
+          '<input type="number" step="100" inputmode="numeric" placeholder="' + esc(r.start) + '" data-eid="' + id + '" data-ei="' + i + '">') +
         '</div>';
     }).join('');
     updateEntryState();
@@ -858,9 +954,9 @@
     var pv = document.getElementById('preview');
     var save = document.getElementById('btn-save');
     document.getElementById('btn-autofill').hidden = true;
-    if (picked.length < 2) {
+    if (picked.length < 3) {
       sumEl.className = '';
-      sumEl.textContent = picked.length ? 'あと1人以上選んでください' : '打った人を選んでください';
+      sumEl.textContent = picked.length ? 'あと' + (3 - picked.length) + '人以上選んでください' : '打った人を選んでください';
       pv.innerHTML = ''; save.disabled = true;
       return;
     }
@@ -916,8 +1012,13 @@
       var c = day.chips[id];
       var cpt = (c === undefined || c === null || c === '') ? null :
         Math.round((Number(c) - state.rules.chipBase) * state.rules.chipPt * 10) / 10;
-      var total = Math.round((scorePt + (cpt || 0)) * 10) / 10;
-      return { p: p, id: id, games: games, scorePt: scorePt, cpt: cpt, total: total, tops: tops, lasts: lasts };
+      var expt = 0;
+      (day.ex || []).forEach(function (e) {
+        if (e.f === id) expt = Math.round((expt - e.pt) * 10) / 10;
+        if (e.t === id) expt = Math.round((expt + e.pt) * 10) / 10;
+      });
+      var total = Math.round((scorePt + expt + (cpt || 0)) * 10) / 10;
+      return { p: p, id: id, games: games, scorePt: scorePt, cpt: cpt, expt: expt, total: total, tops: tops, lasts: lasts };
     }).filter(function (r) { return r.p; });
     rows.sort(function (a, b) { return b.total - a.total; });
     return rows;
@@ -931,7 +1032,9 @@
       document.getElementById('standings').innerHTML = '<tbody><tr><td class="empty">この日はまだ記録がありません。対局を保存するとここに並びます。</td></tr></tbody>';
       return;
     }
+    var hasEx = (day.ex || []).length > 0;
     var html = '<thead><tr><th></th><th>プレイヤー</th><th class="num">合計pt</th><th class="num">対局pt</th>' +
+      (hasEx ? '<th class="num">祝儀pt</th>' : '') +
       '<th class="num">チップpt</th><th class="num">半荘</th><th class="num">トップ</th><th class="num">ラス</th></tr></thead><tbody>';
     rows.forEach(function (r, i) {
       var leader = i === 0;
@@ -940,6 +1043,7 @@
         '<td>' + ptag(r.id) + (leader ? '<span class="crown">首位</span>' : '') + '</td>' +
         '<td class="num total ' + ptClass(r.total) + '">' + fmtPt(r.total) + '</td>' +
         '<td class="num ' + ptClass(r.scorePt) + '">' + fmtPt(r.scorePt) + '</td>' +
+        (hasEx ? '<td class="num ' + ptClass(r.expt) + '">' + fmtPt(r.expt) + '</td>' : '') +
         '<td class="num ' + (r.cpt === null ? '' : ptClass(r.cpt)) + '">' + (r.cpt === null ? '—' : fmtPt(r.cpt)) + '</td>' +
         '<td class="num">' + r.games + '</td><td class="num">' + r.tops + '</td><td class="num">' + r.lasts + '</td></tr>';
     });
@@ -998,7 +1102,7 @@
       var cpt = chipPtFor(p.id);
       var diff = (v === undefined || v === null || v === '') ? null : Number(v) - state.rules.chipBase;
       return '<div class="chip-row">' + ptag(p.id) +
-        '<input type="number" step="1" inputmode="numeric" placeholder="' + state.rules.chipBase + '" data-chip="' + p.id + '" value="' + (v === undefined || v === null ? '' : v) + '">枚' +
+        '<input type="number" step="1" inputmode="numeric" placeholder="' + esc(state.rules.chipBase) + '" data-chip="' + p.id + '" value="' + esc(v === undefined || v === null ? '' : v) + '">枚' +
         '<span class="chip-calc">' + (diff === null ? '未入力' :
           ((diff >= 0 ? '+' : '') + diff + '枚 → <b class="' + ptClass(cpt) + '">' + fmtPt(cpt) + 'pt</b>')) + '</span></div>';
     }).join('');
@@ -1015,6 +1119,118 @@
         '⚠ 入力済み' + entered.length + '人の合計 ' + total + '枚(配給合計 ' + expect + '枚と ' + (total > expect ? '+' : '') + (total - expect) + '枚ずれています)';
     } else warn.textContent = '';
   }
+
+  /* ---------- goshugi / local-rule pt transfers ---------- */
+  var exPre = -1;   // selected preset index (-1 = manual)
+  function renderEx() {
+    var el = document.getElementById('ex-presets');
+    el.innerHTML = state.rules.ex.map(function (r, i) {
+      return '<button type="button" class="rchip' + (exPre === i ? ' on' : '') + '" data-expre="' + i + '">' +
+        esc(r.n) + ' ' + esc(r.pt) + 'pt</button>';
+    }).join('');
+    var opts = function (ph) {
+      return '<option value="">' + ph + '</option>' + state.players.map(function (p) {
+        return '<option value="' + p.id + '">' + esc(p.name) + '</option>';
+      }).join('');
+    };
+    var f = document.getElementById('ex-from'), t = document.getElementById('ex-to');
+    var fv = f.value, tv = t.value;
+    f.innerHTML = opts('払う人'); t.innerHTML = opts('もらう人');
+    f.value = fv; t.value = tv;
+    var list = document.getElementById('ex-list');
+    var exs = curDay().ex || [];
+    list.innerHTML = exs.map(function (e, i) {
+      return '<div class="hrow"><span class="h-no">' + esc(e.n || 'ご祝儀') + '</span>' +
+        '<span class="h-res"><span class="r">' + ptag(e.f) + ' → ' + ptag(e.t) + '</span></span>' +
+        '<input type="number" step="0.1" min="0" inputmode="decimal" data-expt="' + i + '" value="' + e.pt + '" aria-label="pt">' +
+        '<span class="h-act"><button class="btn small danger" type="button" data-exdel="' + i + '">削除</button></span></div>';
+    }).join('');
+  }
+  function renderExRules() {
+    var el = document.getElementById('ex-rules');
+    el.innerHTML = state.rules.ex.map(function (r, i) {
+      return '<div class="prow exr-row">' +
+        '<input type="text" maxlength="8" data-exrn="' + i + '" value="' + esc(r.n) + '" aria-label="名前">' +
+        '<input type="number" step="0.1" min="0" inputmode="decimal" data-exrp="' + i + '" value="' + esc(r.pt) + '" aria-label="pt">' +
+        '<span class="note" style="margin:0">pt</span>' +
+        '<button class="btn small danger" type="button" data-exrdel="' + i + '">削除</button></div>';
+    }).join('') || '<p class="note" style="margin:0">下の欄から追加できます</p>';
+  }
+  document.getElementById('ex-presets').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-expre]');
+    if (!b) return;
+    var i = Number(b.dataset.expre);
+    exPre = (exPre === i) ? -1 : i;
+    if (exPre >= 0) document.getElementById('ex-pt').value = state.rules.ex[i].pt;
+    renderEx();
+  });
+  document.getElementById('ex-pt').addEventListener('input', function () {
+    if (exPre >= 0 && Number(this.value) !== state.rules.ex[exPre].pt) { exPre = -1; renderEx(); }
+  });
+  document.getElementById('btn-ex-add').addEventListener('click', function () {
+    var f = Number(document.getElementById('ex-from').value);
+    var t = Number(document.getElementById('ex-to').value);
+    var pt = Number(document.getElementById('ex-pt').value);
+    if (!f || !t) { showToast('払う人ともらう人を選んでください'); return; }
+    if (f === t) { showToast('払う人ともらう人が同じです'); return; }
+    if (!isFinite(pt) || pt <= 0) { showToast('ptを入れてください'); return; }
+    pt = Math.round(pt * 10) / 10;
+    var n = exPre >= 0 ? state.rules.ex[exPre].n : 'ご祝儀';
+    (curDay().ex = curDay().ex || []).push({ f: f, t: t, pt: pt, n: n });
+    persist();
+    renderEx(); renderStandings(); renderDays(); renderTotals(); renderPlayers();
+    showToast((pById(t) ? pById(t).name : '?') + ' に ' + pt + 'pt を記録しました ✓');
+  });
+  document.getElementById('ex-list').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-exdel]');
+    if (!b) return;
+    curDay().ex.splice(Number(b.dataset.exdel), 1);
+    persist();
+    renderEx(); renderStandings(); renderDays(); renderTotals(); renderPlayers();
+    showToast('削除しました');
+  });
+  document.getElementById('ex-list').addEventListener('change', function (ev) {
+    var inp = ev.target.closest('input[data-expt]');
+    if (!inp) return;
+    var v = Number(inp.value);
+    if (!isFinite(v) || v <= 0) { renderEx(); return; }
+    curDay().ex[Number(inp.dataset.expt)].pt = Math.round(v * 10) / 10;
+    persist();
+    renderEx(); renderStandings(); renderDays(); renderTotals();
+  });
+  document.getElementById('btn-add-ex').addEventListener('click', function () {
+    var name = document.getElementById('new-ex-name').value.trim();
+    var pt = Number(document.getElementById('new-ex-pt').value);
+    if (!name) { showToast('名前を入れてください'); return; }
+    if (!isFinite(pt) || pt <= 0) { showToast('ptを入れてください'); return; }
+    state.rules.ex.push({ n: name, pt: Math.round(pt * 10) / 10 });
+    document.getElementById('new-ex-name').value = '';
+    document.getElementById('new-ex-pt').value = '';
+    persist();
+    renderExRules(); renderEx();
+  });
+  document.getElementById('ex-rules').addEventListener('change', function (ev) {
+    var n = ev.target.closest('input[data-exrn]');
+    var p = ev.target.closest('input[data-exrp]');
+    if (n) {
+      var v = n.value.trim();
+      if (v) state.rules.ex[Number(n.dataset.exrn)].n = v;
+    }
+    if (p) {
+      var pv = Number(p.value);
+      if (isFinite(pv) && pv > 0) state.rules.ex[Number(p.dataset.exrp)].pt = Math.round(pv * 10) / 10;
+    }
+    persist();
+    renderExRules(); renderEx();
+  });
+  document.getElementById('ex-rules').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-exrdel]');
+    if (!b) return;
+    state.rules.ex.splice(Number(b.dataset.exrdel), 1);
+    if (exPre >= 0) exPre = -1;
+    persist();
+    renderExRules(); renderEx();
+  });
 
   /* ---------- history ---------- */
   function renderHistory() {
@@ -1048,7 +1264,8 @@
   /* ---------- players ---------- */
   function pidUsed(id) {
     return state.days.some(function (d) {
-      return d.games.some(function (g) { return g.pids.indexOf(id) >= 0; });
+      return d.games.some(function (g) { return g.pids.indexOf(id) >= 0; }) ||
+        (d.ex || []).some(function (e) { return e.f === id || e.t === id; });
     });
   }
   function renderPlayers() {
@@ -1076,7 +1293,12 @@
       r3.uma.reduce(function (a, b) { return a + b; }, 0) + ')';
   }
   function readRules() {
-    function num(id, fb) { var v = Number(document.getElementById(id).value); return isFinite(v) ? v : fb; }
+    function num(id, fb) {
+      var el = document.getElementById(id);
+      if (el.value.trim() === '') return fb;      // 空欄は0ではなく既定値へ
+      var v = Number(el.value);
+      return isFinite(v) ? v : fb;
+    }
     state.rules.r4 = {
       start: num('r4-start', 25000), target: num('r4-target', 30000),
       uma: [num('r4-u0', 20), num('r4-u1', 10), num('r4-u2', -10), num('r4-u3', -20)]
@@ -1101,6 +1323,8 @@
     renderEntry();
     renderStandings();
     renderChips();
+    renderEx();
+    renderExRules();
     renderHistory();
     renderDays();
     renderTotals();
@@ -1138,9 +1362,29 @@
     b.dataset.sgn = neg ? '-1' : '1';
     b.textContent = neg ? '−' : '＋';
     b.classList.toggle('neg', neg);
+    var ninp = b.parentNode.querySelector('input');
+    if (ninp) ninp.classList.toggle('negv', neg);
     updateEntryState();
   });
-  document.getElementById('entry-rows').addEventListener('input', updateEntryState);
+  /* 「-10」と直接タイプされたら符号ボタンを−に倒す(打った通りに入る) */
+  function normalizeSign(inp) {
+    var row = inp.closest('.erow');
+    if (!row) return;
+    var b = row.querySelector('.sgn');
+    if (!b) return;              // 持ち点モードは飛びのマイナスをそのまま使う
+    var v = inp.value;
+    if (v.indexOf('-') < 0 && v.indexOf('\u2212') < 0) return;
+    inp.value = v.replace(/[-\u2212]/g, '');
+    b.dataset.sgn = '-1';
+    b.textContent = '\u2212';
+    b.classList.add('neg');
+    inp.classList.add('negv');
+  }
+  document.getElementById('entry-rows').addEventListener('input', function (ev) {
+    var inp = ev.target.closest('input');
+    if (inp) normalizeSign(inp);
+    updateEntryState();
+  });
   document.getElementById('btn-autofill').addEventListener('click', function () {
     var inputs = document.querySelectorAll('#entry-rows input');
     var sum = 0, empty = null;
@@ -1158,7 +1402,7 @@
   document.getElementById('btn-save').addEventListener('click', function () {
     var rec;
     if (state.im === 'pt') {
-      if (picked.length < 2) return;
+      if (picked.length < 3) return;
       var ep = readPts();
       var pts = ep.vals.slice();
       if (ep.filled === picked.length - 1) {
@@ -1224,6 +1468,7 @@
           sg.dataset.sgn = neg ? '-1' : '1';
           sg.textContent = neg ? '−' : '＋';
           sg.classList.toggle('neg', neg);
+          inp.classList.toggle('negv', neg);
           inp.value = Math.abs(vals[i]);
         } else inp.value = vals[i];
       });
@@ -1270,7 +1515,7 @@
   });
   document.getElementById('btn-new-day').addEventListener('click', function () {
     var d = curDay();
-    if (!d.games.length && !Object.keys(d.chips).length) {
+    if (!d.games.length && !Object.keys(d.chips).length && !(d.ex || []).length) {
       d.date = todayStr();
       state.cur = state.days.indexOf(d);
       persist(); renderAll();
@@ -1345,7 +1590,7 @@
     var inp = ev.target.closest('input[data-player]');
     if (!inp) return;
     var p = pById(Number(inp.dataset.player));
-    if (p) { p.name = inp.value.trim() || p.name; persist(); renderStandings(); renderChips(); renderHistory(); renderEntry(); renderRota(); }
+    if (p) { p.name = inp.value.trim() || p.name; persist(); renderStandings(); renderChips(); renderEx(); renderHistory(); renderEntry(); renderRota(); }
   });
   document.getElementById('players-edit').addEventListener('click', function (ev) {
     var b = ev.target.closest('button[data-remove]');
@@ -1362,7 +1607,7 @@
     var inp = document.getElementById('new-player');
     var name = inp.value.trim();
     if (!name) return;
-    state.players.push({ id: state.nextId++, name: name });
+    state.players.push({ id: state.nextId++, name: name, c: freeSlot() });
     inp.value = '';
     persist();
     renderAll();
@@ -1430,8 +1675,8 @@
     var when = dec.t ? new Date(dec.t).toLocaleString('ja-JP') : '日時不明';
     if (confirm(label + '(' + when + ' 時点)を読み込みます。\nこのブラウザの今の記録は置き換えられます。よろしいですか?')) {
       state = dec.state;
-      editingIdx = null; picked = [];
-      persist();
+      editingIdx = null; picked = []; exPre = -1;
+      persist(true);   /* 取り込んだ瞬間に共有中の金庫を上書きしない */
       renderAll();
       showToast('共有データを読み込みました ✓');
       return true;

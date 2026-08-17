@@ -270,6 +270,10 @@
   .chip-set label { font-size: 12.5px; font-weight: 700; color: var(--ink2); display: inline-flex; align-items: center; gap: 6px; }
   .chip-set input { font: inherit; font-size: 14px; width: 74px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
   #chip-warn { font-size: 12px; color: var(--neg); margin-top: 8px; font-weight: 600; }
+  .store-warn {
+    font-size: 12.5px; font-weight: 700; color: var(--neg); margin: 0 0 12px;
+    border: 1px solid var(--neg); border-radius: 8px; padding: 8px 12px; line-height: 1.6;
+  }
 
   .pedit { display: flex; flex-direction: column; gap: 8px; }
   .prow { display: flex; align-items: center; gap: 9px; }
@@ -362,6 +366,8 @@
       <a class="btn" href="index.html">⌂ 部屋</a>
     </div>
   </header>
+
+  <p id="store-warn" class="store-warn" hidden></p>
 
   <p class="note" style="margin:-8px 0 14px">あなたのブラウザにだけ保存されるスコア帳です(登録不要・誰かのデータを壊す心配なし)。打った人をタップ→±ptを入れるだけ。</p>
 
@@ -568,7 +574,7 @@
   /* ---------- state ---------- */
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
   function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-  function newDay() { return { date: todayStr(), games: [], chips: {}, ex: [] }; }
+  function newDay() { return { date: todayStr(), games: [], chips: {}, ex: [], rules: null }; }
   function defaultState() {
     return {
       players: [
@@ -610,7 +616,74 @@
     }
     return o;
   }
+  /* 既存データ: 今表示されている数字のまま固定する(移行時点で見た目は変わらない) */
+  function freezeOldDays(o) {
+    if (o && Array.isArray(o.days) && o.rules && o.rules.r4 && o.rules.r3) {
+      o.days.forEach(function (d) {
+        if (!d || d.rules) return;
+        var used = (d.games || []).length || Object.keys(d.chips || {}).length || (d.ex || []).length;
+        if (used) d.rules = ruleSnap(o.rules);
+      });
+    }
+    return o;
+  }
+  /* 共有URLやファイル経由の値を無害化する(数値であるべき所に文字列やHTMLを入れられないように) */
+  function numOr(v, fb) { var n = Number(v); return isFinite(n) ? n : fb; }
+  function sanitize(o) {
+    if (!o || typeof o !== 'object') return o;
+    if (Array.isArray(o.players)) {
+      o.players = o.players.filter(function (p) { return p && isFinite(Number(p.id)); });
+      o.players.forEach(function (p) {
+        p.id = Number(p.id);
+        p.name = String(p.name === undefined || p.name === null ? '' : p.name).slice(0, 24) || '?';
+        p.c = Math.min(8, Math.max(1, Math.round(numOr(p.c, 1))));
+      });
+    }
+    var ids = {};
+    (o.players || []).forEach(function (p) { ids[p.id] = 1; });
+    if (!isFinite(Number(o.nextId))) {
+      var mx = 0;
+      (o.players || []).forEach(function (p) { mx = Math.max(mx, p.id); });
+      o.nextId = mx + 1;
+    } else o.nextId = Number(o.nextId);
+    if (o.rules && typeof o.rules === 'object') {
+      ['r4', 'r3'].forEach(function (k) {
+        var d = k === 'r4' ? { s: 25000, t: 30000, u: [20, 10, -10, -20] } : { s: 35000, t: 40000, u: [15, 0, -15] };
+        var r = o.rules[k] && typeof o.rules[k] === 'object' ? o.rules[k] : {};
+        o.rules[k] = {
+          start: numOr(r.start, d.s), target: numOr(r.target, d.t),
+          uma: (Array.isArray(r.uma) && r.uma.length === d.u.length ? r.uma : d.u).map(function (x, i) { return numOr(x, d.u[i]); })
+        };
+      });
+      o.rules.chipBase = numOr(o.rules.chipBase, 20);
+      o.rules.chipPt = numOr(o.rules.chipPt, 1);
+      o.rules.ex = (Array.isArray(o.rules.ex) ? o.rules.ex : [])
+        .filter(function (e) { return e && isFinite(Number(e.pt)); })
+        .map(function (e) { return { n: String(e.n === undefined ? '' : e.n).slice(0, 12) || 'ご祝儀', pt: Number(e.pt) }; });
+      if (!o.rules.ex.length) o.rules.ex = [{ n: '飛ばし', pt: 10 }];
+    }
+    (Array.isArray(o.days) ? o.days : []).forEach(function (d) {
+      if (!d || typeof d !== 'object') return;
+      var ch = {};
+      Object.keys(d.chips || {}).forEach(function (k) {
+        var v = Number(d.chips[k]);
+        if (isFinite(v) && ids[Number(k)]) ch[Number(k)] = Math.round(v);
+      });
+      d.chips = ch;
+      d.ex = (Array.isArray(d.ex) ? d.ex : []).filter(function (e) {
+        return e && ids[Number(e.f)] && ids[Number(e.t)] && isFinite(Number(e.pt));
+      }).map(function (e) {
+        return { f: Number(e.f), t: Number(e.t), pt: Number(e.pt), n: String(e.n === undefined ? '' : e.n).slice(0, 12) || 'ご祝儀' };
+      });
+      d.games = (Array.isArray(d.games) ? d.games : []).filter(function (g) {
+        return g && Array.isArray(g.pids) && g.pids.every(function (id) { return ids[Number(id)]; });
+      });
+      if (d.date !== null && d.date !== undefined) d.date = String(d.date).slice(0, 20);
+    });
+    return o;
+  }
   function migrate(o) {
+    o = sanitize(o);
     if (o && !o.days && Array.isArray(o.games)) {
       o.days = [{ date: null, games: o.games, chips: o.chips || {} }];
       delete o.games; delete o.chips;
@@ -622,7 +695,7 @@
     if (o && (!o.rota || !Array.isArray(o.rota.ids))) o.rota = { ids: [], mode: 4 };
     if (o && o.rules && !Array.isArray(o.rules.ex)) o.rules.ex = [{ n: '飛ばし', pt: 10 }];
     if (o && o.im !== 'pt' && o.im !== 'score') o.im = 'pt';
-    return fixColors(o);
+    return freezeOldDays(fixColors(o));
   }
   function isValidState(o) {
     if (!o || typeof o !== 'object') return false;
@@ -631,6 +704,8 @@
     })) return false;
     if (!Array.isArray(o.days) || !o.days.length || !o.days.every(function (d) {
       return d && typeof d === 'object' && validGames(d.games) && typeof d.chips === 'object' &&
+        (d.rules === undefined || d.rules === null ||
+          (d.rules.r4 && d.rules.r3 && Array.isArray(d.rules.r4.uma) && Array.isArray(d.rules.r3.uma))) &&
         (d.ex === undefined || (Array.isArray(d.ex) && d.ex.every(function (e) {
           return e && typeof e.f === 'number' && typeof e.t === 'number' &&
             typeof e.pt === 'number' && isFinite(e.pt);
@@ -656,11 +731,24 @@
     (day.ex || []).forEach(function (e) { [e.f, e.t].forEach(function (id) { if (!seen[id]) { seen[id] = 1; out.push(id); } }); });
     return out;
   }
+  var storageFailed = false;
   function persist(skipAutoPush) {
     state.t = Date.now();
-    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* blocked */ }
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); storageFailed = false; }
+    catch (e) { storageFailed = true; }
+    showStorageWarn();
     try { history.replaceState(null, '', '#d=' + encodeState()); } catch (e) { /* sandboxed */ }
     if (!skipAutoPush) scheduleAutoPush();
+  }
+
+  function showStorageWarn() {
+    var el = document.getElementById('store-warn');
+    if (!el) return;
+    el.hidden = !storageFailed;
+    if (storageFailed) {
+      el.textContent = '\u26a0 このブラウザに保存できていません(プライベートモードか容量不足)。' +
+        'このページのURLをブックマークすれば記録は残ります。';
+    }
   }
 
   /* entry form state (mode is persisted as state.im) */
@@ -695,18 +783,33 @@
     var p = pById(id);
     return '<span class="ptag"><i class="dot" style="background:var(--p' + slot(id) + ')"></i>' + esc(p ? p.name : '?') + '</span>';
   }
-  function rulesFor(mode) { return mode === 3 ? state.rules.r3 : state.rules.r4; }
-  function okaFor(mode) {
-    var r = rulesFor(mode);
+  /* その日に使ったルールを日ごとに凍結する(あとでルールを変えても過去日は動かない) */
+  function ruleSnap(src) {
+    var r = src || state.rules;
+    return {
+      r4: { start: r.r4.start, target: r.r4.target, uma: r.r4.uma.slice() },
+      r3: { start: r.r3.start, target: r.r3.target, uma: r.r3.uma.slice() },
+      chipBase: r.chipBase, chipPt: r.chipPt
+    };
+  }
+  function dayRules(day) { return (day && day.rules) ? day.rules : state.rules; }
+  function freezeCurrentDay() { var d = curDay(); if (d && !d.rules) d.rules = ruleSnap(); }
+  function syncDayRules() { var d = curDay(); if (d && d.rules) d.rules = ruleSnap(); }
+  function rulesFor(mode, rules) {
+    var r = rules || state.rules;
+    return mode === 3 ? r.r3 : r.r4;
+  }
+  function okaFor(mode, rules) {
+    var r = rulesFor(mode, rules);
     return (r.target - r.start) * mode / 1000;
   }
-  function calcGame(mode, scores) {
-    var r = rulesFor(mode);
+  function calcGame(mode, scores, rules) {
+    var r = rulesFor(mode, rules);
     var order = scores.map(function (_, i) { return i; })
       .sort(function (a, b) { return scores[b] - scores[a] || a - b; });
     var out = [];
     order.forEach(function (si, rank) {
-      var pt = (scores[si] - r.target) / 1000 + r.uma[rank] + (rank === 0 ? okaFor(mode) : 0);
+      var pt = (scores[si] - r.target) / 1000 + r.uma[rank] + (rank === 0 ? okaFor(mode, rules) : 0);
       out[si] = { rank: rank + 1, pt: Math.round(pt * 10) / 10 };
     });
     /* 0.1丸めの端数で合計が0からずれることがあるので、1位に寄せて必ずゼロサムにする */
@@ -714,7 +817,7 @@
     if (resid) out[order[0]].pt = Math.round((out[order[0]].pt - resid) * 10) / 10;
     return out;
   }
-  function resOf(g) {
+  function resOf(g, day) {
     if (g.k === 'pt') {
       var order = g.pts.map(function (_, i) { return i; })
         .sort(function (a, b) { return g.pts[b] - g.pts[a] || a - b; });
@@ -722,7 +825,7 @@
       order.forEach(function (si, r) { out[si] = { rank: r + 1, pt: g.pts[si] }; });
       return out;
     }
-    return calcGame(g.mode, g.scores);
+    return calcGame(g.mode, g.scores, dayRules(day));
   }
   function fmtPt(v) {
     var x = Math.round(v * 10) / 10;
@@ -735,7 +838,8 @@
   function chipPtFor(id) {
     var c = curDay().chips[id];
     if (c === undefined || c === null || c === '') return null;
-    return Math.round((Number(c) - state.rules.chipBase) * state.rules.chipPt * 10) / 10;
+    var r = dayRules(curDay());
+    return Math.round((Number(c) - r.chipBase) * r.chipPt * 10) / 10;
   }
 
   /* ---------- rotation math ----------
@@ -1003,15 +1107,16 @@
       day.games.forEach(function (g) {
         var i = g.pids.indexOf(id);
         if (i < 0) return;
-        var res = resOf(g);
+        var res = resOf(g, day);
         games++;
         scorePt = Math.round((scorePt + res[i].pt) * 10) / 10;
         if (res[i].rank === 1) tops++;
         if (res[i].rank === g.pids.length) lasts++;
       });
       var c = day.chips[id];
+      var dr = dayRules(day);
       var cpt = (c === undefined || c === null || c === '') ? null :
-        Math.round((Number(c) - state.rules.chipBase) * state.rules.chipPt * 10) / 10;
+        Math.round((Number(c) - dr.chipBase) * dr.chipPt * 10) / 10;
       var expt = 0;
       (day.ex || []).forEach(function (e) {
         if (e.f === id) expt = Math.round((expt - e.pt) * 10) / 10;
@@ -1176,6 +1281,7 @@
     if (!isFinite(pt) || pt <= 0) { showToast('ptを入れてください'); return; }
     pt = Math.round(pt * 10) / 10;
     var n = exPre >= 0 ? state.rules.ex[exPre].n : 'ご祝儀';
+    freezeCurrentDay();
     (curDay().ex = curDay().ex || []).push({ f: f, t: t, pt: pt, n: n });
     persist();
     renderEx(); renderStandings(); renderDays(); renderTotals(); renderPlayers();
@@ -1243,7 +1349,7 @@
     var html = '';
     for (var gi = games.length - 1; gi >= 0; gi--) {
       var g = games[gi];
-      var res = resOf(g);
+      var res = resOf(g, curDay());
       var isPt = g.k === 'pt';
       var order = g.pids.map(function (_, i) { return i; }).sort(function (a, b) { return res[a].rank - res[b].rank; });
       html += '<div class="hrow"><span class="h-no">第' + (gi + 1) + '戦<span class="mode-badge">' + (isPt ? '±pt' : g.mode + '麻') + '</span></span>' +
@@ -1307,6 +1413,7 @@
       start: num('r3-start', 35000), target: num('r3-target', 40000),
       uma: [num('r3-u0', 15), num('r3-u1', 0), num('r3-u2', -15)]
     };
+    syncDayRules();
     persist();
     renderRules();
     renderStandings();
@@ -1423,6 +1530,7 @@
     saveRec(rec);
   });
   function saveRec(rec) {
+    freezeCurrentDay();
     var label;
     if (editingIdx !== null) { curDay().games[editingIdx] = rec; label = '第' + (editingIdx + 1) + '戦を修正しました ✓'; }
     else { curDay().games.push(rec); label = '第' + curDay().games.length + '戦を保存しました ✓ 同じメンバーなら数字を入れるだけで次戦いけます'; }
@@ -1430,7 +1538,7 @@
     /* 連戦しやすいように打った人の選択は保持(値だけクリア) */
     persist();
     renderAll();
-    showToast(label);
+    showToast(storageFailed ? '\u26a0 保存できていません — URLをブックマークして残してください' : label);
   }
   document.getElementById('btn-cancel-edit').addEventListener('click', function () {
     editingIdx = null;
@@ -1560,8 +1668,9 @@
     var inp = ev.target.closest('input[data-chip]');
     if (!inp) return;
     var id = Number(inp.dataset.chip);
+    freezeCurrentDay();
     if (inp.value.trim() === '') delete curDay().chips[id];
-    else curDay().chips[id] = Number(inp.value);
+    else curDay().chips[id] = Math.round(Number(inp.value));
     persist();
     renderStandings();
     renderDays();
@@ -1577,11 +1686,13 @@
   document.getElementById('chip-base').addEventListener('change', function () {
     var v = Number(document.getElementById('chip-base').value);
     state.rules.chipBase = isFinite(v) ? v : 20;
+    syncDayRules();
     persist(); renderStandings(); renderChips();
   });
   document.getElementById('chip-pt').addEventListener('change', function () {
     var v = Number(document.getElementById('chip-pt').value);
     state.rules.chipPt = isFinite(v) ? v : 1;
+    syncDayRules();
     persist(); renderStandings(); renderChips();
   });
 
@@ -1627,6 +1738,7 @@
     b.addEventListener('click', function () {
       var v = b.dataset.preset4.split(',').map(Number);
       state.rules.r4 = { start: v[0], target: v[1], uma: [v[2], v[3], v[4], v[5]] };
+      syncDayRules();
       persist(); renderRules(); renderStandings(); renderHistory(); updateEntryState();
       showToast('4人打ちルールを変更しました');
     });
@@ -1635,6 +1747,7 @@
     b.addEventListener('click', function () {
       var v = b.dataset.preset3.split(',').map(Number);
       state.rules.r3 = { start: v[0], target: v[1], uma: [v[2], v[3], v[4]] };
+      syncDayRules();
       persist(); renderRules(); renderStandings(); renderHistory(); updateEntryState();
       showToast('3人打ちルールを変更しました');
     });
@@ -1780,15 +1893,34 @@
     clearTimeout(pushTimer);
     pushTimer = setTimeout(autoPush, 1500);
   }
-  function autoPush(isRetry) {
+  /* いま把握しているリモートの世代。これより先に進んでいたら他の端末が保存している */
+  var syncedT = 0;
+  function remoteTOf(cur) {
+    try {
+      if (!cur || !cur.content) return 0;
+      var txt = decodeURIComponent(escape(atob(String(cur.content).replace(/\s/g, ''))));
+      var o = JSON.parse(txt);
+      return Number((o && o.t) || 0) || 0;
+    } catch (e) { return 0; }
+  }
+  function conflictStop() {
+    setGhStatus('他の端末が先に保存しています — 上書きを中止しました');
+    showToast('\u26a0 他の人が先に保存しています。ページを再読み込みして最新を取り込んでください');
+  }
+  function autoPush() {
     var token = ghToken();
     if (!token || typeof fetch !== 'function') return;
     var headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
     var body = JSON.stringify(state, null, 2);
+    var pushedT = state.t;
     setGhStatus('保存中…');
     fetch(GH_API, { headers: headers, cache: 'no-store' })
       .then(function (r) { return r.status === 404 ? null : r.json(); })
       .then(function (cur) {
+        var rt = remoteTOf(cur);
+        /* 自分が最後に見た世代よりリモートが進んでいたら、他人の記録を消さずに止める */
+        if (syncedT && rt > syncedT) { conflictStop(); return null; }
+        if (!syncedT) syncedT = rt;   /* 初回はリモートの世代を基準に採用 */
         var payload = {
           message: '\u30bb\u30c3\u30c8\u306e\u6210\u7e3e\u3092\u81ea\u52d5\u4fdd\u5b58',
           content: btoa(unescape(encodeURIComponent(body)))
@@ -1797,8 +1929,9 @@
         return fetch(GH_API, { method: 'PUT', headers: headers, body: JSON.stringify(payload) });
       })
       .then(function (r) {
-        if (r && r.ok) { setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
-        else if (r && r.status === 409 && !isRetry) { autoPush(true); }
+        if (!r) return;   /* 競合で中止済み */
+        if (r.ok) { syncedT = pushedT; setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
+        else if (r.status === 409) { conflictStop(); }
         else {
           setGhStatus('自動保存に失敗(トークンの権限・期限を確認)');
           showToast('\u26a0 自動保存に失敗しました — トークンを確認してください');
@@ -1860,11 +1993,13 @@
         var bt = (o && o.t) || (st && st.t) || 0;
         var localEmpty = state.days.length === 1 && curDay().games.length === 0 && Object.keys(curDay().chips).length === 0;
         if (!localEmpty && !(bt && bt > (state.t || 0))) {
+          syncedT = bt;
           if (ghToken() && state.t && (!bt || state.t > bt)) scheduleAutoPush();
           return;
         }
         state = st;
-        editingIdx = null; picked = [];
+        editingIdx = null; picked = []; exPre = -1;
+        syncedT = bt;   /* この世代を基準にする(以後、他端末が進めたら検知できる) */
         persist(true); /* adopting the baseline: no need to push it back */
         renderAll();
         showToast('保存版データを読み込みました \u2713');

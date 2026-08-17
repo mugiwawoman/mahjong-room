@@ -156,7 +156,15 @@ function makeEnv(opts) {
   };
 
   const document = {
-    getElementById(id) { return els[id] || (els[id] = new El(id)); },
+    getElementById(id) {
+      if (els[id]) return els[id];
+      /* innerHTML で流し込まれた木の中も探す(本物のブラウザは見つける) */
+      for (const k of Object.keys(els)) {
+        const hit = queryAll(els[k].kids, '#' + id)[0];
+        if (hit) return hit;
+      }
+      return (els[id] = new El(id));
+    },
     querySelector(sel) {
       if (sel && sel[0] === '#') return this.getElementById(sel.slice(1));
       return els['__' + sel] || (els['__' + sel] = new El('', 'DIV'));

@@ -357,6 +357,58 @@ console.log('\n[9d] 途中で画面が描き直されても戻せる');
     rowsOf(e)[0].querySelector('input').value);
 }
 
+console.log('\n[9e] ポイント推移: 指で狙わずに1半荘ずつ振り返れる');
+{
+  const many = {};
+  for (let i = 1; i <= 8; i++) many[i] = [40000, 30000, 20000, 10000];
+  const e = run(NEW, { storage: { [KEY]: JSON.stringify(mk(many)) }, fetch: mkFetch({}) });
+  await settle(e);
+  const readout = () => String(e.el('chart-readout').innerHTML);
+
+  chk('送り操作が出ている', e.el('chart-scrub').hidden === false);
+  chk('スライダーの範囲が半荘数に合う', e.el('chart-range').max === '8', 'max=' + e.el('chart-range').max);
+  chk('既定で最新を表示している', /第8半荘.*最新/.test(readout()), readout().slice(0, 60));
+  chk('最新では ▶ と「最新」が押せない', e.el('chart-next').disabled === true && e.el('chart-latest').disabled === true);
+
+  e.el('chart-prev').fire('click');
+  chk('◀ で1半荘もどる', /第7半荘/.test(readout()), readout().slice(0, 40));
+  chk('スライダーも連動する', e.el('chart-range').value === '7', e.el('chart-range').value);
+  chk('もどると ▶ が押せるようになる', e.el('chart-next').disabled === false);
+
+  e.el('chart-range').value = '3';
+  e.el('chart-range').fire('input');
+  chk('スライダーで飛べる', /第3半荘/.test(readout()), readout().slice(0, 40));
+
+  e.el('chart-next').fire('click');
+  chk('▶ で1半荘すすむ', /第4半荘/.test(readout()), readout().slice(0, 40));
+
+  e.el('chart-latest').fire('click');
+  chk('「最新」で最後まで戻る', /第8半荘.*最新/.test(readout()) && e.el('chart-range').value === '8', e.el('chart-range').value);
+
+  // 端で止まる
+  e.el('chart-range').value = '0';
+  e.el('chart-range').fire('input');
+  chk('先頭は「開始時」', /開始時/.test(readout()), readout().slice(0, 40));
+  chk('先頭では ◀ が押せない', e.el('chart-prev').disabled === true);
+  e.el('chart-prev').fire('click');
+  chk('◀ を押しても先頭を越えない', e.el('chart-range').value === '0', e.el('chart-range').value);
+
+  // 全員分の値が出ている(tooltipを唯一の経路にしない)
+  chk('5人ぶんの行が出る', (readout().match(/tt-row/g) || []).length === 5,
+    (readout().match(/tt-row/g) || []).length);
+  const xh = e.ctx.document.querySelectorAll('#chart #xhair')[0];
+  chk('縦線が指を離しても出たまま', !!xh && xh.attrs.visibility === 'visible',
+    xh ? 'visibility=' + xh.attrs.visibility : 'xhairが見つからない');
+  chk('縦線が選択位置に動く', !!xh && xh.attrs.x1 === xh.attrs.x2 && Number(xh.attrs.x1) > 0,
+    xh ? 'x1=' + xh.attrs.x1 : '-');
+
+  // 半荘が無ければ操作ごと隠す
+  const zero = run(NEW, { storage: { [KEY]: JSON.stringify(mk({})) }, fetch: mkFetch({}) });
+  await settle(zero);
+  chk('0半荘なら送り操作は出ない', zero.el('chart-scrub').hidden === true);
+  chk('0半荘なら読み取り欄も空', String(zero.el('chart-readout').innerHTML) === '');
+}
+
 console.log('\n[10] 普段使いが重くなっていないこと');
 {
   // 新しい端末で開く: 金庫を黙って表示、確認ゼロ

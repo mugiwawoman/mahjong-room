@@ -8,6 +8,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
+    /* 文字の3層。3ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
+       sans : 本文・数字        serif: ページ名と牌の面      hand : 見出し・注記・ボタン */
+    --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    --font-hand: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
     --bg: #f4f2e9;
     --surface: #fdfcf7;
     --surface2: #efede1;
@@ -163,7 +168,7 @@
     background-image: radial-gradient(var(--grain) 1px, transparent 1.3px);
     background-size: 5px 5px;
     color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.6;
   }
@@ -207,7 +212,7 @@
     margin-bottom: 2px;
   }
   h1 {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-family: var(--font-serif);
     font-size: 30px; font-weight: 700; margin: 0; line-height: 1.25;
     letter-spacing: .04em; text-wrap: balance;
   }
@@ -274,7 +279,7 @@
     border: 1px solid var(--tile-edge);
     box-shadow: 0 2px 0 rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .7);
     display: grid; place-items: center;
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-family: var(--font-serif);
     font-size: 30px; font-weight: 700; color: var(--tile-ink);
   }
   .seat.bye .seat-tile {
@@ -337,7 +342,7 @@
     text-align: center; color: var(--muted); min-width: 0; position: relative;
     background: repeating-linear-gradient(-45deg, transparent 0 7px, rgba(127, 127, 127, .05) 7px 14px);
   }
-  .ybadge .yb-name { font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; font-size: 15px; font-weight: 700; letter-spacing: .08em; display: block; opacity: .6; }
+  .ybadge .yb-name { font-family: var(--font-serif); font-size: 15px; font-weight: 700; letter-spacing: .08em; display: block; opacity: .6; }
   .ybadge .yb-sub { font-size: 10px; display: block; margin-top: 3px; opacity: .7; }
   .ybadge.got {
     border: 1px solid var(--gold-line);
@@ -376,15 +381,26 @@
   #chart-wrap { position: relative; }
   #chart { display: block; width: 100%; }
   .empty { color: var(--muted); font-size: 13.5px; padding: 28px 4px; text-align: center; }
-  #tooltip {
-    position: absolute; pointer-events: none; display: none; z-index: 5;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
-    box-shadow: var(--shadow); padding: 8px 11px; font-size: 12px; min-width: 150px;
+
+  /* 振り返る半荘を送る操作。1半荘あたり7pxの的を指で狙わせない */
+  .chart-scrub { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; }
+  .chart-scrub .scrub-step {
+    flex: none; width: 44px; height: 44px; padding: 0; font-size: 15px; line-height: 1;
+    display: grid; place-items: center;
   }
-  #tooltip .tt-head { font-weight: 700; color: var(--ink2); margin-bottom: 4px; white-space: nowrap; }
-  #tooltip .tt-row { display: flex; align-items: center; gap: 6px; white-space: nowrap; line-height: 1.7; }
-  #tooltip .tt-val { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; padding-left: 12px; }
-  #tooltip .tt-delta { font-variant-numeric: tabular-nums; color: var(--muted); width: 52px; text-align: right; }
+  .chart-scrub input[type="range"] {
+    flex: 1; min-width: 0; height: 44px; margin: 0; accent-color: var(--accent);
+    background: none; cursor: pointer;
+  }
+  .chart-scrub .scrub-latest { flex: none; height: 44px; white-space: nowrap; }
+  #chart-readout {
+    margin-top: 8px; background: var(--surface2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 12px; font-size: 12px;
+  }
+  #chart-readout .tt-head { font-weight: 700; color: var(--ink2); margin-bottom: 4px; }
+  #chart-readout .tt-row { display: flex; align-items: center; gap: 6px; line-height: 1.75; }
+  #chart-readout .tt-val { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; padding-left: 12px; }
+  #chart-readout .tt-delta { font-variant-numeric: tabular-nums; color: var(--muted); width: 52px; text-align: right; }
 
   /* ---- entry ---- */
   .entry-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -408,7 +424,7 @@
     width: 26px; height: 30px; border-radius: 4px; flex: none;
     background: var(--tile); border: 1px solid var(--tile-edge);
     display: grid; place-items: center; color: var(--tile-ink);
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 15px; font-weight: 700;
+    font-family: var(--font-serif); font-size: 15px; font-weight: 700;
   }
   .erow input {
     font: inherit; font-size: 16px; font-variant-numeric: tabular-nums;
@@ -565,7 +581,7 @@
 
   h2, .eyebrow, .note, .btn, .rule-h, .lab-h, .empty, details summary, footer,
   .next-pill, .oka-note, .edit-flag, .pick-label {
-    font-family: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    font-family: var(--font-hand);
   }
   footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
   footer b { color: var(--ink2); }
@@ -650,8 +666,14 @@
       <div class="legend" id="legend"></div>
       <div id="chart-wrap">
         <svg id="chart" role="img" aria-label="累計ポイントの推移グラフ"></svg>
-        <div id="tooltip"></div>
       </div>
+      <div class="chart-scrub" id="chart-scrub" hidden>
+        <button class="btn small scrub-step" id="chart-prev" type="button" aria-label="1半荘もどる">◀</button>
+        <input type="range" id="chart-range" min="0" max="0" value="0" step="1" aria-label="振り返る半荘を選ぶ">
+        <button class="btn small scrub-step" id="chart-next" type="button" aria-label="1半荘すすむ">▶</button>
+        <button class="btn small scrub-latest" id="chart-latest" type="button">最新</button>
+      </div>
+      <div id="chart-readout" aria-live="polite"></div>
     </section>
   </div>
 
@@ -1938,7 +1960,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   }
   function seriesColor(i) { return cssVar('--p' + (i + 1)); }
 
-  var chartGeom = null; // for tooltip hit-testing
+  var chartGeom = null; // 振り返り位置の当たり判定に使う
 
   function buildCumu() {
     var nums = playedNums();
@@ -1977,6 +1999,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     if (!G) {
       svg.setAttribute('height', '0');
       svg.innerHTML = '';
+      document.getElementById('chart-scrub').hidden = true;
+      document.getElementById('chart-readout').innerHTML = '';
       if (!document.getElementById('chart-empty')) {
         var d = document.createElement('div');
         d.id = 'chart-empty';
@@ -2098,30 +2122,53 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     chartGeom = { W: W, H: H, padL: padL, padT: padT, plotW: plotW, plotH: plotH, G: G, data: data, xAt: xAt };
 
     var zone = document.getElementById('hover-zone');
-    zone.addEventListener('pointermove', onHover);
-    zone.addEventListener('pointerleave', hideTooltip);
+    /* ホバーもドラッグもタップも、やることは「selIdxを書き換える」だけ。
+       指を離しても消えない(pointerleaveで隠さない)。 */
+    zone.addEventListener('pointermove', function (ev) { if (ev.buttons || ev.pointerType === 'mouse') setIdx(idxAtX(ev)); });
+    zone.addEventListener('pointerdown', function (ev) { setIdx(idxAtX(ev)); });
+
+    var range = document.getElementById('chart-range');
+    range.max = String(G);
+    document.getElementById('chart-scrub').hidden = false;
+    if (selIdx === null || selIdx > G) selIdx = G;
+    showAt(selIdx);
   }
 
-  function onHover(ev) {
-    if (!chartGeom) return;
+  /* ---- グラフの振り返り位置 ---- */
+  var selIdx = null;            /* 0 = 開始時, G = 最新 */
+  function idxAtX(ev) {
     var g = chartGeom;
     var rect = document.getElementById('chart').getBoundingClientRect();
     var x = (ev.clientX - rect.left) * (g.W / rect.width);
-    var i = Math.round((x - g.padL) / (g.plotW / g.G));
-    i = Math.max(0, Math.min(g.G, i));
+    return Math.max(0, Math.min(g.G, Math.round((x - g.padL) / (g.plotW / g.G))));
+  }
+  function setIdx(i) {
+    if (!chartGeom) return;
+    selIdx = Math.max(0, Math.min(chartGeom.G, i));
+    showAt(selIdx);
+  }
+  function showAt(i) {
+    var g = chartGeom;
+    if (!g) return;
     var xh = document.getElementById('xhair');
-    xh.setAttribute('x1', g.xAt(i));
-    xh.setAttribute('x2', g.xAt(i));
-    xh.setAttribute('visibility', 'visible');
+    if (xh) {
+      xh.setAttribute('x1', g.xAt(i));
+      xh.setAttribute('x2', g.xAt(i));
+      xh.setAttribute('visibility', 'visible');
+    }
+    var range = document.getElementById('chart-range');
+    if (range && String(range.value) !== String(i)) range.value = String(i);
+    document.getElementById('chart-prev').disabled = i <= 0;
+    document.getElementById('chart-next').disabled = i >= g.G;
+    document.getElementById('chart-latest').disabled = i >= g.G;
 
-    var tt = document.getElementById('tooltip');
     var head, deltaOf;
     if (i === 0) {
       head = '開始時';
       deltaOf = function () { return ''; };
     } else {
       var pg = g.data.perGame[i - 1];
-      head = gameLabel(pg.n) + '(第' + weekOf(pg.n) + '週)終了時';
+      head = gameLabel(pg.n) + '(第' + weekOf(pg.n) + '週)終了時' + (i === g.G ? ' — 最新' : '');
       deltaOf = function (p) { return pg.m[p] ? fmtPt(pg.m[p].pt) : '抜け番'; };
     }
     var row = g.data.cum[i];
@@ -2132,21 +2179,12 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         '<span class="tt-delta">' + deltaOf(p) + '</span>' +
         '<span class="tt-val ' + ptClass(row[p]) + '">' + fmtPt(row[p]) + '</span></div>';
     });
-    tt.innerHTML = html;
-    tt.style.display = 'block';
-    var wrapRect = document.getElementById('chart-wrap').getBoundingClientRect();
-    var px = g.xAt(i) * (rect.width / g.W) + (rect.left - wrapRect.left);
-    var ttW = tt.offsetWidth;
-    var left = px + 14;
-    if (left + ttW > wrapRect.width - 4) left = px - ttW - 14;
-    tt.style.left = Math.max(4, left) + 'px';
-    tt.style.top = '18px';
+    document.getElementById('chart-readout').innerHTML = html;
   }
-  function hideTooltip() {
-    document.getElementById('tooltip').style.display = 'none';
-    var xh = document.getElementById('xhair');
-    if (xh) xh.setAttribute('visibility', 'hidden');
-  }
+  document.getElementById('chart-range').addEventListener('input', function () { setIdx(Number(this.value)); });
+  document.getElementById('chart-prev').addEventListener('click', function () { setIdx(selIdx - 1); });
+  document.getElementById('chart-next').addEventListener('click', function () { setIdx(selIdx + 1); });
+  document.getElementById('chart-latest').addEventListener('click', function () { setIdx(chartGeom ? chartGeom.G : 0); });
 
   /* ---------- toast ---------- */
   var toastTimer = null;

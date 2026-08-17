@@ -4,8 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>点数下敷き</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
+    /* 文字の3層。3ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
+       sans : 本文・数字        serif: ページ名と牌の面      hand : 見出し・注記・ボタン */
+    --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    --font-hand: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
     --bg: #f4f1e8;
     --surface: #fcfaf3;
     --surface2: #efeadb;
@@ -71,13 +79,13 @@
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg); color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px; line-height: 1.65;
   }
   .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 48px; }
   .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; margin-bottom: 2px; }
   h1 {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-family: var(--font-serif);
     font-size: 28px; font-weight: 700; margin: 0 0 18px; letter-spacing: .04em; text-wrap: balance;
   }
   section.card {
@@ -192,6 +200,9 @@
   .tips li { margin-bottom: 7px; font-size: 13.5px; }
   .tips b { color: var(--accent); }
 
+  h2, .eyebrow, .note, footer {
+    font-family: var(--font-hand);
+  }
   footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
   a { color: var(--accent); }
   @media (prefers-reduced-motion: no-preference) {

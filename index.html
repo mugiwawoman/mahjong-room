@@ -9,6 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
+    /* 文字の3層。3ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
+       sans : 本文・数字        serif: ページ名と牌の面      hand : 見出し・注記・ボタン */
+    --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    --font-hand: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
     --bg: #f2efe5;
     --ink: #211f1a;
     --ink2: #5c584e;
@@ -33,7 +38,7 @@
   body {
     background: var(--bg);
     color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+    font-family: var(--font-sans);
     line-height: 1.6;
   }
   .wrap { max-width: 620px; margin: 0 auto; padding: 30px 20px 60px; }
@@ -51,7 +56,7 @@
     border: 1px solid var(--tile-edge);
     box-shadow: 0 3px 0 #cfc9b2, 0 6px 8px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .8);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-family: var(--font-serif);
     font-weight: 700; line-height: 1.05;
   }
   .kt svg { display: block; width: 74%; height: auto; }
@@ -77,7 +82,7 @@
     .band { background: linear-gradient(180deg, #0c523b, #07392a); }
   }
   h1 {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-family: var(--font-serif);
     font-size: 31px; font-weight: 700; margin: 0; letter-spacing: .1em; line-height: 1.35;
     text-wrap: balance;
   }
@@ -98,7 +103,7 @@
     border: 1px solid var(--tile-edge);
     box-shadow: 0 4px 0 #4e8a68, 0 7px 10px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .75);
     display: grid; place-items: center;
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-family: var(--font-serif);
     font-size: 28px; font-weight: 700;
   }
   .room-body b { display: block; font-size: 19px; letter-spacing: .03em; line-height: 1.4; }
@@ -127,7 +132,7 @@
   .scoring .room-tile { color: var(--chun); }
 
   .site-note, .room-body span, .lp-link, footer {
-    font-family: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+    font-family: var(--font-hand);
   }
   footer { margin-top: 36px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.9; }
 

@@ -181,6 +181,8 @@
   tr:last-child td { border-bottom: none; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .table-scroll { overflow-x: auto; }
+
+
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .grid2 > div { min-width: 0; }
   @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
@@ -207,6 +209,35 @@
   a { color: var(--accent); }
   @media (prefers-reduced-motion: no-preference) {
     .seg button, .fu-seg button { transition: background .12s ease; }
+  }
+  /* 狭い画面では表を横に振らせず、行を積む(代表方針: 横スクロールしない) */
+  @media (max-width: 560px) {
+    .table-scroll { overflow-x: visible; }
+    table.stack-sm, table.stack-sm tbody, table.stack-sm tr { display: block; }
+    table.stack-sm thead { display: none; }
+    table.stack-sm tr { padding: 9px 2px; border-bottom: 1px solid var(--line); }
+    table.stack-sm tr:last-child { border-bottom: none; }
+    table.stack-sm td {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      border: none; padding: 1px 0; white-space: normal; text-align: left;
+    }
+    table.stack-sm td::before {
+      content: attr(data-l); flex: none; font-size: 11px; font-weight: 700; color: var(--muted);
+    }
+    table.stack-sm td.fu-col, table.stack-sm td.nm {
+      justify-content: flex-start; gap: 8px; font-weight: 700; margin-bottom: 3px;
+    }
+    table.stack-sm td.fu-col::before, table.stack-sm td.nm::before { content: none; }
+    table.stack-sm td.mangan-cell { background: none; }
+    table.stack-sm td.mangan-cell::after { content: '満'; font-size: 10px; color: var(--accent); margin-left: 6px; }
+    /* 役の早見表は「役名 / 条件 / 説明」の3行に積む(HTMLは触らない) */
+    .yaku-table, .yaku-table tbody, .yaku-table tr { display: block; }
+    .yaku-table tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .yaku-table tr:last-child { border-bottom: none; }
+    .yaku-table td { display: block; border: none; padding: 0; white-space: normal; }
+    /* 元CSSの nowrap の方が詳細度が高いので、同じ強さで打ち消す */
+    .yaku-table td:first-child { font-weight: 700; white-space: normal; }
+    .yaku-table td:nth-child(2) { font-size: 11px; color: var(--muted); white-space: normal; }
   }
 </style>
 </head>
@@ -318,11 +349,11 @@
     <div class="grid2">
       <div>
         <p class="tbl-h">子のアガリ</p>
-        <div class="table-scroll"><table id="tbl-ko"></table></div>
+        <div class="table-scroll"><table id="tbl-ko" class="stack-sm"></table></div>
       </div>
       <div>
         <p class="tbl-h">親のアガリ</p>
-        <div class="table-scroll"><table id="tbl-oya"></table></div>
+        <div class="table-scroll"><table id="tbl-oya" class="stack-sm"></table></div>
       </div>
     </div>
     <p class="note">上段=ロンの点数、下段=ツモの支払い(子払い/親払い。親ツモは「◯◯オール」)。色付きセルは満貫扱い。切り上げ満貫の設定は上の計算機のスイッチと連動しています。</p>
@@ -330,14 +361,14 @@
 
   <section class="card">
     <h2>満貫以上(符は関係なし)</h2>
-    <div class="table-scroll"><table>
+    <div class="table-scroll"><table class="stack-sm">
       <thead><tr><th>名前</th><th>翻</th><th class="num">子</th><th class="num">親</th><th class="num">子ツモ</th><th class="num">親ツモ</th></tr></thead>
       <tbody>
-        <tr><td><b>満貫</b></td><td>5翻</td><td class="num">8,000</td><td class="num">12,000</td><td class="num">2,000/4,000</td><td class="num">4,000オール</td></tr>
-        <tr><td><b>跳満</b></td><td>6-7翻</td><td class="num">12,000</td><td class="num">18,000</td><td class="num">3,000/6,000</td><td class="num">6,000オール</td></tr>
-        <tr><td><b>倍満</b></td><td>8-10翻</td><td class="num">16,000</td><td class="num">24,000</td><td class="num">4,000/8,000</td><td class="num">8,000オール</td></tr>
-        <tr><td><b>三倍満</b></td><td>11翻〜</td><td class="num">24,000</td><td class="num">36,000</td><td class="num">6,000/12,000</td><td class="num">12,000オール</td></tr>
-        <tr><td><b>役満</b></td><td>—</td><td class="num">32,000</td><td class="num">48,000</td><td class="num">8,000/16,000</td><td class="num">16,000オール</td></tr>
+        <tr><td class="nm"><b>満貫</b></td><td data-l="翻">5翻</td><td class="num" data-l="子">8,000</td><td class="num" data-l="親">12,000</td><td class="num" data-l="子ツモ">2,000/4,000</td><td class="num" data-l="親ツモ">4,000オール</td></tr>
+        <tr><td class="nm"><b>跳満</b></td><td data-l="翻">6-7翻</td><td class="num" data-l="子">12,000</td><td class="num" data-l="親">18,000</td><td class="num" data-l="子ツモ">3,000/6,000</td><td class="num" data-l="親ツモ">6,000オール</td></tr>
+        <tr><td class="nm"><b>倍満</b></td><td data-l="翻">8-10翻</td><td class="num" data-l="子">16,000</td><td class="num" data-l="親">24,000</td><td class="num" data-l="子ツモ">4,000/8,000</td><td class="num" data-l="親ツモ">8,000オール</td></tr>
+        <tr><td class="nm"><b>三倍満</b></td><td data-l="翻">11翻〜</td><td class="num" data-l="子">24,000</td><td class="num" data-l="親">36,000</td><td class="num" data-l="子ツモ">6,000/12,000</td><td class="num" data-l="親ツモ">12,000オール</td></tr>
+        <tr><td class="nm"><b>役満</b></td><td data-l="翻">—</td><td class="num" data-l="子">32,000</td><td class="num" data-l="親">48,000</td><td class="num" data-l="子ツモ">8,000/16,000</td><td class="num" data-l="親ツモ">16,000オール</td></tr>
       </tbody>
     </table></div>
     <p class="note">Tリーグは数え役満なし(13翻以上も三倍満)。流し満貫はあり(満貫扱い)。</p>
@@ -591,14 +622,14 @@
     } else {
       html += '<span class="tsu">—</span>';
     }
-    return '<td class="num' + (mangan ? ' mangan-cell' : '') + '">' + html + '</td>';
+    return '<td class="num' + (mangan ? ' mangan-cell' : '') + '" data-l="' + han + '翻">' + html + '</td>';
   }
   function renderTables() {
     var fus = [20, 25, 30, 40, 50, 60, 70];
     [false, true].forEach(function (dealer) {
       var html = '<thead><tr><th>符</th><th class="num">1翻</th><th class="num">2翻</th><th class="num">3翻</th><th class="num">4翻</th></tr></thead><tbody>';
       fus.forEach(function (fu) {
-        html += '<tr><td class="fu-col">' + fu + (fu === 20 ? '<span class="tsu">平和ツモ</span>' : (fu === 25 ? '<span class="tsu">七対子</span>' : '')) + '</td>';
+        html += '<tr><td class="fu-col">' + fu + '符' + (fu === 20 ? '<span class="tsu">平和ツモ</span>' : (fu === 25 ? '<span class="tsu">七対子</span>' : '')) + '</td>';
         [1, 2, 3, 4].forEach(function (han) { html += cell(fu, han, dealer); });
         html += '</tr>';
       });

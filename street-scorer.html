@@ -247,6 +247,8 @@
   .pos { color: var(--pos); }
   .neg { color: var(--neg); }
   .table-scroll { overflow-x: auto; }
+
+
   #standings td, #standings th, #totals td, #totals th { white-space: nowrap; }
   #standings td.empty, #totals td.empty { white-space: normal; }
   #standings .rank { font-size: 13px; font-weight: 700; color: var(--muted); width: 30px; }
@@ -364,6 +366,31 @@
     .btn, .pick, .mode-btn { transition: background .12s ease; }
     #toast { transition: opacity .25s ease; }
   }
+  /* 狭い画面では表を横に振らせず、行を積んで見出しをラベルにする(代表方針: 横スクロールしない) */
+  @media (max-width: 560px) {
+    .table-scroll { overflow-x: visible; }
+    table.stack-sm, table.stack-sm tbody, table.stack-sm tr { display: block; }
+    table.stack-sm thead { display: none; }
+    table.stack-sm tr { padding: 10px 2px; border-bottom: 1px solid var(--line); }
+    table.stack-sm tr:last-child { border-bottom: none; }
+    table.stack-sm td {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      border: none; padding: 1px 0; white-space: normal; text-align: left;
+    }
+    table.stack-sm td::before {
+      content: attr(data-l); flex: none; font-size: 11px; font-weight: 700; color: var(--muted);
+    }
+    /* 元CSSの nowrap は詳細度が高いので、積む時だけ明示的に解除する */
+    #standings td, #standings th, #totals td, #totals th, #rota-table td, #rota-table th { white-space: normal; }
+    /* 順位と名前は1行に並べる。以降が「ラベル: 値」の積み重ね */
+    table.stack-sm td.rank, table.stack-sm td.nm { display: inline-flex; width: auto; }
+    /* 行の見出し(第N半荘 など)。空ラベルと均等配置されて中央寄せに見えるのを防ぐ */
+    table.stack-sm td.stack-title { justify-content: flex-start; gap: 8px; font-weight: 700; margin-bottom: 3px; }
+    table.stack-sm td.stack-title::before { content: none; }
+    table.stack-sm td.rank { margin-right: 8px; }
+    table.stack-sm td.total { font-size: 19px; }
+    table.stack-sm td.act { justify-content: flex-end; margin-top: 6px; }
+  }
 </style>
 
 <div class="wrap">
@@ -418,7 +445,7 @@
       <button class="btn small primary" id="btn-new-day" type="button">今日を締めて新しい日を始める</button>
       <button class="btn small" id="btn-latest-day" type="button" hidden>最新の日へ戻る</button>
     </div>
-    <div class="table-scroll"><table id="standings"></table></div>
+    <div class="table-scroll"><table id="standings" class="stack-sm"></table></div>
     <p class="note">この日に打った人だけが表示されます。合計pt = 対局pt + チップpt(常に現在のルールで再計算)。</p>
   </section>
 
@@ -455,7 +482,7 @@
 
   <section class="card">
     <h2>通算成績(全日合計)</h2>
-    <div class="table-scroll"><table id="totals"></table></div>
+    <div class="table-scroll"><table id="totals" class="stack-sm"></table></div>
   </section>
 
   <section class="card">
@@ -472,7 +499,7 @@
       <span class="note" style="margin:0">今日いる人を選ぶと、公平な回し方が出ます</span>
     </div>
     <div class="pick-row" id="r-members" style="margin-bottom:10px"></div>
-    <div class="table-scroll"><table id="rota-table"></table></div>
+    <div class="table-scroll"><table id="rota-table" class="stack-sm"></table></div>
     <p class="note" id="rota-note"></p>
     </details>
   </section>
@@ -941,9 +968,9 @@
     var body = rot.map(function (g, i) {
       return '<tr class="' + (i === nextIdx ? 'next' : '') + '"><td class="rank num">' + (i + 1) +
         (i === nextIdx ? ' <span class="nextmark">次</span>' : '') + '</td>' +
-        g.seats.map(function (id) { return '<td>' + ptag(id) + '</td>'; }).join('') +
-        (ids.length > m ? '<td class="byes">' + g.byes.map(function (id) { return esc(pById(id).name); }).join('・') + '</td>' : '') +
-        '<td><button class="btn small" type="button" data-use="' + i + '">この組で入力</button></td></tr>';
+        g.seats.map(function (id, si) { return '<td data-l="' + WINDS[si] + '">' + ptag(id) + '</td>'; }).join('') +
+        (ids.length > m ? '<td class="byes" data-l="抜け番">' + g.byes.map(function (id) { return esc(pById(id).name); }).join('・') + '</td>' : '') +
+        '<td class="act"><button class="btn small" type="button" data-use="' + i + '">この組で入力</button></td></tr>';
     }).join('');
     tbl.innerHTML = head + '<tbody>' + body + '</tbody>';
     var byeCnt = ids.length - m;
@@ -1185,12 +1212,13 @@
       var leader = i === 0;
       html += '<tr class="' + (leader ? 'leader' : '') + '">' +
         '<td class="rank num">' + (i + 1) + '</td>' +
-        '<td>' + ptag(r.id) + (leader ? '<span class="crown">首位</span>' : '') + '</td>' +
-        '<td class="num total ' + ptClass(r.total) + '">' + fmtPt(r.total) + '</td>' +
-        '<td class="num ' + ptClass(r.scorePt) + '">' + fmtPt(r.scorePt) + '</td>' +
-        (hasEx ? '<td class="num ' + ptClass(r.expt) + '">' + fmtPt(r.expt) + '</td>' : '') +
-        '<td class="num ' + (r.cpt === null ? '' : ptClass(r.cpt)) + '">' + (r.cpt === null ? '—' : fmtPt(r.cpt)) + '</td>' +
-        '<td class="num">' + r.games + '</td><td class="num">' + r.tops + '</td><td class="num">' + r.lasts + '</td></tr>';
+        '<td class="nm">' + ptag(r.id) + (leader ? '<span class="crown">首位</span>' : '') + '</td>' +
+        '<td class="num total ' + ptClass(r.total) + '" data-l="合計pt">' + fmtPt(r.total) + '</td>' +
+        '<td class="num ' + ptClass(r.scorePt) + '" data-l="対局pt">' + fmtPt(r.scorePt) + '</td>' +
+        (hasEx ? '<td class="num ' + ptClass(r.expt) + '" data-l="祝儀pt">' + fmtPt(r.expt) + '</td>' : '') +
+        '<td class="num ' + (r.cpt === null ? '' : ptClass(r.cpt)) + '" data-l="チップpt">' + (r.cpt === null ? '—' : fmtPt(r.cpt)) + '</td>' +
+        '<td class="num" data-l="半荘">' + r.games + '</td><td class="num" data-l="トップ">' + r.tops + '</td>' +
+        '<td class="num" data-l="ラス">' + r.lasts + '</td></tr>';
     });
     html += '</tbody>';
     document.getElementById('standings').innerHTML = html;
@@ -1229,10 +1257,10 @@
     var html = '<thead><tr><th></th><th>プレイヤー</th><th class="num">通算pt</th><th class="num">日数</th><th class="num">半荘</th><th class="num">トップ</th><th class="num">ラス</th></tr></thead><tbody>';
     order.forEach(function (a, i) {
       html += '<tr' + (i === 0 ? ' class="leader"' : '') + '><td class="rank num">' + (i + 1) + '</td>' +
-        '<td>' + ptag(a.id) + (i === 0 ? '<span class="crown">通算首位</span>' : '') + '</td>' +
-        '<td class="num total ' + ptClass(a.total) + '">' + fmtPt(a.total) + '</td>' +
-        '<td class="num">' + a.days + '</td><td class="num">' + a.games + '</td>' +
-        '<td class="num">' + a.tops + '</td><td class="num">' + a.lasts + '</td></tr>';
+        '<td class="nm">' + ptag(a.id) + (i === 0 ? '<span class="crown">通算首位</span>' : '') + '</td>' +
+        '<td class="num total ' + ptClass(a.total) + '" data-l="通算pt">' + fmtPt(a.total) + '</td>' +
+        '<td class="num" data-l="日数">' + a.days + '</td><td class="num" data-l="半荘">' + a.games + '</td>' +
+        '<td class="num" data-l="トップ">' + a.tops + '</td><td class="num" data-l="ラス">' + a.lasts + '</td></tr>';
     });
     document.getElementById('totals').innerHTML = html + '</tbody>';
   }

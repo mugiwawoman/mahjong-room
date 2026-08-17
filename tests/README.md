@@ -13,6 +13,19 @@ node tests/street.test.js
 node archive/golf.test.js
 ```
 
+## 横スクロールの実測 (tests/overflow.test.js)
+
+本物の Chromium で 320 / 360 / 390px を開き、横に振れる箱が1つも無いことを確かめる。
+CSSは頭で考えても当たらないので測る。サーバを立ててから:
+
+```
+npx http-server -p 8123 -s .   # 別ターミナル
+node tests/overflow.test.js
+```
+
+空の表は必ず収まる = 測っても意味が無いので、street には混みあった状態を流し込み、
+「表に中身がある」ことも同時に確かめている。900px では表が表のままかも見る。
+
 `dom.js` は最小のDOM/localStorage/fetchのスタブ。各HTMLの `<script>` を抜き出して
 `vm` で走らせ、**外から触れる入口だけ**を叩く:
 

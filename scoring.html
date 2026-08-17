@@ -210,35 +210,43 @@
   @media (prefers-reduced-motion: no-preference) {
     .seg button, .fu-seg button { transition: background .12s ease; }
   }
-  /* 狭い画面では表を横に振らせず、行を積む(代表方針: 横スクロールしない) */
+  /* 狭い画面では表を横に振らせない(代表方針) */
   @media (max-width: 560px) {
     .table-scroll { overflow-x: visible; }
-    table.stack-sm, table.stack-sm tbody, table.stack-sm tr { display: block; }
+    /* 満貫以上: 行は1ブロック、セルは「ラベル+値」のチップとして折り返す */
+    table.stack-sm, table.stack-sm tbody { display: block; }
     table.stack-sm thead { display: none; }
-    table.stack-sm tr { padding: 9px 2px; border-bottom: 1px solid var(--line); }
+    table.stack-sm tr {
+      display: flex; flex-wrap: wrap; align-items: baseline;
+      column-gap: 12px; row-gap: 2px;
+      padding: 8px 2px; border-bottom: 1px solid var(--line);
+    }
     table.stack-sm tr:last-child { border-bottom: none; }
     table.stack-sm td {
-      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-      border: none; padding: 1px 0; white-space: normal; text-align: left;
+      display: inline-flex; align-items: baseline; gap: 5px;
+      border: none; padding: 0; white-space: normal; text-align: left;
     }
     table.stack-sm td::before {
-      content: attr(data-l); flex: none; font-size: 11px; font-weight: 700; color: var(--muted);
+      content: attr(data-l); flex: none; font-size: 10.5px; font-weight: 700; color: var(--muted);
     }
-    table.stack-sm td.fu-col, table.stack-sm td.nm {
-      justify-content: flex-start; gap: 8px; font-weight: 700; margin-bottom: 3px;
-    }
-    table.stack-sm td.fu-col::before, table.stack-sm td.nm::before { content: none; }
+    table.stack-sm td.nm { font-weight: 700; }
+    table.stack-sm td.nm::before { content: none; }
     table.stack-sm td.mangan-cell { background: none; }
-    table.stack-sm td.mangan-cell::after { content: '満'; font-size: 10px; color: var(--accent); margin-left: 6px; }
-    /* 役の早見表は「役名 / 条件 / 説明」の3行に積む(HTMLは触らない) */
+    /* 点数早見表(符×翻)は格子のまま縮めて収める。引き当てる表は積むと逆に探せない */
+    .cmpct td, .cmpct th { padding: 4px 3px; }
+    .cmpct td .ron { font-size: 12px; }
+    .cmpct td .tsu { font-size: 10px; white-space: normal; }   /* <wbr>で「/」の後だけ折る */
+    .cmpct .fu-col { font-size: 12px; }
+    /* 役の早見表: 役名と条件を1行に、説明を2行目に */
     .yaku-table, .yaku-table tbody, .yaku-table tr { display: block; }
-    .yaku-table tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .yaku-table tr { padding: 7px 0; border-bottom: 1px solid var(--line); }
     .yaku-table tr:last-child { border-bottom: none; }
-    .yaku-table td { display: block; border: none; padding: 0; white-space: normal; }
-    /* 元CSSの nowrap の方が詳細度が高いので、同じ強さで打ち消す */
-    .yaku-table td:first-child { font-weight: 700; white-space: normal; }
-    .yaku-table td:nth-child(2) { font-size: 11px; color: var(--muted); white-space: normal; }
+    .yaku-table td { border: none; padding: 0; white-space: normal; }
+    .yaku-table td:first-child { display: inline; font-weight: 700; margin-right: 8px; white-space: normal; }
+    .yaku-table td:nth-child(2) { display: inline; font-size: 11px; color: var(--muted); white-space: normal; }
+    .yaku-table td:nth-child(3) { display: block; }
   }
+
 </style>
 </head>
 <body>
@@ -349,11 +357,11 @@
     <div class="grid2">
       <div>
         <p class="tbl-h">子のアガリ</p>
-        <div class="table-scroll"><table id="tbl-ko" class="stack-sm"></table></div>
+        <div class="table-scroll"><table id="tbl-ko" class="cmpct"></table></div>
       </div>
       <div>
         <p class="tbl-h">親のアガリ</p>
-        <div class="table-scroll"><table id="tbl-oya" class="stack-sm"></table></div>
+        <div class="table-scroll"><table id="tbl-oya" class="cmpct"></table></div>
       </div>
     </div>
     <p class="note">上段=ロンの点数、下段=ツモの支払い(子払い/親払い。親ツモは「◯◯オール」)。色付きセルは満貫扱い。切り上げ満貫の設定は上の計算機のスイッチと連動しています。</p>
@@ -618,7 +626,7 @@
     if (ron && !ron.warn) html += '<span class="ron">' + fmt(ron.ron) + '</span>';
     else html += '<span class="ron">—</span>';
     if (!tsu.warn) {
-      html += '<span class="tsu">' + (dealer ? fmt(tsu.all) + 'オール' : fmt(tsu.koPay) + '/' + fmt(tsu.oyaPay)) + '</span>';
+      html += '<span class="tsu">' + (dealer ? fmt(tsu.all) + 'オール' : fmt(tsu.koPay) + '/<wbr>' + fmt(tsu.oyaPay)) + '</span>';
     } else {
       html += '<span class="tsu">—</span>';
     }

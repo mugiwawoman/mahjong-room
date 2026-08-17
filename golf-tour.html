@@ -23,6 +23,10 @@
       --gold: #d9bf6a; --gold-line: rgba(217, 191, 106, .4); --gold-bg: rgba(217, 191, 106, .1);
       --pos: #64b5f6; --neg: #ef9a9a; --shadow: 0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.3); }
   }
+  .store-warn {
+    font-size: 12.5px; font-weight: 700; color: var(--neg); margin: 0 0 12px;
+    border: 1px solid var(--neg); border-radius: 8px; padding: 8px 12px; line-height: 1.6;
+  }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font-family: system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
@@ -125,7 +129,10 @@
   <a class="btn" href="index.html" style="background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#eaf5ea">⌂ 部屋</a>
 </div></header>
 
-<div class="wrap"><p class="note" style="margin:0 0 12px">あなたのブラウザにだけ保存されるコンペ帳です(登録不要)。メンバー登録→参加者を選んでグロスとハンデを入れるだけ。</p></div>
+<div class="wrap">
+  <p id="store-warn" class="store-warn" hidden></p>
+  <p class="note" style="margin:0 0 12px">あなたのブラウザにだけ保存されるコンペ帳です(登録不要)。メンバー登録→参加者を選んでグロスとハンデを入れるだけ。</p>
+</div>
 
 <div class="wrap">
 
@@ -210,29 +217,86 @@
   var PTS = [15,12,10,8,7,6,5,4,3,2];
   var BADGE_NAMES = ['ホールインワン','アルバトロス','イーグル','チップイン','砂神(バンカー一発)','ナイスパー拾い'];
 
+  var MAX_MEMBERS = 60, MAX_COMPS = 300, MAX_BADGES = 500, MAX_ROWS = 60;
+
   function def() { return { title: '社内ゴルフツアー', members: [], comps: [], badges: [], t: Date.now() }; }
+
+  /* 共有URLやlocalStorageから来た値を無害化する。
+     ここを通さないと rows の無いコンペ1つで ranked() が例外→画面が白のまま、
+     しかもその壊れたstateがlocalStorageに居座って再読み込みでも戻らない。 */
+  function numOr(v, fb) { var n = Number(v); return isFinite(n) ? n : fb; }
+  function clampHd(v) { return Math.max(-60, Math.min(60, Math.round(numOr(v, 0) * 10) / 10)); }
+  function str(v, max, fb) {
+    var s = (v === undefined || v === null) ? '' : String(v);
+    return s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max).trim() || fb;
+  }
+  function sanitize(o) {
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+    var s = { title: str(o.title, 40, '社内ゴルフツアー'), members: [], comps: [], badges: [], t: numOr(o.t, 0) };
+    (Array.isArray(o.members) ? o.members : []).slice(0, MAX_MEMBERS).forEach(function (m) {
+      if (!m || typeof m !== 'object') return;
+      s.members.push({ name: str(m.name, 12, '?'), hd: clampHd(m.hd) });
+    });
+    var n = s.members.length;
+    (Array.isArray(o.comps) ? o.comps : []).slice(0, MAX_COMPS).forEach(function (c) {
+      if (!c || typeof c !== 'object') return;
+      var rows = [];
+      (Array.isArray(c.rows) ? c.rows : []).slice(0, MAX_ROWS).forEach(function (r) {
+        if (!r || typeof r !== 'object') return;
+        var mi = Math.round(numOr(r.m, -1));
+        var g = Math.round(numOr(r.gross, NaN));
+        /* 居ないメンバー宛やグロス無しの行は順位計算を壊す */
+        if (!(mi >= 0 && mi < n) || !(g >= 18 && g <= 300)) return;
+        rows.push({ m: mi, gross: g, hd: clampHd(r.hd) });
+      });
+      if (!rows.length) return;   /* 空 rows は ranked()/ベスグロが成立しない */
+      s.comps.push({ name: str(c.name, 30, 'コンペ'), date: str(c.date, 10, ''), rows: rows });
+    });
+    (Array.isArray(o.badges) ? o.badges : []).slice(0, MAX_BADGES).forEach(function (b) {
+      if (!b || typeof b !== 'object') return;
+      var mi = Math.round(numOr(b.m, -1));
+      if (!(mi >= 0 && mi < n)) return;
+      var name = str(b.name, 20, '');
+      /* renderBadges の got[name] が Object.prototype をつかむと .push で落ちる */
+      if (!name || name === '__proto__' || name === 'constructor' || name === 'prototype') return;
+      s.badges.push({ m: mi, name: name, comp: str(b.comp, 30, '') });
+    });
+    return s;
+  }
+
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
-      if (raw) {
-        var o = JSON.parse(raw);
-        if (o && Array.isArray(o.members)) {
-          o.comps = Array.isArray(o.comps) ? o.comps : [];
-          o.badges = Array.isArray(o.badges) ? o.badges : [];
-          return o;
-        }
-      }
-    } catch (e) {}
+      if (raw) { var o = sanitize(JSON.parse(raw)); if (o) return o; }
+    } catch (e) { /* 壊れていたら初期状態へ */ }
     return def();
   }
   var state = load();
+
+  var storageFailed = false;
+  function showStorageWarn() {
+    var el = document.getElementById('store-warn');
+    if (!el) return;
+    el.hidden = !storageFailed;
+    if (storageFailed) {
+      el.textContent = '\u26a0 このブラウザに保存できていません(プライベートモードか容量不足)。' +
+        'このページのURLをブックマークすれば記録は残ります。';
+    }
+  }
+  function shareCode(o) {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
   function persist() {
     state.t = Date.now();
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
-    try { history.replaceState(null, '', '#d=' + btoa(unescape(encodeURIComponent(JSON.stringify(state)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify(state)); storageFailed = false; }
+    catch (e) { storageFailed = true; }
+    showStorageWarn();
+    try { history.replaceState(null, '', '#d=' + shareCode(state)); } catch (e) {}
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
   function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._x); toast._x = setTimeout(function () { t.classList.remove('show'); }, 2200); }
+  /* 保存に失敗しているのに「保存しました」と出さない */
+  function saveToast(m) { toast(storageFailed ? '\u26a0 保存できていません — このページのURLをブックマークして残してください' : m); }
 
   /* ---- comp results: rows [{m, gross, hd}] -> ranked by net ---- */
   function ranked(comp) {
@@ -445,7 +509,7 @@
     periaHidden = null;
     document.getElementById('c-name').value = '';
     persist(); renderAll();
-    toast('「' + name + '」を保存しました ⛳');
+    saveToast('「' + name + '」を保存しました ⛳');
   });
   document.getElementById('history').addEventListener('click', function (ev) {
     var d = ev.target.closest('[data-cdel]');
@@ -462,7 +526,7 @@
       name: document.getElementById('bd-name').value,
       comp: document.getElementById('bd-comp').value });
     persist(); renderAll();
-    toast('殿堂入り🏆');
+    saveToast('殿堂入り🏆');
   });
   document.getElementById('badges').addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-bd]');
@@ -505,20 +569,27 @@
   });
 
   /* ---- share link import ---- */
+  /* リンクの中身は誰でも作れ、t はその自己申告でしかない。
+     「新しいから」で無言に置き換えると、未来のtを入れたリンク一発で年間記録が消せる。
+     置き換えは必ず本人の確認を取ってから行う。 */
   (function () {
-    var m = location.hash.match(/#d=([A-Za-z0-9\-_]+)/);
+    var m = String(location.hash || '').match(/#d=([A-Za-z0-9\-_]+)/);
     if (!m) return;
+    var o;
     try {
       var b = m[1].replace(/-/g, '+').replace(/_/g, '/');
       while (b.length % 4) b += '=';
-      var o = JSON.parse(decodeURIComponent(escape(atob(b))));
-      if (o && Array.isArray(o.members) && (!state.comps.length || (o.t || 0) > (state.t || 0))) {
-        o.comps = Array.isArray(o.comps) ? o.comps : [];
-        o.badges = Array.isArray(o.badges) ? o.badges : [];
-        state = o;
-        persist();
-      }
-    } catch (e) {}
+      o = sanitize(JSON.parse(decodeURIComponent(escape(atob(b)))));
+    } catch (e) { return; }
+    if (!o) return;
+    var body = function (s) { return JSON.stringify({ m: s.members, c: s.comps, b: s.badges, ti: s.title }); };
+    if (body(o) === body(state)) return;   /* persist()が書いた自分のURLは素通り */
+    var when = o.t ? new Date(o.t).toLocaleString('ja-JP') : '日時不明';
+    if (!confirm('共有リンクに入っているデータ(' + when + ' 時点)を読み込みます。\nこのブラウザの今の記録は置き換えられます。よろしいですか?')) return;
+    state = o;
+    picked = {};
+    persist();
+    saveToast('共有データを読み込みました ✓');
   })();
 
   renderPeria();

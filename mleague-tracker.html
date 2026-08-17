@@ -545,6 +545,10 @@
     background: var(--surface2); color: var(--ink2); border: 1px solid var(--line);
   }
   body.is-admin .sync-banner { background: var(--wash); color: var(--accent); border-color: var(--accent); }
+  .store-warn {
+    font-size: 12.5px; font-weight: 700; color: var(--neg); margin: 0 0 12px;
+    border: 1px solid var(--neg); border-radius: 8px; padding: 8px 12px; line-height: 1.6;
+  }
   details.adv { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
   details.adv summary {
     cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--ink2);
@@ -624,6 +628,8 @@
   </nav>
 
   <div class="sync-banner" id="sync-banner">…</div>
+
+  <p id="store-warn" class="store-warn" hidden></p>
 
   <section class="next-card" id="next-card" aria-label="次の対局"></section>
 
@@ -873,9 +879,78 @@
   function defaultState() {
     return fillDefaults({ players: ['A', 'B', 'C', 'D', 'E'], results: {}, map: {}, pen: [], yaku: [] });
   }
+  /* 共有リンク・ファイル・金庫から来た値を無害化する。
+     数値であるべき所に文字列やHTMLを入れられない、居ない席(0-4以外)宛の記録は捨てる、
+     配列やキーの数に上限を置く(1e6件のresultsでnextGameNum()が固まるのを防ぐ)。 */
+  var MAX_GAMES = 400, MAX_GAME_NO = 999, MAX_PEN = 200, MAX_YAKU = 200, MAX_LOG = 300;
+  function numOr(v, fb) { var n = Number(v); return isFinite(n) ? n : fb; }
+  function intIn(v, lo, hi) {
+    var n = Math.round(Number(v));
+    return (isFinite(n) && n >= lo && n <= hi) ? n : null;
+  }
+  function str(v, max, fb) {
+    var s = (v === undefined || v === null) ? '' : String(v);
+    return s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max).trim() || fb;
+  }
+  function sanitize(o) {
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return o;
+    /* 5人固定のリーグ。足りない/多い時は席を作り直さず、既定名で5つに揃えて成績を守る */
+    var ps = Array.isArray(o.players) ? o.players : [];
+    o.players = [0, 1, 2, 3, 4].map(function (i) {
+      return str(ps[i], 24, String.fromCharCode(65 + i));
+    });
+    var res = {}, kept = 0;
+    Object.keys((o.results && typeof o.results === 'object') ? o.results : {}).forEach(function (k) {
+      if (kept >= MAX_GAMES) return;
+      var n = intIn(k, 1, MAX_GAME_NO);
+      var v = o.results[k];
+      if (n === null || !Array.isArray(v) || v.length !== 4) return;
+      var vals = v.map(function (x) { return Math.max(-1000000, Math.min(1000000, numOr(x, NaN))); });
+      if (!vals.every(function (x) { return isFinite(x); })) return;
+      res[n] = vals; kept++;
+    });
+    o.results = res;
+    var mp = {};
+    Object.keys((o.map && typeof o.map === 'object') ? o.map : {}).forEach(function (k) {
+      var n = intIn(k, 1, MAX_GAME_NO), m = intIn(o.map[k], 1, MAX_GAME_NO);
+      if (n !== null && m !== null) mp[n] = m;
+    });
+    o.map = mp;
+    o.pen = (Array.isArray(o.pen) ? o.pen : []).slice(0, MAX_PEN).map(function (e) {
+      if (!e || typeof e !== 'object') return null;
+      var p = intIn(e.p, 0, 4), pt = numOr(e.pt, NaN);
+      if (p === null || !isFinite(pt)) return null;
+      var out = { p: p, pt: Math.max(-100000, Math.min(100000, Math.round(pt * 10) / 10)) };
+      var note = str(e.note, 40, '');
+      if (note) out.note = note;
+      return out;
+    }).filter(Boolean);
+    o.yaku = (Array.isArray(o.yaku) ? o.yaku : []).slice(0, MAX_YAKU).map(function (e) {
+      if (!e || typeof e !== 'object') return null;
+      var p = intIn(e.p, 0, 4), n = intIn(e.n, 0, MAX_GAME_NO);
+      if (p === null || n === null) return null;
+      return { p: p, n: n, name: str(e.name, 24, '役満') };
+    }).filter(Boolean);
+    if (Array.isArray(o.prizes)) o.prizes = o.prizes.slice(0, 6).map(function (v) { return str(v, 24, 'なし'); });
+    else if (o.prizes !== undefined) delete o.prizes;
+    if (o.season !== undefined && o.season !== null) {
+      var q = intIn(o.season, 5, 125);
+      if (q === null) delete o.season; else o.season = q;
+    }
+    o.log = (Array.isArray(o.log) ? o.log : []).slice(-MAX_LOG).map(function (e) {
+      if (!e || typeof e !== 'object') return null;
+      var m = str(e.m, 200, '');
+      return m ? { t: numOr(e.t, 0), m: m } : null;
+    }).filter(Boolean);
+    o.t = numOr(o.t, 0);
+    o.dirty = o.dirty ? 1 : 0;
+    o.syncedH = /^[0-9a-f]{8}:\d{1,9}$/.test(String(o.syncedH || '')) ? String(o.syncedH) : '';
+    return o;
+  }
   function isValidState(o) {
     if (!o || typeof o !== 'object') return false;
     if (!Array.isArray(o.players) || o.players.length !== 5) return false;
+    if (!o.players.every(function (p) { return typeof p === 'string'; })) return false;
     if (!o.results || typeof o.results !== 'object') return false;
     if (o.map && (typeof o.map !== 'object' || !Object.keys(o.map).every(function (k) {
       return /^\d+$/.test(k) && typeof o.map[k] === 'number' && o.map[k] >= 1;
@@ -897,17 +972,69 @@
   function load() {
     try {
       var raw = localStorage.getItem(LS_KEY);
-      if (raw) { var o = JSON.parse(raw); if (isValidState(o)) { fillDefaults(o); o.t = o.t || Date.now(); return o; } }
+      if (raw) {
+        var o = sanitize(JSON.parse(raw));
+        if (isValidState(o)) { fillDefaults(o); o.t = o.t || Date.now(); return o; }
+      }
     } catch (e) { /* fall through */ }
     return defaultState();
   }
+
+  /* 金庫と突き合わせる中身だけを取り出した文字列。dirty/syncedH/t/log は含めない
+     (それらは端末ごとの事情であって、成績そのものではない) */
+  function vaultBody(o) {
+    return JSON.stringify({
+      p: o.players, r: o.results, m: o.map || {}, e: o.pen || [],
+      y: o.yaku || [], z: o.prizes, q: o.season
+    });
+  }
+  function hashOf(s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return ('0000000' + h.toString(16)).slice(-8) + ':' + s.length;
+  }
+
+  var storageFailed = false;
+  function showStorageWarn() {
+    var el = document.getElementById('store-warn');
+    if (!el) return;
+    el.hidden = !storageFailed;
+    if (storageFailed) {
+      el.textContent = '\u26a0 このブラウザに保存できていません(プライベートモードか容量不足)。' +
+        'このページのURLをブックマークすれば記録は残ります。';
+    }
+  }
+  function saveLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); storageFailed = false; }
+    catch (e) { storageFailed = true; }
+    showStorageWarn();
+  }
+  /* dirty  : この端末の編集が金庫へまだ届いていない
+     syncedH: 最後に突き合わせた金庫の中身。どちらも時計を使わずに
+              「引っ張ってよいか / 押してよいか」を決めるための印なので保存する */
+  function markSynced() {
+    state.dirty = 0;
+    state.syncedH = hashOf(vaultBody(state));
+    saveLocal();
+  }
+  /* 金庫に body が入った、と記録する。送信中に追加編集が入っていたら dirty は残す */
+  function notePushed(body) {
+    state.syncedH = hashOf(body);
+    if (vaultBody(state) === body) state.dirty = 0;
+    saveLocal();
+  }
   function persist(skipAutoPush) {
     state.t = Date.now();
-    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ }
+    if (!skipAutoPush) state.dirty = 1;
+    saveLocal();
     /* keep the page URL carrying the latest data, so bookmarks and
        re-shared URLs always restore state even on another browser */
     try { history.replaceState(null, '', '#d=' + encodeState()); } catch (e) { /* sandboxed */ }
     if (!skipAutoPush) scheduleAutoPush();
+  }
+  /* 保存できていないのに「保存しました」と言わない */
+  function saveToast(msg, undoFn) {
+    showToast(storageFailed ? '\u26a0 保存できていません — このページのURLをブックマークして残してください' : msg, undoFn);
   }
   var state = load();
 
@@ -1590,7 +1717,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     logAdd('調整を追加: ' + state.players[pIdx] + ' ' + fmtPt(pt) + 'pt' + (note ? '(' + note + ')' : ''));
     persist();
     renderAll();
-    showToast('ペナルティを記録しました');
+    saveToast('ペナルティを記録しました');
     document.getElementById('pen-note').value = '';
     document.getElementById('pen-pt').value = 20;
     var sb = document.getElementById('pen-sgn');
@@ -1668,7 +1795,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     logAdd('役満を記録: ' + state.players[pIdx] + '「' + name + '」' + gameLabel(n));
     persist();
     renderAll();
-    showToast('🏆 役満バッジを解禁しました');
+    saveToast('🏆 役満バッジを解禁しました');
     document.getElementById('yaku-note').value = '';
   });
   document.getElementById('yaku-list').addEventListener('click', function (ev) {
@@ -1740,7 +1867,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     state.season = v;
     persist();
     renderAll();
-    showToast('シーズンを全' + v + '半荘にしました');
+    saveToast('シーズンを全' + v + '半荘にしました');
   });
   function renderSeason() {
     renderPrizeLine();
@@ -1764,7 +1891,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     state.season = v;
     persist();
     renderAll();
-    showToast('シーズンを全' + v + '半荘にしました');
+    saveToast('シーズンを全' + v + '半荘にしました');
   });
   document.getElementById('prizes-edit').addEventListener('input', function (ev) {
     var inp = ev.target;
@@ -2111,7 +2238,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     logAdd(gameLabel(n) + (wasEdit ? 'を修正' : 'を保存') + '(' + e.vals.map(function (v) { return v.toLocaleString(); }).join(' / ') + ')');
     persist();
     renderAll();
-    showToast('第' + n + '半荘を保存しました ✓');
+    saveToast('第' + n + '半荘を保存しました ✓');
   });
 
   document.getElementById('next-card').addEventListener('click', function (ev) {
@@ -2138,7 +2265,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         };
         persist();
         renderAll();
-        showToast(gameLabel(n) + 'の結果を削除しました', undoAction);
+        saveToast(gameLabel(n) + 'の結果を削除しました', undoAction);
       }
     } else if (t.dataset.edit) {
       renderEntrySelect(Number(t.dataset.edit));
@@ -2192,13 +2319,16 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var reader = new FileReader();
     reader.onload = function () {
       try {
-        var o = JSON.parse(reader.result);
+        var o = sanitize(JSON.parse(reader.result));
         if (!isValidState(o)) throw new Error('bad shape');
         if (confirm('読み込んだデータで現在の記録を置き換えます。よろしいですか?')) {
           state = fillDefaults(o);
-          persist();
+          pinnedByUser = true;
+          state.dirty = 1;      /* 金庫にはまだ無い内容 */
+          state.syncedH = '';   /* 金庫と突き合わせ直すまで押し出さない */
+          persist(true);        /* 読み込んだ瞬間に金庫を上書きしない */
           renderAll();
-          showToast('ファイルを読み込みました ✓');
+          saveToast('ファイルを読み込みました ✓');
         }
       } catch (e) {
         alert('このファイルは読み込めません。「書き出し」で保存したJSONファイルを選んでください。');
@@ -2227,17 +2357,34 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     baseInput.value = shareBase();
   });
   function encodeState() {
-    var json = JSON.stringify({ p: state.players, r: state.results, m: state.map, e: state.pen, y: state.yaku, z: state.prizes, q: state.season, t: Date.now() });
+    var json = JSON.stringify({ p: state.players, r: state.results, m: state.map, e: state.pen, y: state.yaku, z: state.prizes, q: state.season, t: state.t });
     return btoa(unescape(encodeURIComponent(json)))
       .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
+  /* この読み込みで本人が「これを使う」と選んだか。選んだ物を後から金庫で上書きしない */
+  var pinnedByUser = false;
+  /* 金庫ファイル・共有コードの中身(短いキーでも長いキーでも)を state に正規化する。
+     必ず sanitize を通すので、ここを抜けた物だけが表示・保存に回る。 */
+  function vaultToState(o) {
+    if (!o || typeof o !== 'object') return null;
+    var st = o.p ? {
+      players: o.p, results: o.r, map: o.m || {}, pen: o.e || [],
+      yaku: o.y || o.yaku || [], prizes: o.z || o.prizes, season: o.q || o.season
+    } : o;
+    st = sanitize({
+      players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [],
+      yaku: st.yaku || [], prizes: st.prizes, season: st.season
+    });
+    return isValidState(st) ? fillDefaults(st) : null;
+  }
+  function whenOf(o) { return (o && o.t) ? new Date(o.t).toLocaleString('ja-JP') : '日時不明'; }
   function decodeShare(code) {
     try {
       var b = code.replace(/-/g, '+').replace(/_/g, '/');
       while (b.length % 4) b += '=';
       var o = JSON.parse(decodeURIComponent(escape(atob(b))));
-      var st = (o && o.p) ? { players: o.p, results: o.r, map: o.m || {}, pen: o.e || [], yaku: o.y || [], prizes: o.z, season: o.q } : o;
-      if (isValidState(st)) return { state: fillDefaults({ players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [], yaku: st.yaku || [], prizes: st.prizes, season: st.season }), t: o.t };
+      var st = vaultToState(o);
+      if (st) return { state: st, t: numOr(o && o.t, 0) };
     } catch (e) { /* invalid */ }
     return null;
   }
@@ -2247,16 +2394,42 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     var t = String(text).trim();
     return /^[A-Za-z0-9\-_]{16,}$/.test(t) ? t : null;
   }
+  /* 取り込んだ瞬間に金庫を上書きしない。古い共有リンク一発で全端末の記録が消えるのを防ぐ。
+     金庫へ出るのは、このあと記録係が自分で何かを保存した時だけ。 */
   function importShared(dec, sourceLabel) {
-    var when = dec.t ? new Date(dec.t).toLocaleString('ja-JP') : '日時不明';
-    if (confirm(sourceLabel + '(' + when + ' 時点)を読み込みます。\nこのブラウザの今の記録は置き換えられます。よろしいですか?')) {
-      state = fillDefaults(dec.state);
-      persist();
-      renderAll();
-      showToast('共有データを読み込みました ✓');
-      return true;
+    if (!confirm(sourceLabel + '(' + whenOf(dec) + ' 時点)を読み込みます。\nこのブラウザの今の記録は置き換えられます。よろしいですか?')) return false;
+    state = fillDefaults(dec.state);
+    pinnedByUser = true;
+    state.dirty = 1;
+    state.syncedH = '';
+    persist(true);
+    renderAll();
+    saveToast('共有データを読み込みました ✓');
+    return true;
+  }
+  /* 金庫の内容を取り込む。端末どうしの時計は比べない:
+       中身が同じ        → 何もしない(同期済みとして覚えるだけ)
+       未送信の編集が無い → 金庫が正。黙って合わせる
+       未送信の編集がある → 勝手に消さない。必ず訊く */
+  function adoptVault(o, alwaysAsk) {
+    var st = vaultToState(o);
+    if (!st) return false;
+    var incoming = vaultBody(st);
+    if (incoming === vaultBody(state)) {
+      if (state.dirty || state.syncedH !== hashOf(incoming)) markSynced();
+      return false;
     }
-    return false;
+    if (alwaysAsk) {
+      if (!confirm('金庫の保存版(' + whenOf(o) + ' 時点)でこの端末の表示を置き換えます。よろしいですか?')) return false;
+    } else if (state.dirty) {
+      if (!confirm('金庫に別の内容があります(' + whenOf(o) + ' 時点)。\nこの端末の未送信の編集は失われます。読み込みますか?')) return false;
+    }
+    state = st;
+    state.t = numOr(o && o.t, 0) || Date.now();
+    markSynced();
+    try { history.replaceState(null, '', '#d=' + encodeState()); } catch (e) { /* sandboxed */ }
+    renderAll();
+    return true;
   }
   function makeShareLink() {
     var link = shareBase() + '#d=' + encodeState();
@@ -2285,14 +2458,11 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     fetch('league-data.json?v=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
       .then(function (o) {
-        var st = o && o.p ? { players: o.p, results: o.r, map: o.m || {}, pen: o.e || [], yaku: o.y || o.yaku || [], prizes: o.z || o.prizes, season: o.q || o.season } : o;
-        if (!isValidState(st)) throw new Error('shape');
-        var when = o.t ? new Date(o.t).toLocaleString('ja-JP') : '日時不明';
-        if (!confirm('金庫の保存版(' + when + ' 時点)でこの端末の表示を置き換えます。よろしいですか？')) return;
-        state = fillDefaults({ players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [], yaku: st.yaku || [], prizes: st.prizes, season: st.season });
-        persist(true);
-        renderAll();
-        showToast('金庫の最新データを読み込みました \u2713');
+        var st = vaultToState(o);
+        if (!st) throw new Error('shape');
+        if (vaultBody(st) === vaultBody(state)) { markSynced(); showToast('金庫の内容はこの端末と同じでした'); return; }
+        pinnedByUser = true;
+        if (adoptVault(o, true)) showToast('金庫の最新データを読み込みました \u2713');
       })
       .catch(function () { alert('金庫のデータを取得できませんでした。電波のある場所でもう一度お試しください。'); });
   });
@@ -2315,6 +2485,9 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     if (word !== '削除') { showToast('キャンセルしました(「削除」と入力された時だけ実行します)'); return; }
     state = defaultState();
     logAdd('全データを削除(この端末)');
+    pinnedByUser = true;
+    state.dirty = 1;      /* 金庫にはまだ反映されていない */
+    state.syncedH = '';   /* 次に押す時は金庫の中身を確認してから */
     persist(true); /* 金庫へは自動送信しない */
     renderAll();
     showToast('この端末のデータを削除しました(金庫は未変更)');
@@ -2357,29 +2530,62 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     clearTimeout(pushTimer);
     pushTimer = setTimeout(autoPush, 1500);
   }
-  function autoPush(isRetry) {
+  function conflictStop() {
+    setGhStatus('他の端末が先に保存しています — 上書きを中止しました');
+    showToast('\u26a0 他の人が先に保存しています。「金庫の最新を読み込む」で取り込んでから保存し直してください');
+  }
+  /* GitHubが返した現物(base64)を素のJSONへ。読めなければ null */
+  function remoteOf(cur) {
+    try {
+      if (!cur || !cur.content) return null;
+      return JSON.parse(decodeURIComponent(escape(atob(String(cur.content).replace(/\s/g, '')))));
+    } catch (e) { return null; }
+  }
+  function autoPush() {
     var token = ghToken();
     if (!token || typeof fetch !== 'function') return;
     var headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
     var body = JSON.stringify({ players: state.players, results: state.results, map: state.map, pen: state.pen, yaku: state.yaku, prizes: state.prizes, season: state.season, t: state.t }, null, 2);
+    var pushed = vaultBody(state);
     setGhStatus('保存中…');
     fetch(GH_API, { headers: headers, cache: 'no-store' })
       .then(function (r) { return r.status === 404 ? null : r.json(); })
       .then(function (cur) {
+        var raw = remoteOf(cur);
+        var rst = vaultToState(raw);
+        var remote = rst ? vaultBody(rst) : '';
+        if (remote && remote !== pushed) {
+          if (state.syncedH) {
+            /* 最後に突き合わせた中身から金庫が動いている = 他の端末が保存した。上書きしない */
+            if (hashOf(remote) !== state.syncedH) { conflictStop(); return null; }
+          } else if (!confirm('金庫には別の内容が入っています(' + whenOf(raw) + ' 時点)。\nこの端末の記録で上書きしますか?\n(金庫の方を使うなら「キャンセル」→「金庫の最新を読み込む」)')) {
+            setGhStatus('保存を中止しました(金庫の内容を確認してください)');
+            return null;
+          }
+        }
+        if (remote === pushed) {   /* 金庫はもう同じ中身 — 空コミットを作らない */
+          notePushed(pushed);
+          setGhStatus('自動保存 ON(金庫は最新です \u2713)');
+          return null;
+        }
         var payload = {
           message: lastAction || 'リーグの成績を自動保存',
           content: btoa(unescape(encodeURIComponent(body)))
         };
+        /* この版に対する更新だとGitHub側でも確かめさせる(取得〜送信の隙に誰かが保存したら409) */
         if (cur && cur.sha) payload.sha = cur.sha;
         return fetch(GH_API, { method: 'PUT', headers: headers, body: JSON.stringify(payload) });
       })
       .then(function (r) {
-        if (r && r.ok) { setGhStatus('自動保存 ON(いま保存しました \u2713)'); }
-        else if (r && r.status === 409 && !isRetry) { autoPush(true); }
-        else {
-          setGhStatus('自動保存に失敗(トークンの権限・期限を確認)');
-          showToast('\u26a0 自動保存に失敗しました — トークンを確認してください');
+        if (!r) return;   /* 競合を検知して中止、または本人が中止 */
+        if (r.ok) {
+          notePushed(pushed);   /* 金庫の中身はいま押した物 */
+          setGhStatus('自動保存 ON(いま保存しました \u2713)');
+          return;
         }
+        if (r.status === 409) { conflictStop(); return; }
+        setGhStatus('自動保存に失敗(トークンの権限・期限を確認)');
+        showToast('\u26a0 自動保存に失敗しました — トークンを確認してください');
       })
       .catch(function () {
         setGhStatus('自動保存に失敗(通信エラー)');
@@ -2414,26 +2620,16 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   });
   refreshGhUI();
 
-  /* if opened via a share link, offer to load its data */
+  /* 共有リンクで開かれた場合。
+     リンクの t は誰でも好きな値を書ける自己申告なので「新しいから」で無言に置き換えない
+     — 未来の t を入れたリンク一発でシーズン全記録が消せてしまう。
+     中身が違えば必ず本人に訊く。自分の persist() が書いた #d= は中身が一致するので素通りする。 */
   (function () {
     var code = extractCode(location.hash || '');
     if (!code) return;
     var dec = decodeShare(code);
     if (!dec) return;
-    var comparable = function (st) {
-      return JSON.stringify({ p: st.players, r: st.results, m: st.map || {}, e: st.pen || [], y: st.yaku || [], z: st.prizes, q: st.season });
-    };
-    if (comparable(dec.state) === comparable(state)) return;
-    /* ブックマークの古いリンクで毎回confirmが出ないように:
-       古いデータは無視、新しいデータは閲覧者なら無言で適用(記録係のみ確認) */
-    if (!dec.t || dec.t <= (state.t || 0)) return;
-    if (!ghToken()) {
-      state = fillDefaults(dec.state);
-      persist(true);
-      renderAll();
-      showToast('共有リンクの最新データを読み込みました ✓');
-      return;
-    }
+    if (vaultBody(dec.state) === vaultBody(state)) return;
     importShared(dec, '共有リンクに入っているデータ');
   })();
 
@@ -2448,42 +2644,23 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
           .then(function (r2) { return r2.ok ? r2.json() : null; });
       })
       .then(function (o) {
-        if (!o) return;
-        var st = o && o.p ? { players: o.p, results: o.r, map: o.m || {}, pen: o.e || [], yaku: o.y || o.yaku || [], prizes: o.z || o.prizes, season: o.q || o.season } : o;
-        if (!isValidState(st)) return;
-        var localEmpty = Object.keys(state.results).length === 0;
-        var newer = o.t && o.t > (state.t || 0);
-        if (!localEmpty && !newer) {
-          /* this device is ahead of the vault: if it's the recorder, push now */
-          if (ghToken() && state.t && (!o.t || state.t > o.t)) scheduleAutoPush();
-          return;
-        }
-        state = fillDefaults({ players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [], yaku: st.yaku || [], prizes: st.prizes, season: st.season });
-        persist(true); /* adopting the baseline: no need to push it back */
-        renderAll();
-        showToast('保存版データを読み込みました \u2713');
+        if (!o || pinnedByUser) return;   /* この読み込みで本人が選んだ物を後から上書きしない */
+        if (adoptVault(o)) { showToast('保存版データを読み込みました \u2713'); return; }
+        /* 取り込まなかった = この端末が先に進んでいる。記録係なら金庫へ送る */
+        if (ghToken() && state.dirty) scheduleAutoPush();
       })
       .catch(function () { /* no baseline file / blocked */ });
   })();
 
-  /* タブ復帰時に金庫を再取得(新しければ無言で反映) */
+  /* タブ復帰時に金庫を再取得。未送信の編集が無ければ無言で反映、あれば必ず訊く */
   var lastVaultCheck = Date.now();
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) return;
-    if (Date.now() - lastVaultCheck < 60000) return;
+    if (Date.now() - lastVaultCheck < 60000) return;   /* 取りに行き過ぎない(この端末内だけの間引き) */
     lastVaultCheck = Date.now();
     fetch('league-data.json?v=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (o) {
-        if (!o || !o.t || o.t <= (state.t || 0)) return;
-        var st = o.p ? { players: o.p, results: o.r, map: o.m || {}, pen: o.e || [], yaku: o.y || o.yaku || [], prizes: o.z || o.prizes, season: o.q || o.season } : o;
-        if (!isValidState(st)) return;
-        state = fillDefaults({ players: st.players, results: st.results, map: st.map || {}, pen: st.pen || [], yaku: st.yaku || [], prizes: st.prizes, season: st.season });
-        state.t = o.t;
-        persist(true);
-        renderAll();
-        showToast('最新の成績に更新しました ✓');
-      })
+      .then(function (o) { if (o && adoptVault(o)) showToast('最新の成績に更新しました ✓'); })
       .catch(function () { /* offline */ });
   });
 })();

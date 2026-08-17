@@ -1,8 +1,9 @@
 # STATUS
 - 更新: 2026-08-17
-- 今: データ保護 P0 完了。street / mleague / golf の3つとも、共有リンクの無言適用なし・
-  競合判定から時計を排除・保存失敗の可視化・sanitize が入った状態で main に載っている
-- 運用: **GitHubのmainが唯一の正**。zip等でのファイル受け渡しはしない（版ズレの事故を断つため）
-- テスト: `node tests/mleague.test.js`(40件) / `node tests/golf.test.js`(24件) — 依存なし、node のみ
-- 次: P1（実戦UX）。入力途中のドラフト自動保存 → Undoスタック → 44px化・iOS自動ズーム
+- 今: P1「入力ドラフト自動保存」を3ファイルとも完了。打ちかけはタブが飛んでも残り、
+  復元バナーから本人の操作で戻す（勝手には書き戻さない）
+- 運用: **GitHubのmainが唯一の正**。zip等でのファイル受け渡しはしない
+- テスト: `node tests/mleague.test.js`(62) / `node tests/street.test.js`(33) / `node tests/golf.test.js`(42)
+  依存なし・node のみ。`tests/old/` を置くと修正前との比較も走る
+- 次: P1の続き。streetの汎用Undoスタック → 修正/削除ボタンの44px化・分離 → iOS自動ズーム(16px下限)
 - LOLO待ち: なし

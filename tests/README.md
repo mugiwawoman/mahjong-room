@@ -3,8 +3,9 @@
 依存なし。node だけで動く。
 
 ```
-node tests/golf.test.js
 node tests/mleague.test.js
+node tests/street.test.js
+node tests/golf.test.js
 ```
 
 `dom.js` は最小のDOM/localStorage/fetchのスタブ。各HTMLの `<script>` を抜き出して
@@ -17,6 +18,10 @@ node tests/mleague.test.js
 
 内部関数は呼ばない。攻撃者が実際に触れる面と同じ所からしか入らないので、
 テストが通る = その入口からは壊せない、と読める。
+
+`dom.js` は innerHTML に流し込まれたタグ列を簡易に木へ起こすので、
+`querySelector` / `closest` / `.dataset` が効く。入力欄を打って保存ボタンを押す、
+という操作そのものをテストから再現できる。
 
 ## tests/old/(任意)
 

@@ -255,6 +255,108 @@ console.log('\n[9b] 金庫と同じ中身なら空コミットを作らない');
     JSON.stringify({ d: readState(n).dirty, h: readState(n).syncedH }));
 }
 
+console.log('\n[9c] 入力ドラフト(打ちかけを失わない)');
+{
+  const DK = KEY + '-draft';
+  const rowsOf = env => env.ctx.document.querySelectorAll('#entry-rows .erow');
+  const type = (env, vals) => {
+    rowsOf(env).forEach((r, i) => { if (vals[i] !== undefined) r.querySelector('input').value = vals[i]; });
+    env.el('entry-rows').fire('input');
+    env.flush();
+  };
+
+  // 打ちかけが自動で残る
+  const a = run(NEW, { storage: { [KEY]: JSON.stringify(GOOD) }, fetch: mkFetch({}) });
+  await settle(a);
+  chk('起動時は復元バナーが出ていない', a.el('draft-bar').hidden === true);
+  type(a, ['42300', '30000']);
+  const saved = JSON.parse(a.store[DK] || 'null');
+  chk('入力すると下書きが保存される', !!saved && saved.vals[0] === '42300' && saved.vals[1] === '30000',
+    JSON.stringify(saved && saved.vals));
+  chk('本体のstateはまだ変わらない', Object.keys(readState(a).results).length === 2,
+    Object.keys(readState(a).results).join());
+
+  // 符号(箱下のマイナス)も残る
+  const sgnBtn = rowsOf(a)[2].querySelector('.sgn');
+  a.el('entry-rows').fire('click', { target: sgnBtn });
+  a.flush();
+  chk('マイナス符号も下書きに入る', JSON.parse(a.store[DK]).sgns[2] === -1, JSON.stringify(JSON.parse(a.store[DK]).sgns));
+
+  // 落ちた後に開き直す
+  const b = run(NEW, { storage: { [KEY]: a.store[KEY], [DK]: a.store[DK] }, fetch: mkFetch({}) });
+  await settle(b);
+  chk('復元バナーが出る', b.el('draft-bar').hidden === false);
+  chk('どの半荘の途中かを言う', /半荘の入力が途中で残っています/.test(b.el('draft-msg').textContent),
+    b.el('draft-msg').textContent);
+  chk('勝手には戻さない', rowsOf(b).every(r => r.querySelector('input').value === ''),
+    JSON.stringify(rowsOf(b).map(r => r.querySelector('input').value)));
+
+  b.el('draft-restore').fire('click');
+  const back = rowsOf(b).map(r => r.querySelector('input').value);
+  chk('「入力を戻す」で値が戻る', back[0] === '42300' && back[1] === '30000', JSON.stringify(back));
+  chk('符号も戻る', rowsOf(b)[2].querySelector('.sgn').dataset.sgn === '-1',
+    rowsOf(b)[2].querySelector('.sgn').dataset.sgn);
+  chk('戻したらバナーは消える', b.el('draft-bar').hidden === true);
+
+  // 破棄
+  const c = run(NEW, { storage: { [KEY]: a.store[KEY], [DK]: a.store[DK] }, fetch: mkFetch({}) });
+  await settle(c);
+  c.el('draft-drop').fire('click');
+  chk('「破棄」で下書きが消える', !(DK in c.store) && c.el('draft-bar').hidden === true, JSON.stringify(Object.keys(c.store)));
+
+  // 保存したら下書きは残らない
+  const d = run(NEW, { storage: { [KEY]: JSON.stringify(GOOD) }, fetch: mkFetch({}) });
+  await settle(d);
+  type(d, ['42300', '30000', '15000', '12700']);
+  chk('4人分そろえば保存ボタンが有効', d.el('btn-save').disabled === false, 'disabled=' + d.el('btn-save').disabled);
+  chk('保存前は下書きがある', DK in d.store);
+  d.el('btn-save').fire('click');
+  chk('保存すると下書きが消える', !(DK in d.store), JSON.stringify(Object.keys(d.store)));
+  chk('半荘は本体に入る', Object.keys(readState(d).results).length === 3, Object.keys(readState(d).results).join());
+
+  // 保存済みと同じ内容の下書きは黙って捨てる
+  const stale = { n: 1, vals: ['35000', '30000', '25000', '10000'], sgns: [1, 1, 1, 1], t: 1000 };
+  const e2 = run(NEW, { storage: { [KEY]: JSON.stringify(GOOD), [DK]: JSON.stringify(stale) }, fetch: mkFetch({}) });
+  await settle(e2);
+  chk('保存済みと同内容ならバナーを出さない', e2.el('draft-bar').hidden === true);
+  chk('その下書きは捨てられる', !(DK in e2.store));
+
+  // 汚染された下書き
+  const JUNK = ['null', '{}', '[]', 'not json', JSON.stringify({ n: 'x', vals: 1 }),
+    JSON.stringify({ n: 1e9, vals: ['1', '2', '3', '4'] }),
+    JSON.stringify({ n: 1, vals: ['a'.repeat(9999), '', '', ''], sgns: 'x' })];
+  let junkOk = true, junkErr = '';
+  for (const j of JUNK) {
+    const z = run(NEW, { storage: { [KEY]: JSON.stringify(GOOD), [DK]: j }, fetch: mkFetch({}) });
+    await settle(z);
+    if (z.log.errors.length) { junkOk = false; junkErr = j.slice(0, 30) + ': ' + z.log.errors.join('|'); }
+  }
+  chk('壊れた下書きで落ちない(' + JUNK.length + '種)', junkOk, junkErr);
+}
+
+console.log('\n[9d] 途中で画面が描き直されても戻せる');
+{
+  const DK = KEY + '-draft';
+  const rowsOf = env => env.ctx.document.querySelectorAll('#entry-rows .erow');
+  const e = run(NEW, { storage: { [KEY]: JSON.stringify(GOOD) }, fetch: mkFetch({}) });
+  await settle(e);
+  rowsOf(e)[0].querySelector('input').value = '42300';
+  e.el('entry-rows').fire('input');
+  e.flush();
+  // ペナルティ保存など、入力中に renderAll() が走る操作
+  e.el('pen-player').value = '0';
+  e.el('pen-pt').value = '20';
+  e.el('pen-sgn').dataset.sgn = '-1';
+  e.el('btn-pen-add').fire('click');
+  chk('(前提)ペナルティが記録され画面が描き直された', readState(e).pen.length === 1, JSON.stringify(readState(e).pen));
+  chk('描き直しで打ちかけは消える(元々の挙動)', rowsOf(e)[0].querySelector('input').value === '',
+    rowsOf(e)[0].querySelector('input').value);
+  chk('その場で復元バナーが出る(再読み込み不要)', e.el('draft-bar').hidden === false);
+  e.el('draft-restore').fire('click');
+  chk('戻せる', rowsOf(e)[0].querySelector('input').value === '42300',
+    rowsOf(e)[0].querySelector('input').value);
+}
+
 console.log('\n[10] 普段使いが重くなっていないこと');
 {
   // 新しい端末で開く: 金庫を黙って表示、確認ゼロ

@@ -117,6 +117,73 @@ console.log('\n[5] 保存できない時に黙らない');
   } else skipped++;
 }
 
+console.log('\n[5b] 入力ドラフト(打ちかけを失わない)');
+{
+  const DK = KEY + '-draft';
+  const chips = env => env.ctx.document.querySelectorAll('#c-members [data-pick]');
+  const srows = env => env.ctx.document.querySelectorAll('#c-rows .srow');
+  const typeComp = env => {
+    chips(env).slice(0, 2).forEach(c => env.el('c-members').fire('click', { target: c }));
+    env.el('c-name').value = '第2戦 山中CC';
+    env.el('c-name').fire('input');
+    const r = srows(env);
+    r[0].querySelector('.g').value = '88';
+    r[1].querySelector('.g').value = '101';
+    env.el('c-rows').fire('input');
+    env.flush();
+    return r;
+  };
+
+  const a = run(NEW, { storage: seed() });
+  chk('起動時は復元バナーが出ていない', a.el('draft-bar').hidden === true);
+  typeComp(a);
+  const d = JSON.parse(a.store[DK] || 'null');
+  chk('打ちかけが自動で残る', !!d && d.rows['0'].g === '88' && d.rows['1'].g === '101', JSON.stringify(d && d.rows));
+  chk('コンペ名も残る', !!d && d.name === '第2戦 山中CC', d && d.name);
+  chk('参加者も残る', !!d && d.ids.length === 2, JSON.stringify(d && d.ids));
+  chk('本体のコンペ数はまだ1件', readState(a).comps.length === 1, readState(a).comps.length);
+
+  // 落ちた後に開き直す
+  const b = run(NEW, { storage: { [KEY]: a.store[KEY], [DK]: a.store[DK] } });
+  chk('復元バナーが出る', b.el('draft-bar').hidden === false);
+  chk('何の途中かを言う', /第2戦 山中CC・2名/.test(b.el('draft-msg').textContent), b.el('draft-msg').textContent);
+  chk('勝手には戻さない', srows(b).length === 0, 'srows=' + srows(b).length);
+
+  b.el('draft-restore').fire('click');
+  chk('「入力を戻す」で参加者が戻る', srows(b).length === 2, 'srows=' + srows(b).length);
+  chk('グロスが戻る', srows(b).map(r => r.querySelector('.g').value).join(',') === '88,101',
+    srows(b).map(r => r.querySelector('.g').value).join(','));
+  chk('コンペ名が戻る', b.el('c-name').value === '第2戦 山中CC', b.el('c-name').value);
+  chk('戻したらバナーは消える', b.el('draft-bar').hidden === true);
+
+  // 破棄
+  const c = run(NEW, { storage: { [KEY]: a.store[KEY], [DK]: a.store[DK] } });
+  c.el('draft-drop').fire('click');
+  chk('「破棄」で下書きが消える', !(DK in c.store) && c.el('draft-bar').hidden === true);
+
+  // 保存で消える
+  const e = run(NEW, { storage: seed() });
+  typeComp(e);
+  chk('保存前は下書きがある', DK in e.store);
+  e.el('c-save').fire('click');
+  chk('コンペが本体に入る', readState(e).comps.length === 2, readState(e).comps.length);
+  chk('保存すると下書きが消える', !(DK in e.store), JSON.stringify(Object.keys(e.store)));
+
+  // 出してはいけない下書き
+  const gone = run(NEW, { storage: { [KEY]: a.store[KEY], [DK]: JSON.stringify({ name: 'x', ids: [77, 88], rows: {}, t: 1 }) } });
+  chk('居ないメンバー宛の下書きは出さない', gone.el('draft-bar').hidden === true);
+
+  const JUNK = ['null', '{}', '[]', 'not json', JSON.stringify({ ids: 'x', rows: 5 }),
+    JSON.stringify({ name: 'n'.repeat(9999), ids: [0], rows: { 0: { g: 'x'.repeat(999) } } }),
+    JSON.stringify({ ids: [0], rows: { 0: null }, name: '' })];
+  let ok = true, err = '';
+  for (const j of JUNK) {
+    const z = run(NEW, { storage: { [KEY]: a.store[KEY], [DK]: j } });
+    if (z.log.errors.length) { ok = false; err = j.slice(0, 30) + ': ' + z.log.errors.join('|'); }
+  }
+  chk('壊れた下書きで落ちない(' + JUNK.length + '種)', ok, err);
+}
+
 console.log('\n[6] 普段使いが重くなっていないこと');
 {
   const fresh = run(NEW, { storage: {}, hash: '' });

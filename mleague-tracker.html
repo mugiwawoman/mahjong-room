@@ -549,6 +549,13 @@
     font-size: 12.5px; font-weight: 700; color: var(--neg); margin: 0 0 12px;
     border: 1px solid var(--neg); border-radius: 8px; padding: 8px 12px; line-height: 1.6;
   }
+  .draft-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12.5px; font-weight: 700; color: var(--accent);
+    background: var(--wash); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; line-height: 1.6;
+  }
+  .draft-bar .btn { padding: 5px 12px; font-size: 12.5px; }
   details.adv { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
   details.adv summary {
     cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--ink2);
@@ -669,6 +676,11 @@
 
   <section class="card admin-only" id="entry">
     <h2>結果入力</h2>
+    <div class="draft-bar" id="draft-bar" hidden>
+      <span id="draft-msg"></span>
+      <button class="btn small" id="draft-restore" type="button">入力を戻す</button>
+      <button class="btn small" id="draft-drop" type="button">破棄</button>
+    </div>
     <div class="entry-top">
       <select id="game-select" aria-label="入力する半荘"></select>
       <span class="entry-note">最終持ち点をそのまま入力(例: 42300)。合計100,000点でptを自動計算します。</span>
@@ -1434,6 +1446,9 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     document.querySelectorAll('#entry-rows input').forEach(function (inp) { snap.push(inp.value.trim()); });
     entrySnapshot = snap.join('|');
     updateEntryState();
+    /* renderAll() が走ると打ちかけが消える(金庫の更新・ペナルティ保存など)。
+       下書きは残っているので、その場で戻せるようにバナーを出し直す。 */
+    showDraftBar();
   }
   function readEntry() {
     var vals = [];
@@ -2213,16 +2228,95 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
 
   /* ---------- events ---------- */
   document.getElementById('game-select').addEventListener('change', renderEntryRows);
-  document.getElementById('entry-rows').addEventListener('click', function (ev) {
-    var b = ev.target.closest('.sgn');
-    if (!b) return;
-    var neg = b.dataset.sgn === '1';
+  function setSgn(b, s) {
+    var neg = Number(s) === -1;
     b.dataset.sgn = neg ? '-1' : '1';
     b.textContent = neg ? '−' : '＋';
     b.classList.toggle('neg', neg);
+  }
+  document.getElementById('entry-rows').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.sgn');
+    if (!b) return;
+    setSgn(b, b.dataset.sgn === '1' ? -1 : 1);
     updateEntryState();
+    scheduleDraft();
   });
-  document.getElementById('entry-rows').addEventListener('input', updateEntryState);
+  document.getElementById('entry-rows').addEventListener('input', function () {
+    updateEntryState();
+    scheduleDraft();
+  });
+
+  /* ---------- 入力ドラフト ----------
+     打ちかけの値をタブが飛んでも失わない。本体の state とは別のキーに置き、
+     戻すかどうかは必ず本人が決める(勝手に書き戻さない)。 */
+  var DRAFT_KEY = LS_KEY + '-draft';
+  var draftTimer = null;
+  function scheduleDraft() { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 400); }
+  function saveDraft() {
+    var vals = [], sgns = [];
+    document.querySelectorAll('#entry-rows .erow').forEach(function (row) {
+      vals.push(row.querySelector('input').value.trim());
+      sgns.push(Number(row.querySelector('.sgn').dataset.sgn) || 1);
+    });
+    var n = Number(document.getElementById('game-select').value) || 0;
+    try {
+      if (!n || !vals.some(function (v) { return v !== ''; })) localStorage.removeItem(DRAFT_KEY);
+      else localStorage.setItem(DRAFT_KEY, JSON.stringify({ n: n, vals: vals, sgns: sgns, t: Date.now() }));
+    } catch (e) { /* 書けない端末では下書きも残らない(赤バナーで既に知らせている) */ }
+  }
+  function clearDraft() {
+    clearTimeout(draftTimer);
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* blocked */ }
+    var bar = document.getElementById('draft-bar');
+    if (bar) bar.hidden = true;
+  }
+  /* 下書きも localStorage 経由なので、他の入口と同じく素性を疑ってから使う */
+  function loadDraft() {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { return null; }
+    if (!d || typeof d !== 'object') return null;
+    var n = intIn(d.n, 1, MAX_GAME_NO);
+    if (n === null || !Array.isArray(d.vals) || d.vals.length !== 4) return null;
+    var vals = d.vals.map(function (v) { return str(v, 12, ''); });
+    if (!vals.some(function (v) { return v !== ''; })) return null;
+    var sgns = [0, 1, 2, 3].map(function (i) {
+      return Number((Array.isArray(d.sgns) ? d.sgns : [])[i]) === -1 ? -1 : 1;
+    });
+    return { n: n, vals: vals, sgns: sgns, t: numOr(d.t, 0) };
+  }
+  function showDraftBar() {
+    var bar = document.getElementById('draft-bar');
+    if (!bar) return;
+    var d = loadDraft();
+    if (!d) { bar.hidden = true; return; }
+    /* もう同じ内容が保存済みなら、残っているだけの下書きなので黙って捨てる */
+    var saved = state.results[d.n];
+    if (saved && saved.every(function (v, i) {
+      return String(Math.abs(v)) === d.vals[i] && (v < 0 ? -1 : 1) === d.sgns[i];
+    })) { clearDraft(); return; }
+    var when = d.t ? new Date(d.t).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    document.getElementById('draft-msg').textContent =
+      '✎ ' + gameLabel(d.n) + 'の入力が途中で残っています' + (when ? '(' + when + ')' : '');
+    bar.hidden = false;
+  }
+  document.getElementById('draft-restore').addEventListener('click', function () {
+    var d = loadDraft();
+    if (!d) { clearDraft(); return; }
+    renderEntrySelect(d.n);
+    renderEntryRows();
+    document.querySelectorAll('#entry-rows .erow').forEach(function (row, i) {
+      row.querySelector('input').value = d.vals[i] || '';
+      setSgn(row.querySelector('.sgn'), d.sgns[i]);
+    });
+    updateEntryState();
+    document.getElementById('draft-bar').hidden = true;
+    document.getElementById('entry').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast('入力を戻しました');
+  });
+  document.getElementById('draft-drop').addEventListener('click', function () {
+    clearDraft();
+    showToast('下書きを破棄しました');
+  });
 
   document.getElementById('btn-save').addEventListener('click', function () {
     var e = readEntry();
@@ -2237,6 +2331,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     state.results[n] = e.vals;
     logAdd(gameLabel(n) + (wasEdit ? 'を修正' : 'を保存') + '(' + e.vals.map(function (v) { return v.toLocaleString(); }).join(' / ') + ')');
     persist();
+    clearDraft();
     renderAll();
     saveToast('第' + n + '半荘を保存しました ✓');
   });

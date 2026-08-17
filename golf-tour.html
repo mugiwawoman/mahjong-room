@@ -15,17 +15,25 @@
     --turf: #2e7d32; --turf-deep: #1b5e20; --turf-ink: #eaf5ea; --turf-ink2: #a5d6a7;
     --gold: #9c7c1e; --gold-line: rgba(168, 138, 48, .5); --gold-bg: rgba(212, 175, 55, .13);
     --pos: #1565c0; --neg: #c62828; --flag: #d84315;
+    --draft-ink: #1b5e20; --draft-bg: rgba(46, 125, 50, .10);
     --shadow: 0 1px 2px rgba(30, 40, 25, .07), 0 4px 14px rgba(30, 40, 25, .06);
   }
   @media (prefers-color-scheme: dark) {
     :root { --marker: rgba(242, 201, 76, .22); --bg: #10130e; --paper: #191e16; --line: #2a3125; --baseline: #3d4635;
       --ink: #edf0e6; --ink2: #b7bdaa; --mut: #81877a; --turf: #2e7d32; --turf-deep: #17421a;
       --gold: #d9bf6a; --gold-line: rgba(217, 191, 106, .4); --gold-bg: rgba(217, 191, 106, .1);
-      --pos: #64b5f6; --neg: #ef9a9a; --shadow: 0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.3); }
+      --pos: #64b5f6; --neg: #ef9a9a; --shadow: 0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.3);
+      --draft-ink: #a5d6a7; --draft-bg: rgba(165, 214, 167, .10); }
   }
   .store-warn {
     font-size: 12.5px; font-weight: 700; color: var(--neg); margin: 0 0 12px;
     border: 1px solid var(--neg); border-radius: 8px; padding: 8px 12px; line-height: 1.6;
+  }
+  .draft-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12.5px; font-weight: 700; color: var(--draft-ink);
+    background: var(--draft-bg); border: 1px solid var(--draft-ink);
+    border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; line-height: 1.6;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
@@ -153,8 +161,13 @@
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" id="new-comp">
     <h2>新しいコンペ</h2>
+    <div class="draft-bar" id="draft-bar" hidden>
+      <span id="draft-msg"></span>
+      <button class="btn small" id="draft-restore" type="button">入力を戻す</button>
+      <button class="btn small" id="draft-drop" type="button">破棄</button>
+    </div>
     <div class="row">
       <input id="c-name" type="text" placeholder="第1戦 〇〇カントリー" style="flex:1;min-width:150px" maxlength="30">
       <input id="c-date" type="date">
@@ -456,8 +469,99 @@
     var i = Number(t.dataset.pick);
     picked[i] = !picked[i];
     renderEntry();
+    scheduleDraft();
   });
-  document.getElementById('c-rows').addEventListener('input', updateNets);
+  document.getElementById('c-rows').addEventListener('input', function () {
+    updateNets();
+    scheduleDraft();
+  });
+  document.getElementById('c-name').addEventListener('input', scheduleDraft);
+  document.getElementById('c-date').addEventListener('input', scheduleDraft);
+
+  /* ---------- 入力ドラフト ----------
+     打ちかけをタブが飛んでも失わない。本体の state とは別のキーに置き、
+     戻すかどうかは必ず本人が決める(勝手に書き戻さない)。 */
+  var DRAFT_KEY = KEY + '-draft';
+  var draftTimer = null;
+  function scheduleDraft() { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 400); }
+  function saveDraft() {
+    var rows = {};
+    var any = false;
+    document.querySelectorAll('#c-rows .srow').forEach(function (row) {
+      var g = row.querySelector('.g').value.trim(), h = row.querySelector('.h').value.trim();
+      rows[row.dataset.m] = { g: g, h: h };
+      if (g !== '') any = true;
+    });
+    var name = document.getElementById('c-name').value.trim();
+    var date = document.getElementById('c-date').value;
+    var ids = Object.keys(picked).filter(function (k) { return picked[k]; }).map(Number);
+    try {
+      if (!any && !name && !ids.length) localStorage.removeItem(DRAFT_KEY);
+      else localStorage.setItem(DRAFT_KEY, JSON.stringify({ name: name, date: date, ids: ids, rows: rows, t: Date.now() }));
+    } catch (e) { /* 書けない端末では下書きも残らない(赤バナーで既に知らせている) */ }
+  }
+  function clearDraft() {
+    clearTimeout(draftTimer);
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* blocked */ }
+    var bar = document.getElementById('draft-bar');
+    if (bar) bar.hidden = true;
+  }
+  /* 下書きも localStorage 経由。他の入口と同じく素性を疑ってから使う */
+  function loadDraft() {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { return null; }
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+    var n = state.members.length;
+    var ids = (Array.isArray(d.ids) ? d.ids : []).map(function (v) { return Math.round(numOr(v, -1)); })
+      .filter(function (i) { return i >= 0 && i < n; });
+    var rows = {};
+    var any = false;
+    if (d.rows && typeof d.rows === 'object') {
+      ids.forEach(function (i) {
+        var r = d.rows[i];
+        if (!r || typeof r !== 'object') return;
+        var g = str(r.g, 6, ''), h = str(r.h, 6, '');
+        rows[i] = { g: g, h: h };
+        if (g !== '') any = true;
+      });
+    }
+    var name = str(d.name, 30, '');
+    if (!any && !name) return null;          /* 復元する値が無い */
+    if (!ids.length) return null;
+    return { name: name, date: str(d.date, 10, ''), ids: ids, rows: rows, t: numOr(d.t, 0) };
+  }
+  function showDraftBar() {
+    var bar = document.getElementById('draft-bar');
+    if (!bar) return;
+    var d = loadDraft();
+    if (!d) { bar.hidden = true; return; }
+    var when = d.t ? new Date(d.t).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    document.getElementById('draft-msg').textContent =
+      '\u270e 入力が途中で残っています(' + (d.name || '名前未入力') + '\u30fb' + d.ids.length + '名' + (when ? '\u30fb' + when : '') + ')';
+    bar.hidden = false;
+  }
+  document.getElementById('draft-restore').addEventListener('click', function () {
+    var d = loadDraft();
+    if (!d) { clearDraft(); return; }
+    picked = {};
+    d.ids.forEach(function (i) { picked[i] = true; });
+    document.getElementById('c-name').value = d.name;
+    document.getElementById('c-date').value = d.date;
+    renderEntry();
+    document.querySelectorAll('#c-rows .srow').forEach(function (row) {
+      var r = d.rows[row.dataset.m];
+      if (!r) return;
+      row.querySelector('.g').value = r.g;
+      if (r.h !== '') row.querySelector('.h').value = r.h;
+    });
+    updateNets();
+    document.getElementById('draft-bar').hidden = true;
+    toast('入力を戻しました');
+  });
+  document.getElementById('draft-drop').addEventListener('click', function () {
+    clearDraft();
+    toast('下書きを破棄しました');
+  });
   var periaHidden = null; /* このコンペ(入力セッション)中は隠しホール固定 — 全員同一条件 */
   function drawHidden() {
     var idx = PARS.map(function (_, i) { return i; });
@@ -508,6 +612,7 @@
     picked = {};
     periaHidden = null;
     document.getElementById('c-name').value = '';
+    clearDraft();
     persist(); renderAll();
     saveToast('「' + name + '」を保存しました ⛳');
   });
@@ -594,6 +699,7 @@
 
   renderPeria();
   renderAll();
+  showDraftBar();
 })();
 </script>
 </body>

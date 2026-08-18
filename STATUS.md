@@ -9,6 +9,8 @@
 - 運用: **GitHubのmainが唯一の正**。zip等でのファイル受け渡しはしない
 - テスト: `node tests/mleague.test.js`(80) / `node tests/street.test.js`(33)
   / `node tests/overflow.test.js`(39・要 http-server) / `node archive/golf.test.js`(42)
+- 文字の方針(2026-08-17確定): 道具ページは sans一本 + ページ名と牌だけ明朝。
+  手書き(Klee One)は営業LP専用。ダブルタップズームは全ページで停止(ピンチは効く)
 - 次: P1の残り。streetの汎用Undoスタック → 修正/削除ボタンの44px化・分離
   → iOS自動ズーム(入力欄16px下限) → 既定名「プレイヤー1〜4」の廃止
 - LOLO待ち: なし

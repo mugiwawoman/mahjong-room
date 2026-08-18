@@ -4,13 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>点数下敷き</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* 文字の3層。3ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
-       sans : 本文・数字        serif: ページ名と牌の面      hand : 見出し・注記・ボタン */
+    /* 文字は2層+LP専用の1層。5ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
+       sans : UI全部(本文・見出し・ボタン・数字)   serif: ページ名と牌の面   hand : 営業LPだけの手書き声 */
     --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
     --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
     --font-hand: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
@@ -75,6 +72,8 @@
     --shadow: 0 1px 2px rgba(28, 22, 18, .06), 0 4px 14px rgba(28, 22, 18, .05);
   }
 
+  /* 連打(±や◀▶)をズームと誤認させない。ピンチでの拡大はそのまま効く */
+  html { touch-action: manipulation; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -201,10 +200,6 @@
 
   .tips li { margin-bottom: 7px; font-size: 13.5px; }
   .tips b { color: var(--accent); }
-
-  h2, .eyebrow, .note, footer {
-    font-family: var(--font-hand);
-  }
   footer { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.8; }
   a { color: var(--accent); }
   @media (prefers-reduced-motion: no-preference) {

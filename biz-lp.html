@@ -16,8 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* 文字の3層。3ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
-       sans : 本文・数字        serif: ページ名と牌の面      hand : 見出し・注記・ボタン */
+    /* 文字は2層+LP専用の1層。5ファイルで同じ定義にする(役割で選ぶ / 見た目で選ばない)
+       sans : UI全部(本文・見出し・ボタン・数字)   serif: ページ名と牌の面   hand : 営業LPだけの手書き声 */
     --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
     --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
     --font-hand: "Klee One", "UD デジタル 教科書体 N-R", "YuKyokasho", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
@@ -31,6 +31,8 @@
     --felt: #0d5240;
   }
   * { box-sizing: border-box; margin: 0; }
+  /* 連打(±や◀▶)をズームと誤認させない。ピンチでの拡大はそのまま効く */
+  html { touch-action: manipulation; }
   body {
     background:
       repeating-linear-gradient(0deg, transparent 0 28px, rgba(120, 110, 80, .045) 28px 29px),

@@ -100,11 +100,11 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
     <li>・豚レバーのみ（味付けなし）</li>
   </ul>
   <h2>教えてほしいこと</h2>
-  <div class="q"><b>① 角切りは、均等なサイズにできますか？</b>
+  <div class="q"><b>① 4mm〜12mm、全サイズ角切りでいけそうですか？</b>
     <div class="opts">
-      <label><input type="radio" name="q1" value="できる"><span>できる</span></label>
-      <label><input type="radio" name="q1" value="サイズによる"><span>サイズによる</span></label>
-      <label><input type="radio" name="q1" value="むずかしい"><span>むずかしい</span></label>
+      <label><input type="radio" name="q1" value="全部いける"><span>全部いける</span></label>
+      <label><input type="radio" name="q1" value="小さいのはむずかしい"><span>小さいのは<br>むずかしい</span></label>
+      <label><input type="radio" name="q1" value="やってみないと"><span>やって<br>みないと</span></label>
     </div>
   </div>
   <div class="q"><b>② サイズごとの原価の目安</b>
@@ -127,7 +127,7 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
   function sendAns(){
     var g=function(n){var e=document.querySelector('input[name="'+n+'"]:checked');return e?e.value:'—';};
     var v=function(i){return document.getElementById(i).value.trim();};
-    var t=['【試作の回答】','① 均等な角切り: '+g('q1'),'② 原価の目安: '+(v('a2')||'—'),'③ 直送: '+g('q3')];
+    var t=['【試作の回答】','① 角切り(4〜12mm): '+g('q1'),'② 原価の目安: '+(v('a2')||'—'),'③ 直送: '+g('q3')];
     if(v('a3'))t.push('　送料・入り数: '+v('a3'));
     if(v('memo'))t.push('メモ: '+v('memo'));
     location.href='https://line.me/R/share?text='+encodeURIComponent(t.join('\n'));
@@ -167,7 +167,7 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
     <div class="nm2brand" style="text-align:center;color:#FFF;">犬用レバキューブ 50g</div>
   </div>
 
-  <div class="ptitle">【予約販売（仮）】犬用レバキューブ 50g（国産豚レバー・8mm角）※予定数がなくなり次第終了</div>
+  <div class="ptitle">【予約販売（仮）】犬用レバキューブ 50g（豚レバー・8mm角）※予定数がなくなり次第終了</div>
   <div class="badges"><span class="bg1">予約販売</span><span class="bg2">冷凍</span><span class="bg2">50g×1袋</span><span class="bg2">原材料は豚レバーのみ</span></div>
 
   <div class="pnote">※予約分をまとめて製造→月の中旬にお届け（冷凍便・仮）。作ってから売るのではなく、売れたぶんだけ作ります。</div>

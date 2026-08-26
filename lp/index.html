@@ -20,6 +20,7 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
 .lt textarea{min-height:76px;resize:vertical;}
 .lt .sendbtn{display:block;width:100%;margin-top:22px;padding:16px;border:none;background:#111;color:#FFF;font-family:inherit;font-size:15.5px;font-weight:900;letter-spacing:.06em;cursor:pointer;}
 .lt .outbox{border:1.5px solid #111;padding:12px;font-size:13px;line-height:1.9;white-space:pre-wrap;background:#FAFAF8;margin-top:14px;}
+.lt .qnote{font-size:12.5px;color:#555;margin-top:4px;font-weight:400;}
 .lt .formnote{font-size:11px;color:#8A8A8A;margin-top:8px;text-align:center;}
 .divider{max-width:480px;margin:38px auto 0;padding:16px 20px;background:#F6F5F2;border-top:1px solid #E3E3E0;border-bottom:1px solid #E3E3E0;font-size:12.5px;color:#555;line-height:2;text-align:center;}
 .lpC .col{max-width:480px;margin:0 auto;padding:0 18px;}
@@ -108,10 +109,7 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
       <label><input type="radio" name="q1" value="やってみないと"><span>やって<br>みないと</span></label>
     </div>
   </div>
-  <div class="q"><b>② サイズごとの原価の目安</b>
-    <input type="text" id="a2" placeholder="例）8mmで◯◯円／袋 くらい">
-  </div>
-  <div class="q"><b>③ 冷凍便で、お客さんへの直送はできますか？</b>
+  <div class="q"><b>② 冷凍便で、お客さんへの直送はできますか？</b>
     <div class="opts">
       <label><input type="radio" name="q3" value="できる"><span>できる</span></label>
       <label><input type="radio" name="q3" value="できない"><span>できない</span></label>
@@ -119,8 +117,12 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
     </div>
     <input type="text" id="a3" placeholder="できる場合）送料と、1箱に入る袋数">
   </div>
-  <div class="q"><b>④ 試作のできあがりは、いつ頃になりそうですか？</b>
+  <div class="q"><b>③ 試作のできあがりは、いつ頃になりそうですか？</b>
     <input type="text" id="a4" placeholder="例）2週間後くらい">
+  </div>
+  <div class="q"><b>④ 試作の費用</b>
+    <p class="qnote">タダでお願いするつもりはないので、材料代と手間代を教えてください。</p>
+    <input type="text" id="a5" placeholder="例）◯◯円">
   </div>
   <div class="q"><b>そのほか</b>
     <textarea id="memo"></textarea>
@@ -135,9 +137,10 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
   function buildAns(){
     var g=function(n){var e=document.querySelector('input[name="'+n+'"]:checked');return e?e.value:'—';};
     var v=function(i){return document.getElementById(i).value.trim();};
-    var t=['【試作の回答】','① 角切り(4〜12mm): '+g('q1'),'② 原価の目安: '+(v('a2')||'—'),'③ 直送: '+g('q3')];
+    var t=['【試作の回答】','① 角切り(4〜12mm): '+g('q1'),'② 直送: '+g('q3')];
     if(v('a3'))t.push('　送料・入り数: '+v('a3'));
-    t.push('④ できあがり: '+(v('a4')||'—'));
+    t.push('③ できあがり: '+(v('a4')||'—'));
+    t.push('④ 試作の費用: '+(v('a5')||'—'));
     if(v('memo'))t.push('そのほか: '+v('memo'));
     return t.join('\n');
   }
@@ -194,9 +197,9 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
     <div class="orig">
       <div class="ot">そもそも</div>
       <div class="oh">金レバとは。</div>
-      <p>レバー職人が作る、冷凍レバニラのブランド。<br>毎月の販売日に出しては、すぐ売り切れます。<br>犬のおやつのために探したレバーではなく、<br>もともと、人が食べるためのレバーです。</p>
+      <p>レバー職人が作る、冷凍食品ブランド。<br>毎月の販売日に出しては、すぐ売り切れます。<br>犬のおやつのために探したレバーではなく、<br>もともと、人が食べるためのレバーです。</p>
     </div>
-    <div class="slot mid"><div class="anno a1">ここに実物写真：金レバのレバニラ</div><div class="arrow">↓</div><div class="a2">金レバの商品（写真はご相談）</div></div>
+    <div class="slot mid"><div class="anno a1">ここに実物写真：金レバの商品</div><div class="arrow">↓</div><div class="a2">金レバの商品（写真はご相談）</div></div>
     <p>この仕事に惚れて、犬用をお願いしました。ぜひ一度あげてみてください。</p>
     <p class="sig">監修・製造 金レバ（レバ兄）※お名前の出し方は、ご相談のうえで。</p>
   </div>

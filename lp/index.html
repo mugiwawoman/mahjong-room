@@ -10,6 +10,16 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
 .lt ul,.lt ol{list-style:none;margin-top:10px;}
 .lt ul li{font-size:14px;line-height:1.9;margin-top:5px;padding-left:1em;text-indent:-1em;}
 .lt ol li{font-size:14px;line-height:1.9;margin-top:9px;padding-left:1.55em;text-indent:-1.55em;}
+.lt .q{margin-top:18px;}
+.lt .q b{display:block;font-size:14px;}
+.lt .opts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.lt .opts label{flex:1;min-width:90px;text-align:center;border:1.5px solid #111;padding:10px 6px;font-size:13.5px;font-weight:700;cursor:pointer;}
+.lt .opts input{display:none;}
+.lt .opts input:checked+span{background:#111;color:#FFF;display:block;margin:-10px -6px;padding:10px 6px;}
+.lt input[type="text"],.lt textarea{width:100%;border:1.5px solid #111;padding:11px 10px;font-family:inherit;font-size:14px;margin-top:8px;border-radius:0;-webkit-appearance:none;background:#FFF;color:#111;}
+.lt textarea{min-height:76px;resize:vertical;}
+.lt .sendbtn{display:block;width:100%;margin-top:22px;padding:16px;border:none;background:#06C755;color:#FFF;font-family:inherit;font-size:15.5px;font-weight:900;letter-spacing:.06em;cursor:pointer;}
+.lt .formnote{font-size:11px;color:#8A8A8A;margin-top:8px;text-align:center;}
 .divider{max-width:480px;margin:38px auto 0;padding:16px 20px;background:#F6F5F2;border-top:1px solid #E3E3E0;border-bottom:1px solid #E3E3E0;font-size:12.5px;color:#555;line-height:2;text-align:center;}
 .lpC .col{max-width:480px;margin:0 auto;padding:0 18px;}
 .lpC .fude{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif;font-weight:900;letter-spacing:.05em;}
@@ -84,16 +94,45 @@ body{background:#FFFFFF;margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kak
   <p>犬用おやつの件です。<br>まずは角切りのサイズを決めたいので、試作をお願いできないでしょうか。</p>
   <h2>お願いしたいもの</h2>
   <ul>
-    <li>・4mm／6mm／8mm／12mmくらいの角切りを各少量（サイズごとに袋分けだと助かります）</li>
-    <li>・できれば真空パウチ＋急速冷凍まで（解凍後の崩れやドリップを見たいためです）</li>
-    <li>・中身は豚レバーのみ（味付けなし）</li>
+    <li>・角切り 4mm／6mm／8mm／12mm を各少量</li>
+    <li>・サイズごとに袋分け</li>
+    <li>・真空パウチ＋急速冷凍まで（解凍後の変化を見るため）</li>
+    <li>・豚レバーのみ（味付けなし）</li>
   </ul>
-  <h2>教えてほしいこと（ざっくりで大丈夫です）</h2>
-  <ol>
-    <li>① 角切りって、均等なサイズに揃えられそうですか？</li>
-    <li>② サイズごとの原価の目安（あとで大丈夫です）</li>
-    <li>③ 冷凍便でお客さんへの直送はできますか？（できる場合、送料と1箱に入る袋数も・あとで大丈夫です）</li>
-  </ol>
+  <h2>教えてほしいこと</h2>
+  <div class="q"><b>① 角切りは、均等なサイズにできますか？</b>
+    <div class="opts">
+      <label><input type="radio" name="q1" value="できる"><span>できる</span></label>
+      <label><input type="radio" name="q1" value="サイズによる"><span>サイズによる</span></label>
+      <label><input type="radio" name="q1" value="むずかしい"><span>むずかしい</span></label>
+    </div>
+  </div>
+  <div class="q"><b>② サイズごとの原価の目安</b>
+    <input type="text" id="a2" placeholder="例）8mmで◯◯円／袋 くらい">
+  </div>
+  <div class="q"><b>③ 冷凍便で、お客さんへの直送はできますか？</b>
+    <div class="opts">
+      <label><input type="radio" name="q3" value="できる"><span>できる</span></label>
+      <label><input type="radio" name="q3" value="できない"><span>できない</span></label>
+      <label><input type="radio" name="q3" value="要相談"><span>要相談</span></label>
+    </div>
+    <input type="text" id="a3" placeholder="できる場合）送料と、1箱に入る袋数">
+  </div>
+  <div class="q"><b>そのほか、なんでも</b>
+    <textarea id="memo"></textarea>
+  </div>
+  <button class="sendbtn" type="button" onclick="sendAns()">回答をLINEで送る</button>
+  <p class="formnote">押すとLINEが開いて、回答文が入った状態になります。</p>
+  <script>
+  function sendAns(){
+    var g=function(n){var e=document.querySelector('input[name="'+n+'"]:checked');return e?e.value:'—';};
+    var v=function(i){return document.getElementById(i).value.trim();};
+    var t=['【試作の回答】','① 均等な角切り: '+g('q1'),'② 原価の目安: '+(v('a2')||'—'),'③ 直送: '+g('q3')];
+    if(v('a3'))t.push('　送料・入り数: '+v('a3'));
+    if(v('memo'))t.push('メモ: '+v('memo'));
+    location.href='https://line.me/R/share?text='+encodeURIComponent(t.join('\n'));
+  }
+  </script>
 </div>
 
 <div class="divider">ここから下は、商品ができたら使う販売ページのたたきです。<br>金レバの文脈を落とし込んでいます。<br>サイズや価格は、試作をふまえて決めてから完成させます。</div>

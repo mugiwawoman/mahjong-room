@@ -195,6 +195,20 @@
     background: var(--surface); white-space: nowrap;
   }
   .qnav a:hover { color: var(--accent); border-color: var(--accent); }
+  .qnav .qnav-more {
+    display: none; border: 1px solid var(--line); border-radius: 99px; padding: 5px 13px;
+    font-size: 12.5px; font-weight: 700; color: var(--muted); background: var(--surface);
+    font-family: inherit; cursor: pointer;
+  }
+  @media (max-width: 640px) {
+    .qnav:not(.open) a.qnav-x { display: none; }   /* スマホは主役だけ。残りは「その他」で開く */
+    .qnav .qnav-more { display: inline-flex; }
+  }
+  .statusline { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin: 0 0 14px; }
+  .statusline .season-mini { flex: 1 1 220px; margin: 0; }
+  .statusline .sync-banner { flex: none; margin: 0; }
+  .sync-banner .sb-sub { font-size: 11.5px; font-weight: 600; opacity: .8; }
+  @media (max-width: 480px) { .sync-banner .sb-sub { display: none; } }
   section.card, details.card, .next-card { scroll-margin-top: 54px; }
   .season-mini { display: flex; align-items: center; gap: 10px; margin: -6px 0 10px; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .season-mini .smbar { flex: 1; height: 5px; border-radius: 99px; background: var(--surface2); overflow: hidden; }
@@ -292,6 +306,10 @@
   .upcoming { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .16); font-size: 12.5px; color: var(--felt-ink2); }
   .upcoming b { color: var(--felt-ink); font-weight: 700; }
   .upcoming .urow { margin-top: 2px; }
+  details.upcoming summary { cursor: pointer; list-style: none; font-weight: 700; color: var(--felt-ink2); }
+  details.upcoming summary::-webkit-details-marker { display: none; }
+  details.upcoming summary::after { content: ' ▸'; }
+  details.upcoming[open] summary::after { content: ' ▾'; }
 
   /* ---- shared bits ---- */
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: baseline; }
@@ -368,9 +386,6 @@
   #season-presets tr.cur td:first-child { border-radius: 8px 0 0 8px; }
   #season-presets tr.cur td:last-child { border-radius: 0 8px 8px 0; }
   .cur-flag { font-size: 10.5px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 99px; padding: 1px 8px; white-space: nowrap; }
-  .sbar { height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .16); overflow: hidden; margin-top: 14px; }
-  .sbar i { display: block; height: 100%; background: linear-gradient(90deg, #e8d27a, #d4af37); border-radius: 99px; }
-  .sbar-label { font-size: 11px; color: var(--felt-ink2); margin-top: 5px; }
   .yaku-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--gold); background: var(--gold-bg); border: 1px solid var(--gold-line); border-radius: 99px; padding: 2px 9px; white-space: nowrap; }
   #standings .gap { font-size: 10px; font-weight: 600; color: var(--muted); margin-top: 1px; }
 
@@ -662,24 +677,26 @@
     </div>
   </header>
 
-  <div class="season-mini" id="season-mini" hidden>
-    <span id="sm-label"></span>
-    <div class="smbar"><i id="sm-fill"></i></div>
-  </div>
-
   <nav class="qnav" aria-label="ページ内メニュー">
     <a href="#sec-standings">順位</a>
     <a href="#sec-chart">推移</a>
     <a href="#yakuman-card">図鑑</a>
     <a class="admin-only" href="#entry">入力</a>
-    <a href="#sec-history">履歴</a>
-    <a href="#lab">ラボ</a>
-    <a href="#sec-cycle">座席</a>
-    <a href="#rules">ルール</a>
-    <a href="#share">共有</a>
+    <a class="qnav-x" href="#sec-history">履歴</a>
+    <a class="qnav-x" href="#lab">ラボ</a>
+    <a class="qnav-x" href="#sec-cycle">座席</a>
+    <a class="qnav-x" href="#rules">ルール</a>
+    <a class="qnav-x" href="#share">共有</a>
+    <button class="qnav-more" id="qnav-more" type="button" aria-expanded="false">その他 ▾</button>
   </nav>
 
-  <div class="sync-banner" id="sync-banner">…</div>
+  <div class="statusline">
+    <div class="season-mini" id="season-mini" hidden>
+      <span id="sm-label"></span>
+      <div class="smbar"><i id="sm-fill"></i></div>
+    </div>
+    <div class="sync-banner" id="sync-banner">…</div>
+  </div>
 
   <p id="store-warn" class="store-warn" hidden></p>
 
@@ -1192,18 +1209,14 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       m++;
     }
     html += '<button class="btn felt-btn admin-only" id="btn-goto-entry" type="button">この半荘の結果を入力 ↓</button>';
-    html += '<div class="upcoming admin-only">この先の組み合わせ';
+    html += '<details class="upcoming admin-only"><summary>この先の組み合わせ</summary>';
     ups.forEach(function (g) {
       var s = comboFor(g);
       var parts = s.seats.map(function (p, si) { return SEATS[si] + ' ' + esc(state.players[p]); });
       html += '<div class="urow"><b>' + gameLabel(g) + '</b>(第' + weekOf(g) + '週) ' +
         parts.join('・') + '/抜け番 <b>' + esc(state.players[s.bye]) + '</b></div>';
     });
-    html += '</div>';
-    var done = playedNums().length;
-    var pct = Math.max(0, Math.min(100, Math.round(done / state.season * 100)));
-    html += '<div class="sbar" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="sbar-label">シーズン進行 ' + done + ' / ' + state.season + ' 半荘</div>';
+    html += '</details>';
     document.getElementById('next-card').innerHTML = html;
   }
 
@@ -2679,6 +2692,13 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   });
 
   document.querySelector('.qnav').addEventListener('click', function (ev) {
+    var more = ev.target.closest('.qnav-more');
+    if (more) {
+      var open = more.closest('.qnav').classList.toggle('open');
+      more.setAttribute('aria-expanded', open ? 'true' : 'false');
+      more.textContent = open ? '閉じる ▴' : 'その他 ▾';
+      return;
+    }
     var a = ev.target.closest('a[href^="#"]');
     if (!a) return;
     var el = document.querySelector(a.getAttribute('href'));
@@ -2766,8 +2786,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     setGhStatus(has ? '自動保存 ON' : '未設定(手動運用)');
     document.body.classList.toggle('is-admin', has);
     document.getElementById('sync-banner').innerHTML = has
-      ? '🟢 記録係モード — 保存すると全端末に自動反映されます'
-      : '👀 閲覧モード — 記録係が保存した最新データを表示します(入力・修正は記録係の端末のみ)';
+      ? '🟢 記録係モード<span class="sb-sub"> — 保存で全端末に反映</span>'
+      : '👀 閲覧モード<span class="sb-sub"> — 記録係の最新データを表示</span>';
     renderPlayers();
     renderSeason();
   }

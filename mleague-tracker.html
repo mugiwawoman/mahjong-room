@@ -311,6 +311,31 @@
   details.upcoming summary::after { content: ' ▸'; }
   details.upcoming[open] summary::after { content: ' ▾'; }
 
+  /* ---- 座席サイクル: ミニ卓カード ---- */
+  .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .mtab { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+  .mtab.cur { border: 2px solid #c9a227; box-shadow: 0 2px 10px rgba(201, 162, 39, .22); padding: 7px; }
+  .mtab.done { opacity: .5; }
+  .mt-head { display: flex; align-items: baseline; gap: 6px; font-size: 11px; margin-bottom: 6px; flex-wrap: wrap; }
+  .mt-head b { font-size: 12px; }
+  .mt-week { color: var(--muted); }
+  .mt-flag { font-size: 9.5px; font-weight: 800; color: #b08c32; }
+  .mt-flag.ok { color: var(--pos); }
+  .mt-flag.sw { color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+  .mt-felt { position: relative; aspect-ratio: 1.05; background: radial-gradient(circle at 50% 42%, #17765a, var(--felt-deep)); border-radius: 9px; border: 1px solid rgba(255, 255, 255, .08); }
+  .mt-chip { position: absolute; display: inline-flex; flex-direction: column; align-items: center; gap: 0;
+    background: linear-gradient(180deg, var(--tile), #e9e5d2); border: 1px solid var(--tile-edge);
+    border-radius: 5px; padding: 2px 7px 3px; font-size: 10px; font-weight: 700; color: var(--tile-ink);
+    box-shadow: 0 1.5px 0 rgba(0, 0, 0, .28); max-width: 47%; white-space: nowrap; }
+  .mt-chip .nm { overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: flex; align-items: center; gap: 3px; }
+  .mt-chip .wnd { font-family: var(--font-serif); color: #9b1c1c; font-weight: 700; font-size: 9.5px; line-height: 1.2; }
+  .mt-chip.s0 { bottom: 5px; left: 50%; transform: translateX(-50%); }   /* 東=手前 */
+  .mt-chip.s1 { right: 4px; top: 50%; transform: translateY(-50%); }     /* 南=右 */
+  .mt-chip.s2 { top: 5px; left: 50%; transform: translateX(-50%); }      /* 西=対面 */
+  .mt-chip.s3 { left: 4px; top: 50%; transform: translateY(-50%); }      /* 北=左 */
+  .mt-chip .nm .dot { width: 7px; height: 7px; }
+  .mt-bye { margin-top: 6px; font-size: 10.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+
   /* ---- shared bits ---- */
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: baseline; }
   .dot.p0 { background: var(--p1); }
@@ -339,8 +364,12 @@
   .ptbar i { display: block; height: 100%; border-radius: 99px; }
   .ptbar i.pos { background: var(--pos); }
   .ptbar i.neg { background: var(--neg); }
-  .fseq { display: inline-flex; gap: 5px; margin-left: 3px; font-size: 10.5px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .fseq .f1 { color: var(--pos); }
+  .fseq { display: inline-flex; gap: 3px; margin-left: 3px; vertical-align: middle; }
+  .fseq .fc { width: 15px; height: 17px; border-radius: 4px; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+  .fseq .fc.r1 { background: #c9a227; }
+  .fseq .fc.r2 { background: #7a9a6a; }
+  .fseq .fc.r3 { background: #b9b4a2; }
+  .fseq .fc.r4 { background: #c25e5e; }
   .race-line { font-size: 12.5px; color: var(--ink2); margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
   .race-line b { color: var(--gold); }
   #standings .p-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
@@ -794,7 +823,7 @@
 
   <details class="card fold" id="sec-cycle">
     <summary><h2>座席表(今のサイクル・10半荘)</h2></summary>
-    <div class="table-scroll"><table id="cycle" class="stack-sm"></table></div>
+    <div id="cycle" class="tables-grid"></div>
     <p class="note">「東」の列が起家(親スタート)。1サイクル10半荘で、全員が①抜け番ちょうど2回 ②東南西北スタート各2回 ③<b>上家・下家の並び(全20通り)もちょうど2回ずつ</b>になる厳格設計。さらに<b>第6〜125半荘は全120通りの卓の組み合わせを1回ずつ</b>使う完全設計で、同じ座席の配置は二度と現れません。</p>
     <p class="note admin-only">欠席者がいる日は、結果入力の「スキップ入力」でその人が抜け番の半荘に飛んで進行できます(飛ばした半荘は後日そのまま)。</p>
   </details>
@@ -1330,7 +1359,7 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       var form = '';
       if (formSeq && formSeq[p] && formSeq[p].length) {
         form = ' <span class="fseq" title="直近5戦の着順(左が古い)">' + formSeq[p].slice(-5).map(function (rk) {
-          return '<span' + (rk === 1 ? ' class="f1"' : '') + '>' + rk + '</span>';
+          return '<span class="fc r' + rk + '">' + rk + '</span>';
         }).join('') + '</span>';
       }
       var sub = '<span class="sg">' + s.games + '戦</span> ' +
@@ -1894,21 +1923,24 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
   function renderCycle() {
     var next = nextGameNum();
     var base = next >= 6 ? 5 + Math.floor((next - 6) / 10) * 10 : 0; // cycle: base+1 .. base+10
-    var html = '<thead><tr><th>半荘</th><th class="num">週</th><th>東(起家)</th><th>南</th><th>西</th><th>北</th><th>抜け番</th></tr></thead><tbody>';
+    var html = '';
     for (var n = base + 1; n <= base + 10; n++) {
       var a = comboFor(n);
       var cur = n === next;
       var swapped = effectiveNum(n) !== n;
       var done = !!state.results[n];
-      html += '<tr class="' + (cur ? 'cur' : '') + (done ? ' done' : '') + '"><td class="stack-title">第' + n + '半荘' +
-        (cur ? '<span class="next-flag">次はここ</span>' : '') +
-        (swapped ? '<span class="swap-flag">入替</span>' : '') +
-        (done ? '<span class="done-flag">済</span>' : '') + '</td>' +
-        '<td class="num" data-l="週">' + weekOf(n) + '</td>' +
-        a.seats.map(function (p, si) { return '<td data-l="' + SEATS[si] + '">' + ptag(p) + '</td>'; }).join('') +
-        '<td data-l="抜け番">' + ptag(a.bye) + '</td></tr>';
+      var chips = a.seats.map(function (p, si) {
+        return '<span class="mt-chip s' + si + '"><span class="wnd">' + SEATS[si] + '</span>' +
+          '<span class="nm"><i class="dot p' + p + '"></i>' + esc(state.players[p]) + '</span></span>';
+      }).join('');
+      html += '<div class="mtab' + (cur ? ' cur' : '') + (done ? ' done' : '') + '">' +
+        '<div class="mt-head"><b>第' + n + '半荘</b><span class="mt-week">第' + weekOf(n) + '週</span>' +
+        (cur ? '<span class="mt-flag">次はここ</span>' : '') +
+        (swapped ? '<span class="mt-flag sw">入替</span>' : '') +
+        (done ? '<span class="mt-flag ok">済 ✓</span>' : '') + '</div>' +
+        '<div class="mt-felt">' + chips + '</div>' +
+        '<div class="mt-bye"><i class="dot p' + a.bye + '"></i>抜け番: ' + esc(state.players[a.bye]) + '</div></div>';
     }
-    html += '</tbody>';
     document.getElementById('cycle').innerHTML = html;
   }
 

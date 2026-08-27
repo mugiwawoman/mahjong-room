@@ -204,11 +204,19 @@
     .qnav:not(.open) a.qnav-x { display: none; }   /* スマホは主役だけ。残りは「その他」で開く */
     .qnav .qnav-more { display: inline-flex; }
   }
-  .statusline { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin: 0 0 14px; }
-  .statusline .season-mini { flex: 1 1 220px; margin: 0; }
-  .statusline .sync-banner { flex: none; margin: 0; }
+  @media (max-width: 374px) {   /* 小さいSPでもナビを1行に収める */
+    .qnav a, .qnav .qnav-more { padding: 5px 9px; font-size: 12px; }
+  }
+  .statusline { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; }
+  .statusline .season-mini { flex: 1 1 auto; min-width: 0; margin: 0; }
+  .statusline .season-mini #sm-label { white-space: nowrap; }
+  .statusline .smbar { min-width: 36px; }
+  .statusline .sync-banner { flex: none; margin: 0; white-space: nowrap; }
   .sync-banner .sb-sub { font-size: 11.5px; font-weight: 600; opacity: .8; }
-  @media (max-width: 480px) { .sync-banner .sb-sub { display: none; } }
+  @media (max-width: 480px) {
+    .sync-banner .sb-sub { display: none; }
+    .statusline .sync-banner { padding: 4px 10px; font-size: 12px; }
+  }
   section.card, details.card, .next-card { scroll-margin-top: 54px; }
   .season-mini { display: flex; align-items: center; gap: 10px; margin: -6px 0 10px; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .season-mini .smbar { flex: 1; height: 5px; border-radius: 99px; background: var(--surface2); overflow: hidden; }
@@ -224,6 +232,7 @@
     color: var(--accent); font-size: 12.5px; font-weight: 600;
     margin-bottom: 2px;
   }
+  .eyebrow span { display: inline-block; white-space: nowrap; }   /* 折るならことばの切れ目で */
   h1 {
     font-family: var(--font-serif);
     font-size: 30px; font-weight: 700; margin: 0; line-height: 1.25;
@@ -280,11 +289,12 @@
     padding: 3px 10px; border-radius: 99px;
   }
   .next-title { font-size: 20px; font-weight: 700; letter-spacing: .02em; }
-  .next-title small { font-size: 13px; font-weight: 600; color: var(--felt-ink2); margin-left: 8px; }
-  .seats { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; }
+  .next-title small { font-size: 13px; font-weight: 600; color: var(--felt-ink2); margin-left: 8px; display: inline-block; white-space: nowrap; }
+  /* 風4枚は常に1行のグリッド(SPで3+2に折れない)。抜け番は下の1行 */
+  .seats { display: grid; grid-template-columns: repeat(4, minmax(0, 96px)); gap: 10px; }
   .seat {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    min-width: 84px;
+    min-width: 0;
   }
   .seat-tile {
     width: 56px; height: 68px; border-radius: 7px;
@@ -295,14 +305,19 @@
     font-family: var(--font-serif);
     font-size: 30px; font-weight: 700; color: var(--tile-ink);
   }
-  .seat.bye .seat-tile {
-    background: transparent; border: 1.5px dashed rgba(255, 255, 255, .35);
-    box-shadow: none; color: var(--felt-ink2); font-size: 14px;
-    font-family: inherit; line-height: 1.3; text-align: center;
-  }
-  .seat-name { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--felt-ink); max-width: 110px; }
+  .seat-name { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--felt-ink); max-width: 100%; }
+  .seat-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .seat-name .dot { flex: none; }
-  .seat.bye .seat-name { color: var(--felt-ink2); }
+  .seat-bye { margin-top: 12px; font-size: 12.5px; font-weight: 700; color: var(--felt-ink2); display: flex; align-items: center; gap: 6px; }
+  @media (max-width: 400px) {
+    .seat-tile { width: 46px; height: 56px; font-size: 25px; }
+    .seat-name { font-size: 11.5px; }
+    .seats { gap: 8px; }
+  }
+  @media (max-width: 340px) {   /* 極小幅はドットより名前を優先 */
+    .seat-name { font-size: 10.5px; }
+    .seat-name .dot { display: none; }
+  }
   .upcoming { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .16); font-size: 12.5px; color: var(--felt-ink2); }
   .upcoming b { color: var(--felt-ink); font-weight: 700; }
   .upcoming .urow { margin-top: 2px; }
@@ -637,6 +652,13 @@
   .lc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .lc-head .ptag { font-weight: 700; }
   .lc-head .avg { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .lc-diag { display: flex; flex-direction: column; gap: 5px; margin: 0 0 8px; padding: 9px 11px; background: var(--surface2); border-radius: 8px; font-size: 12px; line-height: 1.55; }
+  .lc-diag .ld { display: flex; gap: 8px; align-items: baseline; }
+  .lc-diag .ld-k { flex: none; width: 52px; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; }
+  .lc-diag .ld-k.k1 { color: var(--pos); }
+  .lc-diag .ld-k.k2 { color: var(--accent); }
+  .lc-diag .ld-k.k3 { color: var(--muted); }
+  .lc-diag b { font-variant-numeric: tabular-nums; }
   .lc-row { display: flex; align-items: flex-start; gap: 7px; flex-wrap: wrap; padding: 6px 0; border-top: 1px dashed var(--line); }
   .lc-lab { flex: none; width: 62px; font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: .04em; padding-top: 3px; }
   .pill { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 99px;
@@ -697,7 +719,7 @@
 <div class="wrap">
   <header class="masthead">
     <div>
-      <div class="eyebrow">麻雀 トイボックスリーグ戦・第一期/Mリーグルール準拠</div>
+      <div class="eyebrow"><span>麻雀 トイボックスリーグ戦・第一期</span> <span>Mリーグルール準拠</span></div>
       <h1>T.LEAGUE</h1>
     </div>
     <div class="mast-actions">
@@ -1226,9 +1248,8 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
       html += '<div class="seat"><div class="seat-tile">' + SEATS[si] + '</div>' +
         '<div class="seat-name"><i class="dot p' + p + '"></i><span>' + esc(state.players[p]) + '</span></div></div>';
     });
-    html += '<div class="seat bye"><div class="seat-tile">抜け番</div>' +
-      '<div class="seat-name"><i class="dot p' + a.bye + '"></i><span>' + esc(state.players[a.bye]) + '</span></div></div>';
     html += '</div>';
+    html += '<div class="seat-bye"><i class="dot p' + a.bye + '"></i>抜け番: ' + esc(state.players[a.bye]) + '</div>';
 
 
     var ups = [];
@@ -1725,6 +1746,56 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
     });
     document.getElementById('lab-facts').innerHTML = top.map(function (f) { return '<div class="fact">' + f.html + '</div>'; }).join('') ||
       '<div class="fact">まだ大きな偏りは出ていません。回すほど面白くなります。</div>';
+    /* ---- 3行診断(強み/伸びしろ/兆候): 保存のたび全員分を自動生成 ---- */
+    var diagRows = [];
+    for (i = 0; i < P; i++) diagRows[i] = [];
+    playedNums().forEach(function (n) {
+      var da = comboFor(n), sc = state.results[n], dres = calcGame(sc);
+      var top = Math.max.apply(null, sc);
+      var second = sc.slice().sort(function (x, y) { return y - x; })[1];
+      da.seats.forEach(function (p, si) {
+        diagRows[p].push({ sc: sc[si], rank: dres[si].rank, gapTop: top - sc[si], lead: sc[si] - second });
+      });
+    });
+    function diagnose(di) {
+      var rows = diagRows[di], g = rows.length;
+      if (g < 5) return null;
+      var dist = [0, 0, 0, 0];
+      rows.forEach(function (r) { dist[r.rank - 1]++; });
+      var hako = rows.filter(function (r) { return r.sc < 0; }).length;
+      var bigTop = rows.filter(function (r) { return r.rank === 1 && r.lead >= 20000; }).length;
+      var close2 = rows.filter(function (r) { return r.rank === 2 && r.gapTop <= 6000; }).length;
+      var lasts = dist[3];
+      var lastScs = rows.filter(function (r) { return r.rank === 4; }).map(function (r) { return r.sc; });
+      var lastAvgSc = lastScs.length ? Math.round(lastScs.reduce(function (x, y) { return x + y; }, 0) / lastScs.length) : null;
+      var pen = 0;
+      (state.pen || []).forEach(function (e) { if (e.p === di) pen += e.pt; });
+      var rk = function (list) { return list.reduce(function (x, r) { return x + r.rank; }, 0) / list.length; };
+      var half = Math.floor(g / 2);
+      var fhA = rk(rows.slice(0, half)), shA = rk(rows.slice(half));
+      var f = function (v) { return (Math.round(v * 100) / 100).toFixed(2); };
+      var s;
+      if (bigTop >= 2 && hako === 0) s = '勝つ時はデカく、負けは浅い。大差トップ<b>' + bigTop + '回</b>・箱下0';
+      else if (bigTop >= 2) s = '爆発力。トップ' + dist[0] + '回のうち大差勝ちが<b>' + bigTop + '回</b>';
+      else if (hako === 0 && lasts <= Math.max(2, Math.round(g / 6))) s = '守備力。箱下0で、ラスは<b>' + lasts + '回</b>だけ';
+      else if ((dist[0] + dist[1]) / g >= .45) s = '連対力。トップと2着で<b>' + (dist[0] + dist[1]) + '回</b>';
+      else if (dist[0] >= 2) s = 'トップを取る力はある(<b>' + dist[0] + '回</b>)';
+      else s = '平均順位' + f(rk(rows)) + '。伸びしろしかない';
+      var w;
+      if (pen <= -20) w = 'ペナルティ<b>▲' + Math.abs(pen) + 'pt</b>が重い。ミスをゼロにするだけで大きく戻る';
+      else if (lasts >= 5 && lastAvgSc !== null && lastAvgSc < 5000) w = '負け方がデカい。4着の日に浅く終えるだけでマイナスの多くが消える';
+      else if (close2 >= 2) w = 'あと一歩の2着が<b>' + close2 + '回</b>。オーラスの勝ち切りだけ';
+      else if (dist[2] / g >= .4) w = '「耐えて3着」が<b>' + dist[2] + '回</b>。うち2回を2着に変えれば景色が変わる';
+      else if (lasts >= 4 && lastAvgSc !== null && lastAvgSc < 8000) w = '4着時の沈みが深い。安く終える半荘を増やす';
+      else if (lasts / g >= .35) w = 'ラス<b>' + lasts + '回</b>。まず回避から';
+      else w = '大きな穴なし。今の形を続けるだけ';
+      var t, d = shA - fhA;
+      if (g < 8) t = 'まだ序盤。データ蓄積中';
+      else if (d <= -.25) t = '後半に改善中(' + f(fhA) + '→' + f(shA) + ')';
+      else if (d >= .25) t = '後半やや失速(' + f(fhA) + '→' + f(shA) + ')';
+      else t = '安定運転(前後半とも' + f(rk(rows)) + '前後)';
+      return [s, w, t];
+    }
     /* ---- プレイヤー別カルテ ---- */
     function pill(inner, title) {
       return '<span class="pill"' + (title ? ' title="' + title + '"' : '') + '>' + inner + '</span>';
@@ -1781,8 +1852,14 @@ var SCHED2 = [[0,[1,4,3,2]],[1,[0,3,4,2]],[2,[1,3,0,4]],[3,[2,4,0,1]],[4,[2,0,1,
         h2h += pill('<i class="dot p' + qi + '"></i><b class="' + (rate >= 60 ? 'up' : rate <= 40 ? 'dn' : '') + '">' + rate + '%</b><span class="pico">' + ab.n + '戦</span>',
           esc(state.players[qi]) + 'より上の順位で終えた率');
       }
+      var dg = diagnose(pi);
+      var dgHtml = dg ? '<div class="lc-diag">' +
+        '<div class="ld"><span class="ld-k k1">強み</span><span>' + dg[0] + '</span></div>' +
+        '<div class="ld"><span class="ld-k k2">伸びしろ</span><span>' + dg[1] + '</span></div>' +
+        '<div class="ld"><span class="ld-k k3">兆候</span><span>' + dg[2] + '</span></div>' +
+        '</div>' : '';
       cards += '<div class="lc"><div class="lc-head">' + ptag(pi) +
-        '<span class="avg">平均順位 ' + f1(baseAvg) + '・' + overall[pi].length + '戦</span></div>' +
+        '<span class="avg">平均順位 ' + f1(baseAvg) + '・' + overall[pi].length + '戦</span></div>' + dgHtml +
         '<div class="lc-row"><span class="lc-lab">同卓相性</span><span style="display:flex;gap:6px;flex-wrap:wrap">' + pairRow + '</span></div>' +
         '<div class="lc-row"><span class="lc-lab">上家</span><span style="display:flex;gap:6px;flex-wrap:wrap">' + kamiRow + '</span></div>' +
         '<div class="lc-row"><span class="lc-lab">スタート風</span>' + windsHtml + '</div>' +
